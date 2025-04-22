@@ -3,3 +3,5 @@ chmod 777 /Applications/XAMPP/xamppfiles/htdocs/StazSys/UIDContainer.php
 go to pyhton environment "source ~/venv/bin/activate", "cd ~/Documents"
 
 start server "sudo /Applications/XAMPP/xamppfiles/xampp start"
+
+UIDContainer.php "<?php $UIDresult=''; echo $UIDresult; ?>"
