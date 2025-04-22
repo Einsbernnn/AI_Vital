@@ -1,0 +1,415 @@
+<?php
+require 'database.php';
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require 'PHPMailer/src/Exception.php';
+require 'PHPMailer/src/PHPMailer.php';
+require 'PHPMailer/src/SMTP.php';
+
+$diagnosis = "";
+$message = "";
+$name = "";
+$email = "";
+
+// Get values from query parameters
+$body_temp = isset($_GET['body_temperature']) ? htmlspecialchars($_GET['body_temperature']) : 'N/A';
+$ecg = isset($_GET['ecg']) ? htmlspecialchars($_GET['ecg']) : 'N/A';
+$pulse_rate = isset($_GET['pulse_rate']) ? htmlspecialchars($_GET['pulse_rate']) : 'N/A';
+$spo2 = isset($_GET['spo2']) ? htmlspecialchars($_GET['spo2']) : 'N/A';
+$blood_pressure = isset($_GET['blood_pressure']) ? htmlspecialchars($_GET['blood_pressure']) : 'N/A';
+$uid = isset($_GET['uid']) ? htmlspecialchars($_GET['uid']) : 'N/A';
+$age = isset($_GET['age']) ? htmlspecialchars($_GET['age']) : 'N/A';
+$weight = isset($_GET['weight']) ? htmlspecialchars($_GET['weight']) : 'N/A';
+$height = isset($_GET['height']) ? htmlspecialchars($_GET['height']) : 'N/A';
+$gender = isset($_GET['gender']) ? htmlspecialchars($_GET['gender']) : 'N/A';
+
+// Fetch user details from the database
+try {
+    $conn = Database::connect();
+    $query = "SELECT name, email FROM health_diagnostics WHERE id = ?";
+    $stmt = $conn->prepare($query);
+
+    if (!$stmt) {
+        throw new Exception("Database query preparation failed: " . $conn->errorInfo()[2]);
+    }
+
+    $stmt->execute([$uid]);
+    $user = $stmt->fetch();
+
+    if (!$user) {
+        throw new Exception("User not found.");
+    }
+
+    $name = $user['name'];
+    $email = $user['email'];
+} catch (Exception $e) {
+    $message = "Error fetching user details: " . htmlspecialchars($e->getMessage());
+} finally {
+    Database::disconnect();
+}
+
+// Function to send request to LLaMA 3 locally
+function getAiDiagnosis($body_temp, $ecg, $pulse_rate, $spo2, $blood_pressure, $height, $weight) {
+    $endpoint = "http://localhost:11434/api/generate"; // Ollama API
+
+    $prompt = "You are a highly skilled virtual nurse with expertise in real-time patient diagnostics. 
+    Your goal is to analyze a user's vital signs, determine their health status, and provide recommendations.
+
+    **User's Vital Signs:**
+    - Body Temperature: $body_temp °C
+    - ECG Rate: $ecg BPM
+    - Pulse Rate: $pulse_rate BPM
+    - SpO2 Level: $spo2 %
+    - Blood Pressure: $blood_pressure mmHg
+    - Height: $height cm
+    - Weight: $weight kg
+
+    **Your Task as the AI Nurse:**
+    1. Determine whether the vitals are **normal, borderline, or critical**.
+    2. Identify potential medical conditions (e.g., fever, bradycardia, tachycardia, hypoxia, arrhythmia).
+    3. Explain the **causes** behind abnormal readings.
+    4. Possible sickeness based on user vitals sign result make this explain broadly. Also bold and capital this since this is very crusial.
+    5. Suggest appropriate medical actions (e.g., drink fluids, rest, seek emergency care).
+    6. Give a possible indication on what are their disease.
+    7. If vitals indicate an emergency, give **urgent medical advice**.
+    8. Calculate their BMI based on their weight and height.
+    9. Always state that the diagnosis is based on the data provided and is not 100% accurate. Advise seeking medical attention if needed.
+    10. Always remind the user that the school nurse is available to assist them.";
+
+    $data = [
+        "model" => "llama3",
+        "prompt" => $prompt,
+        "stream" => false
+    ];
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $endpoint);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: application/json"]);
+
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    $response_data = json_decode($response, true);
+    return $response_data['response'] ?? "Sorry, I couldn't process your request.";
+}
+
+// Process form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $diagnosis = getAiDiagnosis($body_temp, $ecg, $pulse_rate, $spo2, $blood_pressure, $height, $weight);
+
+    // Email-sending logic
+    try {
+        $conn = Database::connect();
+
+        // Prepare the email content
+        $subject = "Here Are Your Health Diagnostic Result from Using AI-VITAl";
+        $messageBody = "
+            <h3>Hello $name,</h3>
+            <p>Here are your health readings:</p>
+            <ul>
+                <li><strong>Body Temperature:</strong> $body_temp °C</li>
+                <li><strong>ECG Rate:</strong> $ecg BPM</li>
+                <li><strong>Pulse Rate:</strong> $pulse_rate BPM</li>
+                <li><strong>SpO₂ Level:</strong> $spo2 %</li>
+                <li><strong>Blood Pressure:</strong> $blood_pressure mmHg</li>
+            </ul>
+            <p><strong>Diagnosis:</strong></p>
+            <p style='white-space: pre-line;'>$diagnosis</p>
+            <p>Stay healthy and take care!</p>
+        ";
+
+        // Send the email using PHPMailer
+        $mail = new PHPMailer(true);
+
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'einsbernsystem@gmail.com';
+        $mail->Password = 'bdov zsdz sidj bcsc';
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+
+        $mail->setFrom('einsbernsystem@gmail.com', 'AI-Vital Diagnoser');
+        $mail->addAddress($email, $name);
+
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body = $messageBody;
+
+        $mail->send();
+
+        // Insert the readings and diagnosis into the health_readings table
+        $insertQuery = "
+            INSERT INTO health_readings 
+            (id, patient_name, temperature, ecg_rate, pulse_rate, spo2_level, blood_pressure, diagnosis) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ";
+        $insertStmt = $conn->prepare($insertQuery);
+
+        if (!$insertStmt) {
+            throw new Exception("Failed to prepare insert query: " . $conn->errorInfo()[2]);
+        }
+
+        $insertStmt->execute([
+            $uid,
+            $name,
+            $body_temp,
+            $ecg,
+            $pulse_rate,
+            $spo2,
+            $blood_pressure,
+            $diagnosis
+        ]);
+
+        $message = "The diagnostic result has been sent to \"$email\" successfully.";
+    } catch (Exception $e) {
+        $message = "Failed to send the email. " . htmlspecialchars($e->getMessage());
+    } finally {
+        Database::disconnect();
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Nurse Diagnosis</title>
+
+    <!-- Favicons -->
+    <link href="img/logo.png" rel="icon">
+    <link href="img/apple-touch-icon.png" rel="apple-touch-icon">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Marcellus:wght@400&display=swap" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="vendor/aos/aos.css" rel="stylesheet">
+    <link href="vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+    <link href="vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+
+    <!-- Main CSS File -->
+    <link href="css/main.css" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: url('microcity.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .bg-overlay {
+            background-color: rgba(255, 255, 255, 0.8); /* White overlay with reduced opacity */
+        }
+        .vital-signs-container {
+            background: #ffffff;
+            border: 1px solid #d1fae5;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .vital-signs-container h3 {
+            font-size: 24px;
+            text-align: center;
+            font-weight: bold;
+            color: #065f46;
+            margin-bottom: 16px;
+        }
+        .vital-signs-container .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .vital-signs-container .grid-item {
+            font-size: 16px;
+            font-weight: bold;
+            color: #064e3b;
+        }
+        .diagnosis-button {
+            display: block;
+            margin: 20px auto;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 16px 32px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .diagnosis-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-r from-green-200 to-green-400 min-h-screen flex flex-col">
+    <div class="bg-overlay min-h-screen">
+        
+    <!-- Header Section -->
+    <header id="header" class="header d-flex align-items-center position-relative">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+            <a href="index.php" class="logo d-flex align-items-center">
+                <img src="img/logo.png" alt="AI Vital">
+            </a>
+
+            <nav id="navmenu" class="navmenu">
+                <ul>
+                    <li><a href="index.php">Home</a></li>
+                    <li><a href="registration2.php">Registration</a></li>
+                    <li><a href="userdata2.php">User Data</a></li>
+                    <li><a href="live reading.php">Live-Reading</a></li>
+                    <li><a href="results2.php">Results</a></li>
+                    <li><a href="about.php">About Us</a></li>
+                </ul>
+                <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+            </nav>
+
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <h2 class="text-center text-3xl font-bold text-green-700 mb-6">AI Vital Diagnosis</h2>
+
+        <!-- User Details Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h3 class="text-xl font-bold text-green-700 mb-4">User Information</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <p><strong>UID:</strong> <?php echo $uid; ?></p>
+                <p><strong>Name:</strong> <?php echo $name ?: "N/A"; ?></p>
+                <p><strong>Email:</strong> <?php echo $email ?: "N/A"; ?></p>
+                <p><strong>Age:</strong> <?php echo $age; ?></p>
+                <p><strong>Weight:</strong> <?php echo $weight; ?> kg</p>
+                <p><strong>Height:</strong> <?php echo $height; ?> cm</p>
+                <p><strong>Gender:</strong> <?php echo $gender; ?></p>
+            </div>
+        </div>
+
+        <!-- Vital Signs Section -->
+        <div class="vital-signs-container">
+            <h3>Vital Results</h3>
+            <div class="grid">
+                <div class="grid-item">Body Temperature: <?php echo $body_temp; ?> °C</div>
+                <div class="grid-item">ECG: <?php echo $ecg; ?> BPM</div>
+                <div class="grid-item">Pulse Rate: <?php echo $pulse_rate; ?> BPM</div>
+                <div class="grid-item">SpO₂: <?php echo $spo2; ?> %</div>
+                <div class="grid-item">Blood Pressure: <?php echo $blood_pressure; ?> mmHg</div>
+            </div>
+        </div>
+
+        <!-- Diagnosis Button -->
+        <form action="" method="post">
+            <button type="submit" class="diagnosis-button">Get AI Diagnosis</button>
+        </form>
+
+        <!-- Diagnosis Result -->
+        <?php if ($_SERVER["REQUEST_METHOD"] == "POST") : ?>
+            <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-bold text-green-700 mb-4">AI Diagnosis Result:</h3>
+                <p class="text-gray-700"><?php echo nl2br(htmlspecialchars($diagnosis)); ?></p>
+            </div>
+
+            <!-- Email Button -->
+            <div class="mt-6">
+                <p class="text-green-700 font-bold"><?php echo htmlspecialchars($message); ?></p>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Footer Section -->
+    <footer id="footer" class="footer dark-background">
+        <div class="footer-top">
+            <div class="container">
+                <div class="row gy-4">
+                    <div class="col-lg-4 col-md-6 footer-about">
+                        <a href="index.php" class="logo d-flex align-items-center">
+                            <span class="sitename">AI-VITAL</span>
+                        </a>
+                        <div class="footer-contact pt-3">
+                            <p>MICROCITY OF BUSINESS AND TECHNOLOGY, INC.</p>
+                            <p>Narra St., Capitol Drive, Tenejero, Balanga, Bataan </p>
+                            <p class="mt-3"><strong>Phone:</strong> <span>(047-) 275-0786 / 09811865703</span></p>
+                            <p><strong>Email:</strong> <span>info@microcitycomputercollege.com</span></p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-3 footer-links">
+                        <h4>Start Using </h4>
+                        <ul>
+                            <li><a href="index.php">Home</a></li>
+                            <li><a href="registration2.php">Registration</a></li>
+                            <li><a href="userdata2.php">User Data</a></li>
+                            <li><a href="live reading.php">Live-Reading</a></li>
+                            <li><a href="results2.php">Results</a></li>
+                            <li><a href="about.php">About Us</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="col-lg-2 col-md-3 footer-links">
+                        <h4>What is?</h4>
+                        <ul>
+                            <li><a href="https://en.wikipedia.org/wiki/Blood_pressure" target="_blank">...Blood Pressure</a></li>
+                            <li><a href="https://en.wikipedia.org/wiki/Human_body_temperature" target="_blank">...Body Temperature</a></li>
+                            <li><a href="https://en.wikipedia.org/wiki/Electrocardiography" target="_blank">...Electrocardiogram</a></li>
+                            <li><a href="https://en.wikipedia.org/wiki/Oxygen_saturation_(medicine)" target="_blank">...Oxygen Saturation (spO2)</a></li>
+                            <li><a href="https://en.wikipedia.org/wiki/Pulse" target="_blank">...Pulse Rate</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="col-lg-2 col-md-3 footer-links">
+                        <h4>Hardware Used</h4>
+                        <ul>
+                            <li><a href="#">MLX90614</a></li>
+                            <li><a href="#">AD8323</a></li>
+                            <li><a href="#">MAX30100</a></li>
+                            <li><a href="#">MFRC522</a></li>
+                            <li><a href="#">ESP-32 Wroom</a></li>
+                            <li><a href="#">ESP-8266 </a></li>
+                            <li><a href="#">Arduino Uno</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="col-lg-2 col-md-3 footer-links">
+                        <h4>Tech Stack Used</h4>
+                        <ul>
+                            <li><a href="#">Languages: C++, Php, Javascript</a></li>
+                            <li><a href="#">Frameworks/Libraries: Bootstrap, Tailwind CSS</a></li>
+                            <li><a href="#">Data Base: MySQL</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="copyright text-center">
+            <div class="container d-flex flex-column flex-lg-row justify-content-center justify-content-lg-between align-items-center">
+                <div class="d-flex flex-column align-items-center align-items-lg-start">
+                    <div>
+                        © Copyright <strong><span>AI-Vital</span></strong>. All Rights Reserved
+                    </div>
+                    <div class="credits">
+                        Designed by Einsbern</a>
+                    </div>
+                </div>
+
+                <div class="social-links order-first order-lg-last mb-3 mb-lg-0">
+                    <a href="https://www.microcitycollege.com/" target="_blank"><i class="bi bi-browser-chrome"></i></a>
+                    <a href="https://www.facebook.com/microcity.balanga" target="_blank"><i class="bi bi-facebook"></i></a>
+                    <a href="mailto:einsbernsystem@gmail.com?subject=Send%20Feedback%20to%20Developer"><i class="bi bi-envelope"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
