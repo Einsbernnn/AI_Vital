@@ -437,7 +437,7 @@ $currentDate = date("F j, Y");
         <div class="container mx-auto px-4 py-8 flex space-x-8">
             <!-- Real-Time Sensor Readings Panel -->
             <div class="readings-panel flex-grow">
-                <h3>Real-Time Sensor Readings</h3>
+                <h3>Real-Time Vital Readings</h3>
                 <div class="grid grid-cols-2 gap-4 mt-4">
                     <div class="grid-item red">
                         <p class="label">Body Temperature</p>
