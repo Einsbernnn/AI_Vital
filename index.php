@@ -327,12 +327,10 @@
       <div class="col-lg-5 ml-auto" data-aos="fade-up" data-aos-delay="100">
         <h3 class="content-subtitle text-white opacity-50">Why Choose Us</h3>
         <h2 class="content-title mb-4">
-          More than <strong>50 year experience</strong> in agriculture
-          industry
+          AI Vital <strong>Precise and Accurate</strong> Diagnosis Data
         </h2>
         <p class="opacity-50">
-          Reprehenderit, odio laboriosam? Blanditiis quae ullam quasi illum
-          minima nostrum perspiciatis error consequatur sit nulla.
+        Empowering better healthcare decisions through real-time insights and intelligent diagnostics, driven by cutting-edge AI technology.
         </p>
               <!-- Icons Section -->
         <div class="row my-5">
@@ -393,9 +391,8 @@
                 <img src="img/developers/developer_1.jpg" alt="Testimonial author">
                 <blockquote>
                   <p>
-                    “Lorem ipsum dolor sit, amet consectetur adipisicing
-                    elit. Provident deleniti iusto molestias, dolore vel fugiat
-                    ab placeat ea?”
+                  “AI-Vital makes health monitoring incredibly easy and accessible. 
+                  The real-time data has helped me stay on top of my health like never before.”
                   </p>
                 </blockquote>
                 <p class="client-name">Enrico, Pamela R.</p>
