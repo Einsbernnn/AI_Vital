@@ -1,10 +1,4 @@
 <?php
-session_start();
-if (!isset($_SESSION['admin_logged_in']) && !isset($_SESSION['clerk1_logged_in']) && !isset($_SESSION['clerk2_logged_in'])) {
-    header('Location: admin_login.php');
-    exit();
-}
-
 // Clear UID on page load
 $Write = "<?php $" . "UIDresult=''; " . "echo $" . "UIDresult;" . " ?>";
 file_put_contents('UIDContainer.php', $Write);
@@ -39,28 +33,6 @@ $datesStmt = $pdo->prepare($datesQuery);
 $datesStmt->execute();
 $dates = $datesStmt->fetchAll(PDO::FETCH_ASSOC);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
-    $selectedEntries = $_POST['selected_entries'] ?? [];
-    
-    if (!empty($selectedEntries)) {
-        $deleteConditions = [];
-        $params = [];
-
-        foreach ($selectedEntries as $entry) {
-            list($id, $timestamp) = explode('|', $entry);
-            $deleteConditions[] = "(id = ? AND timestamp = ?)";
-            $params[] = $id;
-            $params[] = $timestamp;
-        }
-
-        $deleteSql = "DELETE FROM health_data WHERE " . implode(" OR ", $deleteConditions);
-        $deleteStmt = $pdo->prepare($deleteSql);
-        $deleteStmt->execute($params);
-
-        header('Location: results2.php?search=' . urlencode($search) . '&date=' . urlencode($date)); // Preserve filters
-        exit();
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -128,6 +100,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
                 });
         });
     </script>
+    <style>
+        body {
+            background: url('microcity.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .bg-overlay {
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        /* Nav menu as links only, no button style, always visible and horizontal, scrollable if needed */
+        #navmenu {
+            background: none;
+            box-shadow: none;
+        }
+        #navmenu ul {
+            display: flex;
+            flex-direction: row;
+            gap: 1.5rem;
+            padding-left: 0;
+            margin-bottom: 0;
+            list-style: none;
+            align-items: center;
+            overflow-x: auto;
+            white-space: nowrap;
+            width: 100%;
+        }
+        #navmenu ul li {
+            display: block;
+        }
+        #navmenu ul li a {
+            display: block;
+            padding: 8px 18px;
+            color: #222;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+            background: none;
+            border: none;
+            transition: background 0.2s, color 0.2s;
+        }
+        #navmenu ul li a:hover,
+        #navmenu ul li a.active {
+            background: #22c55e;
+            color: #fff !important;
+        }
+        .mobile-nav-toggle, .bi-list {
+            display: none !important;
+        }
+        @media (max-width: 600px) {
+            #navmenu ul {
+                gap: 0.5rem;
+                font-size: 0.95rem;
+            }
+            #navmenu ul li a {
+                padding: 6px 10px;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Header Section -->
@@ -138,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
                 <img src="img/logo.png" alt="AI Vital">
             </a>
 
-            <nav id="navmenu" class="navmenu">
+            <nav id="navmenu">
                 <ul>
                     <li><a href="index.php">Home</a></li>
                     <li><a href="registration2.php">Registration</a></li>
@@ -147,7 +177,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
                     <li><a href="results2.php" class="active">Results</a></li>
                     <li><a href="about.php">About Us</a></li>
                 </ul>
-                <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
             </nav>
 
         </div>
@@ -169,52 +198,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
                         </select>
                         <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded-md">Search</button>
                     </form>
-
-                    <form method="POST" id="deleteForm">
-                        <table class="table-auto w-full border-collapse border border-gray-300">
-                            <thead>
-                                <tr class="bg-green-700 text-white">
-                                    <th class="border border-gray-300 px-4 py-2">#</th>
-                                    <th class="border border-gray-300 px-4 py-2">Select</th>
-                                    <th class="border border-gray-300 px-4 py-2">ID</th>
-                                    <th class="border border-gray-300 px-4 py-2">Name</th>
-                                    <th class="border border-gray-300 px-4 py-2">Gender</th>
-                                    <th class="border border-gray-300 px-4 py-2">Age</th>
-                                    <th class="border border-gray-300 px-4 py-2">Height (cm)</th>
-                                    <th class="border border-gray-300 px-4 py-2">Weight (kg)</th>
-                                    <th class="border border-gray-300 px-4 py-2">Body Temperature (°C)</th>
-                                    <th class="border border-gray-300 px-4 py-2">Blood Pressure</th>
-                                    <th class="border border-gray-300 px-4 py-2">ECG</th>
-                                    <th class="border border-gray-300 px-4 py-2">Pulse Rate (BPM)</th>
-                                    <th class="border border-gray-300 px-4 py-2">SpO2 (%)</th>
+                    <table class="table-auto w-full border-collapse border border-gray-300">
+                        <thead>
+                            <tr class="bg-green-700 text-white">
+                                <th class="border border-gray-300 px-4 py-2">#</th>
+                                <th class="border border-gray-300 px-4 py-2">ID</th>
+                                <th class="border border-gray-300 px-4 py-2">Name</th>
+                                <th class="border border-gray-300 px-4 py-2">Gender</th>
+                                <th class="border border-gray-300 px-4 py-2">Age</th>
+                                <th class="border border-gray-300 px-4 py-2">Height (cm)</th>
+                                <th class="border border-gray-300 px-4 py-2">Weight (kg)</th>
+                                <th class="border border-gray-300 px-4 py-2">Body Temperature (°C)</th>
+                                <th class="border border-gray-300 px-4 py-2">Blood Pressure</th>
+                                <th class="border border-gray-300 px-4 py-2">ECG</th>
+                                <th class="border border-gray-300 px-4 py-2">Pulse Rate (BPM)</th>
+                                <th class="border border-gray-300 px-4 py-2">SpO2 (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php 
+                            $rowNumber = 1;
+                            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) { ?>
+                                <tr>
+                                    <td class="border border-gray-300 px-4 py-2"><?= $rowNumber++ ?></td>
+                                    <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['id']) ?></td>
+                                    <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['name']) ?></td>
+                                    <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['gender']) ?></td>
+                                    <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['age']) ?></td>
+                                    <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['height']) ?></td>
+                                    <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['weight']) ?></td>
+                                    <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['body_temperature'] ?? '0.00') ?></td>
+                                    <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['blood_pressure'] ?? 'N/A') ?></td>
+                                    <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['ecg'] ?? '0.00') ?></td>
+                                    <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['pulse_rate'] ?? '0.0') ?></td>
+                                    <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['spo2'] !== null ? number_format($row['spo2'], 2) : '0.00') ?></td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                <?php 
-                                $rowNumber = 1;
-                                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) { ?>
-                                    <tr>
-                                        <td class="border border-gray-300 px-4 py-2"><?= $rowNumber++ ?></td>
-                                        <td class="border border-gray-300 px-4 py-2">
-                                            <input type="checkbox" name="selected_entries[]" value="<?= htmlspecialchars($row['id']) ?>|<?= htmlspecialchars($row['timestamp']) ?>">
-                                        </td>
-                                        <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['id']) ?></td>
-                                        <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['name']) ?></td>
-                                        <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['gender']) ?></td>
-                                        <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['age']) ?></td>
-                                        <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['height']) ?></td>
-                                        <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['weight']) ?></td>
-                                        <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['body_temperature'] ?? '0.00') ?></td>
-                                        <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['blood_pressure'] ?? 'N/A') ?></td>
-                                        <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['ecg'] ?? '0.00') ?></td>
-                                        <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['pulse_rate'] ?? '0.0') ?></td>
-                                        <td class="border border-gray-300 px-4 py-2"><?= htmlspecialchars($row['spo2'] !== null ? number_format($row['spo2'], 2) : '0.00') ?></td>
-                                    </tr>
-                                <?php } ?>
-                            </tbody>
-                        </table>
-                        <button type="submit" class="bg-red-700 text-white px-4 py-2 rounded-md mt-4">Delete Selected</button>
-                    </form>
+                            <?php } ?>
+                        </tbody>
+                    </table>
                 </div>
             </main>
         </div>

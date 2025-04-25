@@ -56,7 +56,59 @@ $email = isset($_GET['email']) ? htmlspecialchars($_GET['email']) : '';
             background-size: cover;
         }
         .bg-overlay {
-            background-color: rgba(255, 255, 255, 0.8); /* White overlay with reduced opacity */
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        /* Nav menu as links only, no button style, always visible and horizontal */
+        #navmenu {
+            background: none;
+            box-shadow: none;
+        }
+        #navmenu ul {
+            display: flex;
+            flex-direction: row;
+            gap: 1.5rem;
+            padding-left: 0;
+            margin-bottom: 0;
+            list-style: none;
+            align-items: center;
+        }
+        #navmenu ul li {
+            display: block;
+        }
+        #navmenu ul li a {
+            display: block;
+            padding: 8px 18px;
+            color: #222;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+            background: none;
+            border: none;
+            transition: background 0.2s, color 0.2s;
+        }
+        #navmenu ul li a:hover,
+        #navmenu ul li a.active {
+            background: #22c55e;
+            color: #fff !important;
+        }
+        .mobile-nav-toggle {
+            font-size: 2rem;
+            color: #222;
+            cursor: pointer;
+            display: none;
+            background: none;
+            border: none;
+        }
+        /* No column direction on mobile, always horizontal */
+        @media (max-width: 600px) {
+            #navmenu ul {
+                gap: 0.5rem;
+                font-size: 0.95rem;
+            }
+            #navmenu ul li a {
+                padding: 6px 10px;
+                font-size: 0.95rem;
+            }
         }
         .input-group {
             display: flex;
@@ -195,7 +247,7 @@ $email = isset($_GET['email']) ? htmlspecialchars($_GET['email']) : '';
                 <img src="img/logo.png" alt="AI Vital">
             </a>
 
-            <nav id="navmenu" class="navmenu">
+            <nav id="navmenu">
                 <ul>
                     <li><a href="index.php">Home</a></li>
                     <li><a href="registration2.php" class="active">Registration</a></li>
@@ -204,7 +256,6 @@ $email = isset($_GET['email']) ? htmlspecialchars($_GET['email']) : '';
                     <li><a href="results2.php">Results</a></li>
                     <li><a href="about.php">About Us</a></li>
                 </ul>
-                <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
             </nav>
 
         </div>

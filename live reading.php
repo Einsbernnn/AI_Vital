@@ -55,10 +55,60 @@ $currentDate = date("F j, Y");
         body {
             background: url('microcity.jpg') no-repeat center center fixed;
             background-size: cover;
-            margin-bottom: 50px; /* Add margin to avoid overlap with the marquee */
+            margin-bottom: 50px;
         }
         .bg-overlay {
-            background-color: rgba(255, 255, 255, 0.8); /* White overlay with reduced opacity */
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        /* Nav menu as links only, no button style, always visible and horizontal, scrollable if needed */
+        #navmenu {
+            background: none;
+            box-shadow: none;
+        }
+        #navmenu ul {
+            display: flex;
+            flex-direction: row;
+            gap: 1.5rem;
+            padding-left: 0;
+            margin-bottom: 0;
+            list-style: none;
+            align-items: center;
+            overflow-x: auto;
+            white-space: nowrap;
+            width: 100%;
+        }
+        #navmenu ul li {
+            display: block;
+        }
+        #navmenu ul li a {
+            display: block;
+            padding: 8px 18px;
+            color: #222;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+            background: none;
+            border: none;
+            transition: background 0.2s, color 0.2s;
+        }
+        #navmenu ul li a:hover,
+        #navmenu ul li a.active {
+            background: #22c55e;
+            color: #fff !important;
+        }
+        .mobile-nav-toggle, .bi-list {
+            display: none !important;
+        }
+        /* Responsive: shrink gap and font size on small screens, but always show nav */
+        @media (max-width: 600px) {
+            #navmenu ul {
+                gap: 0.5rem;
+                font-size: 0.95rem;
+            }
+            #navmenu ul li a {
+                padding: 6px 10px;
+                font-size: 0.95rem;
+            }
         }
         .grid-item {
             background: #f0fdf4; /* Light green background */
@@ -419,7 +469,7 @@ $currentDate = date("F j, Y");
                 <img src="img/logo.png" alt="AgriCulture">
             </a>
 
-            <nav id="navmenu" class="navmenu">
+            <nav id="navmenu">
                 <ul>
                     <li><a href="index.php">Home</a></li>
                     <li><a href="registration2.php">Registration</a></li>
@@ -428,7 +478,6 @@ $currentDate = date("F j, Y");
                     <li><a href="results2.php">Results</a></li>
                     <li><a href="about.php">About Us</a></li>
                 </ul>
-                <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
             </nav>
 
         </div>

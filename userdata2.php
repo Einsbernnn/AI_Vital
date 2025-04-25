@@ -24,7 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Remove viewport meta tag if you want to further enforce desktop layout -->
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
     <title>AI Vital: User Data</title>
 
     <!-- Favicons -->
@@ -70,7 +71,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
             background-size: cover;
         }
         .bg-overlay {
-            background-color: rgba(255, 255, 255, 0.8); /* White overlay with reduced opacity */
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        /* Nav menu as links only, no button style */
+        #navmenu {
+            background: none;
+            box-shadow: none;
+        }
+        #navmenu ul {
+            display: flex;
+            flex-direction: row;
+            gap: 1.5rem;
+            padding-left: 0;
+            margin-bottom: 0;
+            list-style: none;
+            align-items: center;
+        }
+        #navmenu ul li {
+            display: block;
+        }
+        #navmenu ul li a {
+            display: block;
+            padding: 8px 18px;
+            color: #222;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+            background: none;
+            border: none;
+            transition: background 0.2s, color 0.2s;
+        }
+        #navmenu ul li a:hover,
+        #navmenu ul li a.active {
+            background: #22c55e;
+            color: #fff !important;
+        }
+        .mobile-nav-toggle {
+            font-size: 2rem;
+            color: #222;
+            cursor: pointer;
+            display: none;
+            background: none;
+            border: none;
+        }
+        /* Responsive table container */
+        .responsive-table {
+            width: 100%;
+            max-height: 500px; /* Set max height for vertical scroll */
+            overflow-x: auto;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            background: white;
+        }
+        /* Responsive adjustments for iPad Mini and similar */
+        @media (max-width: 900px) {
+            .responsive-table table {
+                min-width: 800px;
+                font-size: 0.95rem;
+            }
+            .responsive-table th,
+            .responsive-table td {
+                padding: 8px 6px;
+            }
+            #searchInput {
+                font-size: 1rem;
+            }
+        }
+        @media (max-width: 600px) {
+            .responsive-table table {
+                min-width: 700px;
+                font-size: 0.9rem;
+            }
+            .responsive-table th,
+            .responsive-table td {
+                padding: 6px 4px;
+            }
+        }
+        /* Sticky header for vertical scroll */
+        .responsive-table thead th {
+            position: sticky;
+            top: 0;
+            background: #15803d;
+            color: #fff;
+            z-index: 2;
+        }
+        /* Optional: visually indicate scrollable area */
+        .responsive-table {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -172,16 +260,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
                 <img src="img/logo.png" alt="AI Vital">
             </a>
 
-            <nav id="navmenu" class="navmenu">
+            <nav id="navmenu">
                 <ul>
-                    <li><a href="index.php">Home</a></li>
-                    <li><a href="registration2.php">Registration</a></li>
+                    <li><a href="index.php" class="">Home</a></li>
+                    <li><a href="registration2.php" class="">Registration</a></li>
                     <li><a href="userdata2.php" class="active">User Data</a></li>
-                    <li><a href="live reading.php">Live-Reading</a></li>
-                    <li><a href="results2.php">Results</a></li>
-                    <li><a href="about.php">About Us</a></li>
+                    <li><a href="live reading.php" class="">Live-Reading</a></li>
+                    <li><a href="results2.php" class="">Results</a></li>
+                    <li><a href="about.php" class="">About Us</a></li>
                 </ul>
-                <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
             </nav>
 
         </div>
@@ -193,47 +280,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
         <div class="mb-4">
             <input type="text" id="searchInput" placeholder="Search..." class="w-full p-2 border rounded">
         </div>
-        <table class="table-auto w-full border-collapse border border-gray-300">
-            <thead>
-                <tr class="bg-green-700 text-white">
-                    <th class="border border-gray-300 px-4 py-2">Name</th>
-                    <th class="border border-gray-300 px-4 py-2">ID</th>
-                    <th class="border border-gray-300 px-4 py-2">Gender</th>
-                    <th class="border border-gray-300 px-4 py-2">Email</th>
-                    <th class="border border-gray-300 px-4 py-2">Mobile Number</th>
-                    <th class="border border-gray-300 px-4 py-2">Age</th>
-                    <th class="border border-gray-300 px-4 py-2">Height</th>
-                    <th class="border border-gray-300 px-4 py-2">Weight</th>
-                    <th class="border border-gray-300 px-4 py-2">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                include 'database.php';
-                $pdo = Database::connect();
-                $sql = 'SELECT * FROM health_diagnostics ORDER BY id DESC';
-                foreach ($pdo->query($sql) as $row) {
-                    echo '<tr id="row-' . htmlspecialchars($row['id']) . '">';
-                    echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['name']) . '</td>';
-                    echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['id']) . '</td>';
-                    echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['gender']) . '</td>';
-                    echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['email']) . '</td>';
-                    echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['mobile']) . '</td>';
-                    echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['age']) . '</td>';
-                    echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['height']) . '</td>';
-                    echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['weight']) . '</td>';
-                    echo '<td class="border border-gray-300 px-4 py-2">
-                            <div class="flex space-x-2">
-                                <a class="bg-green-500 text-white px-3 py-1 rounded" href="user data edit page.php?id='.htmlspecialchars($row['id']).'">Edit</a>
-                                <button class="bg-red-500 text-white px-3 py-1 rounded" onclick="deleteUser(\''.htmlspecialchars($row['id']).'\')">Delete</button>
-                            </div>
-                          </td>';
-                    echo '</tr>';
-                }
-                Database::disconnect();
-                ?>
-            </tbody>
-        </table>
+        <div class="responsive-table">
+            <table class="table-auto w-full border-collapse border border-gray-300">
+                <thead>
+                    <tr class="bg-green-700 text-white">
+                        <th class="border border-gray-300 px-4 py-2">Name</th>
+                        <th class="border border-gray-300 px-4 py-2">ID</th>
+                        <th class="border border-gray-300 px-4 py-2">Gender</th>
+                        <th class="border border-gray-300 px-4 py-2">Email</th>
+                        <th class="border border-gray-300 px-4 py-2">Mobile Number</th>
+                        <th class="border border-gray-300 px-4 py-2">Age</th>
+                        <th class="border border-gray-300 px-4 py-2">Height</th>
+                        <th class="border border-gray-300 px-4 py-2">Weight</th>
+                        <th class="border border-gray-300 px-4 py-2">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    include 'database.php';
+                    $pdo = Database::connect();
+                    $sql = 'SELECT * FROM health_diagnostics ORDER BY id DESC';
+                    foreach ($pdo->query($sql) as $row) {
+                        echo '<tr id="row-' . htmlspecialchars($row['id']) . '">';
+                        echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['name']) . '</td>';
+                        echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['id']) . '</td>';
+                        echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['gender']) . '</td>';
+                        echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['email']) . '</td>';
+                        echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['mobile']) . '</td>';
+                        echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['age']) . '</td>';
+                        echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['height']) . '</td>';
+                        echo '<td class="border border-gray-300 px-4 py-2">'. htmlspecialchars($row['weight']) . '</td>';
+                        echo '<td class="border border-gray-300 px-4 py-2">
+                                <div class="flex space-x-2">
+                                    <a class="bg-green-500 text-white px-3 py-1 rounded" href="user data edit page.php?id='.htmlspecialchars($row['id']).'">Edit</a>
+                                    <button class="bg-red-500 text-white px-3 py-1 rounded" onclick="deleteUser(\''.htmlspecialchars($row['id']).'\')">Delete</button>
+                                </div>
+                              </td>';
+                        echo '</tr>';
+                    }
+                    Database::disconnect();
+                    ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Footer Section -->
