@@ -132,7 +132,24 @@ include 'header.php'; // Include your navigation/header file
     <div class="bg-overlay min-h-screen">
         <div class="container mx-auto px-4 py-8">
             <h1 class="text-4xl font-bold text-green-700 mb-4 text-center">About Us</h1>
-            <p class="text-lg text-gray-700 leading-relaxed text-center">Welcome to <strong>Einsbern System</strong>. Our project, <strong>Vitals Sign Monitoring System</strong>, is designed to provide real-time health monitoring using ESP32 and various sensors.</p>
+            <p class="text-lg text-gray-700 leading-relaxed text-center">
+                Built using modern development tools such as XAMPP for web hosting, PHP and MySQL for the backend, and machine learning frameworks for AI, this system integrates hardware (sensors and RFID) and software to deliver a seamless experience for both patients and healthcare providers.
+                <br><br>
+                Our development team consists of students from [insert your school or department here], each bringing their unique skills in software engineering, artificial intelligence, and health informatics. Through months of research, prototyping, testing, and iteration, we created a working system that demonstrates the potential of AI in real-world medical applications.
+                <br><br>
+                AI-Vital is more than a project — it’s our vision of a smarter, safer, and more connected future for healthcare.
+            </p>
+            <div class="mt-4 mb-4">
+                <span class="text-lg text-gray-700 font-semibold block mb-2">AI-Vital offers a wide range of features, including:</span>
+                <ul class="list-disc list-inside text-left max-w-2xl mx-auto mt-2">
+                    <li><strong>AI-Powered Diagnosis</strong> – An AI model trained to interpret vital signs data and provide instant health assessments.</li>
+                    <li><strong>Real-Time ECG and Blood Pressure Monitoring</strong> – Capturing live readings to detect irregularities early.</li>
+                    <li><strong>SpO₂ and Pulse Tracking</strong> – Accurate measurement of oxygen saturation and pulse rate using a pulse oximeter.</li>
+                    <li><strong>Contactless Temperature Sensing</strong> – Fast and hygienic infrared-based readings.</li>
+                    <li><strong>RFID-Based Patient Identification</strong> – Linking users to their health data in a secure and automated way.</li>
+                    <li><strong>Web-Based Storage and Email Diagnostics</strong> – Health records are stored in a secure online database and summaries are automatically sent via email to the users for accessibility and continuity of care.</li>
+                </ul>
+            </div>
             
             <h2 class="text-2xl font-semibold text-gray-800 mt-8 mb-4 text-center border-b-2 border-green-700 inline-block">Our Developers</h2>
             <ul class="list-none mt-4 space-y-2 text-center">
@@ -145,7 +162,13 @@ include 'header.php'; // Include your navigation/header file
             </ul>
             
             <h2 class="text-2xl font-semibold text-gray-800 mt-8 mb-4 text-center border-b-2 border-green-700 inline-block">Project Information</h2>
-            <p class="text-lg text-gray-700 leading-relaxed text-center">This system utilizes an ESP32 microcontroller, MAX30100 pulse oximeter, MLX90614 temperature sensor, and an RFID module to gather and store health data. The data is processed and displayed on a web-based platform for registered users.</p>
+            <p class="text-lg text-gray-700 leading-relaxed text-center">
+                Built using modern development tools such as XAMPP for web hosting, PHP and MySQL for the backend, and machine learning frameworks for AI, this system integrates hardware (sensors and RFID) and software to deliver a seamless experience for both patients and healthcare providers.
+                <br><br>
+                Our development team consists of students from [insert your school or department here], each bringing their unique skills in software engineering, artificial intelligence, and health informatics. Through months of research, prototyping, testing, and iteration, we created a working system that demonstrates the potential of AI in real-world medical applications.
+                <br><br>
+                AI-Vital is more than a project — it’s our vision of a smarter, safer, and more connected future for healthcare.
+            </p>
         </div>
     </div>
     <footer id="footer" class="footer dark-background">

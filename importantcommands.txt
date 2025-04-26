@@ -19,3 +19,8 @@ http://localhost:8080
 
 
 esptool.py --chip esp32 --port /dev/cu.usbserial-0001 erase_flash
+
+//GITS
+
+git fetch origin
+git branch -r
