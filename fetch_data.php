@@ -18,20 +18,25 @@ if ($response) {
 }
 
 // Initialize default values
-$body_temp = $ecg = $pulse_rate = $spo2 = null;
+$body_temp = $ecg = $pulse_rate = $spo2 = $blood_pressure = null;
 
 if ($data) {
     // Split the response into individual sensor values
-    list($body_temp, $ecg, $pulse_rate, $spo2) = explode(",", $data);
+    $values = explode(",", $data);
+
+    if (count($values) >= 5) {
+        list($body_temp, $ecg, $pulse_rate, $spo2, $blood_pressure) = $values;
+    }
 
     // Debugging: Log the parsed values
-    error_log("Parsed Values - Body Temp: $body_temp, ECG: $ecg, Pulse Rate: $pulse_rate, SpO2: $spo2");
+    error_log("Parsed Values - Body Temp: $body_temp, ECG: $ecg, Pulse Rate: $pulse_rate, SpO2: $spo2, BP: $blood_pressure");
 
-    // Ensure all values are numeric and fallback to 0.00 if invalid
+    // Ensure numeric values where needed
     $body_temp = is_numeric($body_temp) ? floatval($body_temp) : 0.00;
     $ecg = is_numeric($ecg) ? floatval($ecg) : 0.00;
     $pulse_rate = is_numeric($pulse_rate) ? floatval($pulse_rate) : 0.00;
     $spo2 = is_numeric($spo2) ? floatval($spo2) : 0.00;
+    $blood_pressure = $blood_pressure ?: "N/A"; // If not available
 }
 
 // Format the current timestamp
@@ -43,6 +48,7 @@ echo json_encode([
     "ecg" => $ecg,
     "pulse_rate" => $pulse_rate,
     "spo2" => $spo2,
+    "bp" => $blood_pressure, // Use "bp" key for frontend compatibility
     "currentTime" => $currentTime
 ]);
 ?>

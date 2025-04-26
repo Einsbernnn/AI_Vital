@@ -202,17 +202,6 @@ $currentDate = date("F j, Y");
     <script>
         $(document).ready(function(){
             let lastUID = ""; // Store the last fetched UID to avoid unnecessary updates
-            let inactivityTimer;
-
-            function resetInactivityTimer() {
-                clearTimeout(inactivityTimer);
-                inactivityTimer = setTimeout(() => {
-                    location.reload(); // Refresh the page after 12 seconds of inactivity
-                }, 12000); // 12 seconds
-            }
-
-            // Reset timer on any user interaction
-            $(document).on('mousemove keydown click scroll touchstart', resetInactivityTimer);
 
             function fetchUID() {
                 $.get("UIDContainer.php", { cache: "no-store" }, function(data) {
@@ -281,12 +270,10 @@ $currentDate = date("F j, Y");
                                 timerProgressBar: true
                             });
                         }
-                        resetInactivityTimer();
                     })
                     .fail(function() {
                         clearUserDetails(true);
                         showNoMatchAlert();
-                        resetInactivityTimer();
                     });
             }
 
@@ -325,7 +312,6 @@ $currentDate = date("F j, Y");
 
             fetchUID(); // Fetch UID immediately on page load
             setInterval(fetchUID, 300); // Fetch UID every 300 milliseconds
-            resetInactivityTimer(); // Start inactivity timer on load
         });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
