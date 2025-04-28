@@ -826,6 +826,9 @@ $currentDate = date("F j, Y");
                 </table>
                 <div class="mt-4" id="myResultsButton" style="display: none;">
                     <a href="my_results.php" id="myResultsLink" class="bg-green-500 text-white px-16 py-12 rounded-lg text-4xl font-bold hover:bg-green-800 block w-full h-40 flex items-center justify-center">TAP ID</a>
+                    <div class="flex justify-center mt-2 text-green-600 text-5xl" id="myResultsIcon">
+                        <i class="bi bi-card-checklist"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -957,12 +960,25 @@ $currentDate = date("F j, Y");
                 // Show or hide the "My Results" button based on UID
                 const myResultsButton = document.getElementById("myResultsButton");
                 const myResultsLink = document.getElementById("myResultsLink");
+                const myResultsIcon = document.getElementById("myResultsIcon");
                 if (uid) {
                     myResultsButton.style.display = "block";
                     myResultsLink.textContent = "My Results";
+                    myResultsLink.classList.remove("pointer-events-none", "opacity-60");
+                    myResultsLink.classList.add("opacity-100");
+                    myResultsLink.href = "my_results.php";
+                    myResultsLink.setAttribute("tabindex", "0");
+                    // Change icon to checklist
+                    myResultsIcon.innerHTML = '<i class="bi bi-card-checklist"></i>';
                 } else {
                     myResultsButton.style.display = "block";
                     myResultsLink.textContent = "TAP ID";
+                    myResultsLink.classList.add("pointer-events-none", "opacity-60");
+                    myResultsLink.classList.remove("opacity-100");
+                    myResultsLink.href = "#";
+                    myResultsLink.setAttribute("tabindex", "-1");
+                    // Change icon to broadcast
+                    myResultsIcon.innerHTML = '<i class="bi bi-broadcast"></i>';
                 }
 
                 if (uid) {
