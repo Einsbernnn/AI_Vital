@@ -1,12 +1,78 @@
 <?php
-// Clear UID on page load
-$Write = "<?php $" . "UIDresult=''; " . "echo $" . "UIDresult;" . " ?>";
-file_put_contents('UIDContainer.php', $Write);
-
 // Get current date for fallback purposes
 $currentDate = date("F j, Y");
-?>
 
+// Initialize AI responses array
+$ai_responses = [];
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
+    $userInput = trim($_POST['consultInput']);
+
+    $prompts = [
+        "Thank you for sharing your symptoms. Based on your input: \"$userInput\", we recommend monitoring your condition and seeing a healthcare professional if it worsens.",
+        "We’ve received your description: \"$userInput\". It seems like you might be experiencing symptoms related to [condition]. We suggest further investigation and consultation with a doctor.",
+        "Thank you for your input: \"$userInput\". We understand your symptoms are [severity]. Please note that our AI is learning your data and may offer insights as it analyzes more cases.",
+        "We’ve logged your symptoms: \"$userInput\". It’s important to rest and stay hydrated. If symptoms persist or worsen, please consult a medical professional.",
+        "Your symptoms have been noted: \"$userInput\". You may want to track them over the next few days and see if they follow any particular pattern. Let us know if you experience any changes.",
+        "Thank you for your description: \"$userInput\". We recommend watching for additional symptoms. If you have other concerns, feel free to update us at any time.",
+        "Your input has been received: \"$userInput\". Based on your symptoms, it’s possible that [condition] could be a factor. Please monitor your condition and consult a healthcare provider if necessary.",
+        "We’ve logged your symptoms: \"$userInput\". It’s important to track how they evolve. If there’s a drastic change, please seek medical attention.",
+        "Thank you for providing your health details: \"$userInput\". Based on our system’s analysis, we recommend further action based on your specific condition. Please consult with a specialist if needed.",
+        "Your health information has been successfully recorded: \"$userInput\". We’ll continue learning and provide more tailored advice as more data comes in. Stay safe and don’t hesitate to ask for further help!"
+    ];
+
+    $cohere_url = 'https://api.cohere.com/v2/chat';
+    $api_key = 'F3LM9ycUnenzInMB2m94RWdRwHuQLnTH7cT2f5qB';
+    $model = 'command-a-03-2025';
+
+    foreach ($prompts as $prompt) {
+        $payload = [
+            'model' => $model,
+            'messages' => [
+                ['role' => 'user', 'content' => $prompt]
+            ]
+        ];
+
+        $ch = curl_init($cohere_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'accept: application/json',
+            'content-type: application/json',
+            'Authorization: bearer ' . $api_key
+        ]);
+
+        $result = curl_exec($ch);
+        if ($result === false) {
+            $ai_responses[] = "Error: " . curl_error($ch);
+        } else {
+            $data = json_decode($result, true);
+            file_put_contents('cohere_debug.log', $result . PHP_EOL, FILE_APPEND);
+
+            // Handle Cohere's nested response
+            if (isset($data['text'])) {
+                $ai_responses[] = $data['text'];
+            } elseif (isset($data['reply'])) {
+                $ai_responses[] = $data['reply'];
+            } elseif (isset($data['message']['content'][0]['text'])) {
+                $ai_responses[] = $data['message']['content'][0]['text'];
+            } elseif (isset($data['content'][0]['text'])) {
+                $ai_responses[] = $data['content'][0]['text'];
+            } elseif (isset($data['message'])) {
+                $msg = is_array($data['message']) ? json_encode($data['message']) : $data['message'];
+                $ai_responses[] = "API Error: " . $msg;
+            } elseif (isset($data['error'])) {
+                $err = is_array($data['error']) ? json_encode($data['error']) : $data['error'];
+                $ai_responses[] = "API Error: " . $err;
+            } else {
+                $ai_responses[] = "No response from AI. Raw: " . $result;
+            }
+        }
+        curl_close($ch);
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -200,119 +266,48 @@ $currentDate = date("F j, Y");
     </style>
     <script src="jquery.min.js"></script>
     <script>
-        $(document).ready(function(){
-            let lastUID = ""; // Store the last fetched UID to avoid unnecessary updates
-
-            function fetchUID() {
-                $.get("UIDContainer.php", { cache: "no-store" }, function(data) {
-                    const uid = data.trim();
-                    console.log("Fetched UID:", uid);
-
-                    // Update the UI only if the UID has changed
-                    if (uid && uid !== lastUID) {
-                        lastUID = uid; // Update the lastUID variable
-                        $("#uid").text(uid);
-                        $("#name").text("Loading...");
-                        $("#email").text("Loading...");
-                        $("#age").text("Loading...");
-                        $("#weight").text("Loading...");
-                        $("#height").text("Loading...");
-                        $("#gender").text("Loading...");
-
-                        // Fetch user details based on the new UID
-                        fetchUserDetails(uid);
-                    } else if (!uid) {
-                        // Clear the UI if no UID is detected
-                        lastUID = ""; // Reset the lastUID variable
-                        clearUserDetails();
-                    }
-                });
-            }
-
-            function fetchUserDetails(uid) {
-                $.get(`handle_rfid.php?uid=${encodeURIComponent(uid)}`, { cache: "no-store" })
-                    .done(function(data) {
-                        let userData;
-                        try {
-                            userData = typeof data === "object" ? data : JSON.parse(data);
-                        } catch (error) {
-                            userData = {};
-                        }
-                        console.log("User data received:", userData);
-
-                        if (userData && userData.error === 'no_match') {
-                            clearUserDetails(true); // true = clear UID after alert
-                            showNoMatchAlert();
-                        } else if (userData && !userData.error) {
-                            // Valid user data found - update UI
-                            $("#name").text(userData.name || "N/A");
-                            $("#email").text(userData.email || "N/A");
-                            $("#age").text(userData.age ? `${userData.age} years old` : "N/A");
-                            $("#weight").text(userData.weight ? `${userData.weight} kg` : "N/A");
-                            $("#height").text(userData.height ? `${userData.height} cm` : "N/A");
-                            $("#gender").text(userData.gender || "N/A");
-
-                            // Populate hidden email form fields
-                            $("#emailUid").val(uid);
-                            $("#emailName").val(userData.name || "N/A");
-                            $("#emailEmail").val(userData.email || "N/A");
-                            $("#emailAge").val(userData.age || "N/A");
-                            $("#emailWeight").val(userData.weight || "N/A");
-                            $("#emailHeight").val(userData.height || "N/A");
-                            $("#emailGender").val(userData.gender || "N/A");
-
-                            // Show welcome SweetAlert
-                            Swal.fire({
-                                icon: 'success',
-                                title: `Welcome ${userData.name || "User"}!`,
-                                showConfirmButton: false,
-                                timer: 2000,
-                                timerProgressBar: true
-                            });
-                        }
-                    })
-                    .fail(function() {
-                        clearUserDetails(true);
-                        showNoMatchAlert();
-                    });
-            }
-
-            function showNoMatchAlert() {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'No Match Found',
-                    text: 'Please Register Your Card First To Continue Using AI Vital.',
-                    confirmButtonText: 'Okay',
-                    confirmButtonColor: '#3085d6',
-                    timer: 5000, // Auto-dismiss after 5 seconds
-                    timerProgressBar: true,
-                    didClose: () => clearUserDetails(true) // Clear UID after alert timer ends
-                });
-            }
-
-            function clearUserDetails(clearUidFile = false) {
-                // Clear the UI
-                $("#uid").text("N/A");
-                $("#name").text("N/A");
-                $("#email").text("N/A");
-                $("#age").text("N/A");
-                $("#weight").text("N/A");
-                $("#height").text("N/A");
-                $("#gender").text("N/A");
-
-                // Clear the UID in UIDContainer.php if requested
-                if (clearUidFile) {
-                    $.post("UIDContainer.php", { clear: true }, function() {
-                        console.log("UID cleared in UIDContainer.php");
-                    }).fail(function() {
-                        console.error("Failed to clear UID in UIDContainer.php");
-                    });
+    $(document).ready(function() {
+        function updateUserDetails() {
+            $.get('UIDContainer.php', function(uid) {
+                uid = uid.trim();
+                if (!uid) {
+                    // No UID, show N/A
+                    $("#uid").text("N/A");
+                    $("#name").text("N/A");
+                    $("#email").text("N/A");
+                    $("#age").text("N/A");
+                    $("#weight").text("N/A");
+                    $("#height").text("N/A");
+                    $("#gender").text("N/A");
+                    $("#myResultsButton").hide();
+                    return;
                 }
-            }
-
-            fetchUID(); // Fetch UID immediately on page load
-            setInterval(fetchUID, 300); // Fetch UID every 300 milliseconds
-        });
+                $("#uid").text(uid);
+                // Fetch user details from handle_rfid.php
+                $.get('handle_rfid.php', { uid: uid }, function(data) {
+                    if (data && !data.error) {
+                        $("#name").text(data.name || "N/A");
+                        $("#email").text(data.email || "N/A");
+                        $("#age").text(data.age ? data.age + " years old" : "N/A");
+                        $("#weight").text(data.weight ? data.weight + " kg" : "N/A");
+                        $("#height").text(data.height ? data.height + " cm" : "N/A");
+                        $("#gender").text(data.gender || "N/A");
+                        $("#myResultsButton").show();
+                    } else {
+                        $("#name").text("N/A");
+                        $("#email").text("N/A");
+                        $("#age").text("N/A");
+                        $("#weight").text("N/A");
+                        $("#height").text("N/A");
+                        $("#gender").text("N/A");
+                        $("#myResultsButton").hide();
+                    }
+                }, 'json');
+            });
+        }
+        updateUserDetails();
+        setInterval(updateUserDetails, 1000); // Update every second to reflect live reading.php
+    });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
@@ -543,261 +538,24 @@ $currentDate = date("F j, Y");
     </header>
 
         <div class="container mx-auto px-4 py-8 flex space-x-8">
-            <!-- Real-Time Sensor Readings Panel -->
-            <div class="readings-panel flex-grow">
-                <h3>Real-Time Vital Readings</h3>
-                <div class="grid grid-cols-2 gap-4 mt-4">
-                    <div class="grid-item red">
-                        <p class="label">Body Temperature</p>
-                        <p class="value" id="temp">0.00 °C</p>
+            <!-- Input box and submit button panel -->
+            <div class="readings-panel flex-grow flex flex-col items-center justify-center">
+                <form action="" method="post" class="w-full flex flex-col items-center">
+                    <label for="consultInput" class="block text-2xl font-bold text-green-900 mb-4">Describe your symptoms or concerns:</label>
+                    <textarea id="consultInput" name="consultInput" rows="10" class="w-full max-w-2xl p-4 border-2 border-green-400 rounded-lg text-lg mb-6" placeholder="Type your message here..."><?php echo isset($_POST['consultInput']) ? htmlspecialchars($_POST['consultInput']) : ''; ?></textarea>
+                    <div class="flex space-x-4">
+                        <button type="submit" class="bg-green-500 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-green-700 transition">Submit</button>
+                        <a href="live reading.php" class="bg-gray-400 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-gray-600 transition flex items-center justify-center">Back</a>
                     </div>
-                    <div class="grid-item yellow">
-                        <p class="label">ECG</p>
-                        <p class="value" id="ecg">0.00</p>
-                    </div>
-                    <div class="grid-item green">
-                        <p class="label">Pulse Rate</p>
-                        <p class="value" id="pulse_rate">0 BPM</p>
-                    </div>
-                    <div class="grid-item blue">
-                        <p class="label">SpO₂</p>
-                        <p class="value" id="spo2">0.00 %</p>
-                    </div>
-                    <div class="grid-item purple col-span-2">
-                        <p class="label">Blood Pressure</p>
-                        <p class="value" id="bp">N/A mmHg</p>
-                    </div>
-                </div>
-                <div class="mt-4 flex justify-center space-x-4">
-                    <button id="quickSaveButton" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Quick Save</button>
-                    <form action="AI_send.php" method="get" id="sendToMailForm">
-                        <input type="hidden" name="uid" id="emailUid">
-                        <input type="hidden" name="name" id="emailName">
-                        <input type="hidden" name="email" id="emailEmail">
-                        <input type="hidden" name="age" id="emailAge">
-                        <input type="hidden" name="weight" id="emailWeight">
-                        <input type="hidden" name="height" id="emailHeight">
-                        <input type="hidden" name="gender" id="emailGender">
-                        <input type="hidden" name="body_temperature" id="emailBodyTemp">
-                        <input type="hidden" name="ecg" id="emailEcg">
-                        <input type="hidden" name="pulse_rate" id="emailPulseRate">
-                        <input type="hidden" name="spo2" id="emailSpo2">
-                        <input type="hidden" name="blood_pressure" id="emailBp">
-                        <button type="submit" id="diagnosisButton" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Get AI Diagnosis</button>
-                    </form>
-                    <button id="consultButton" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Consult</button>
-                </div>
-                <script>
-                    document.getElementById("diagnosisButton").addEventListener("click", function (event) {
-                        const uid = document.getElementById("uid").innerText.trim();
-                        const temp = document.getElementById("temp").innerText.trim();
-                        const ecg = document.getElementById("ecg").innerText.trim();
-                        const pulseRate = document.getElementById("pulse_rate").innerText.trim();
-                        const spo2 = document.getElementById("spo2").innerText.trim();
-                        const bp = document.getElementById("bp").innerText.trim();
-
-                        // Collect all invalids
-                        let invalids = [];
-
-                        if (!uid || uid === "N/A") {
-                            event.preventDefault();
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'No valid UID detected',
-                                text: 'Please scan your RFID card.',
-                                confirmButtonText: 'Okay',
-                                confirmButtonColor: '#3085d6',
-                                timer: 3500,
-                                timerProgressBar: true
-                            });
-                            return;
-                        }
-                        if (!temp || temp === "0.00 °C" || temp === "N/A °C") {
-                            invalids.push("Body Temperature");
-                        }
-                        if (!ecg || ecg === "0.00" || ecg === "N/A") {
-                            invalids.push("ECG");
-                        }
-                        if (!pulseRate || pulseRate === "0 BPM" || pulseRate === "N/A BPM") {
-                            invalids.push("Pulse Rate");
-                        }
-                        if (!spo2 || spo2 === "0.00 %" || spo2 === "N/A %") {
-                            invalids.push("SpO₂");
-                        }
-                        if (!bp || bp === "N/A mmHg") {
-                            invalids.push("Blood Pressure");
-                        }
-
-                        if (invalids.length > 0) {
-                            event.preventDefault();
-                            let msg = "";
-                            if (invalids.length === 1) {
-                                // Specific instructions for each
-                                switch (invalids[0]) {
-                                    case "Body Temperature":
-                                        msg = "Please retry. Body temperature not detected.";
-                                        break;
-                                    case "ECG":
-                                        msg = "Please attach the ECG pads.";
-                                        break;
-                                    case "Pulse Rate":
-                                    case "SpO₂":
-                                        msg = "Please place your finger into the sensor.";
-                                        break;
-                                    case "Blood Pressure":
-                                        msg = "Please press the BP button and attach the cuff properly.";
-                                        break;
-                                }
-                            } else {
-                                msg = "The following readings are missing or zero: " + invalids.join(", ") + ". Please check all sensors and try again.";
-                            }
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Invalid or Missing Readings',
-                                text: msg,
-                                confirmButtonText: 'Okay',
-                                confirmButtonColor: '#3085d6',
-                                timer: 4000,
-                                timerProgressBar: true
-                            });
-                            return;
-                        }
-                    });
-
-                    document.getElementById("quickSaveButton").addEventListener("click", async function () {
-                        try {
-                            const uid = document.getElementById("uid").innerText.trim();
-                            const name = document.getElementById("name").innerText.trim();
-                            const email = document.getElementById("email").innerText.trim();
-                            const gender = document.getElementById("gender").innerText.trim();
-                            const age = document.getElementById("age").innerText.trim();
-                            const height = document.getElementById("height").innerText.trim();
-                            const weight = document.getElementById("weight").innerText.trim();
-                            const bodyTemp = document.getElementById("temp").innerText.replace(" °C", "").trim();
-                            const ecg = document.getElementById("ecg").innerText.trim();
-                            const pulseRate = document.getElementById("pulse_rate").innerText.replace(" BPM", "").trim();
-                            const spo2 = document.getElementById("spo2").innerText.replace(" %", "").trim();
-                            const bp = document.getElementById("bp").innerText.replace(" mmHg", "").trim();
-
-                            if (!uid || uid === "N/A") {
-                                Swal.fire({
-                                    icon: 'warning',
-                                    title: 'No valid UID detected',
-                                    text: 'Please scan your RFID card.',
-                                    confirmButtonText: 'Okay',
-                                    confirmButtonColor: '#3085d6',
-                                    timer: 3000, // Auto-dismiss after 3 seconds
-                                    timerProgressBar: true,
-                                    didOpen: () => {
-                                        const progressBar = Swal.getHtmlContainer().querySelector('.swal2-timer-progress-bar');
-                                        progressBar.style.animation = 'none'; // Reset animation
-                                        progressBar.style.transformOrigin = 'left'; // Set origin to left
-                                    }
-                                });
-                                return;
-                            }
-
-                            const response = await fetch("store_reading.php", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({
-                                    uid,
-                                    name,
-                                    email,
-                                    gender,
-                                    age,
-                                    height,
-                                    weight,
-                                    body_temperature: bodyTemp,
-                                    ecg,
-                                    pulse_rate: pulseRate,
-                                    spo2,
-                                    blood_pressure: bp,
-                                }),
-                            });
-
-                            const result = await response.json();
-                            if (result.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Success',
-                                    text: 'Reading successfully stored!',
-                                    confirmButtonText: 'Okay',
-                                    confirmButtonColor: '#28a745',
-                                    timer: 3000, // Auto-dismiss after 3 seconds
-                                    timerProgressBar: true,
-                                    didOpen: () => {
-                                        const progressBar = Swal.getHtmlContainer().querySelector('.swal2-timer-progress-bar');
-                                        progressBar.style.animation = 'none'; // Reset animation
-                                        progressBar.style.transformOrigin = 'left'; // Set origin to left
-                                    }
-                                }).then(() => {
-                                    window.location.href = "results2.php"; // Redirect to results2.php
-                                });
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'Failed to store reading. Please try again.',
-                                    confirmButtonText: 'Okay',
-                                    confirmButtonColor: '#d33',
-                                    timer: 3000, // Auto-dismiss after 3 seconds
-                                    timerProgressBar: true,
-                                    didOpen: () => {
-                                        const progressBar = Swal.getHtmlContainer().querySelector('.swal2-timer-progress-bar');
-                                        progressBar.style.animation = 'none'; // Reset animation
-                                        progressBar.style.transformOrigin = 'left'; // Set origin to left
-                                    }
-                                });
-                            }
-                        } catch (error) {
-                            console.error("Error storing reading:", error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'An error occurred while storing the reading.',
-                                confirmButtonText: 'Okay',
-                                confirmButtonColor: '#d33',
-                                timer: 3000, // Auto-dismiss after 3 seconds
-                                timerProgressBar: true,
-                                didOpen: () => {
-                                    const progressBar = Swal.getHtmlContainer().querySelector('.swal2-timer-progress-bar');
-                                    progressBar.style.animation = 'none'; // Reset animation
-                                    progressBar.style.transformOrigin = 'left'; // Set origin to left
-                                }
-                            });
-                        }
-                    });
-
-                    // Add event listener for Consult button
-                    document.getElementById("consultButton").addEventListener("click", function () {
-                        Swal.fire({
-                            icon: 'question',
-                            title: 'Consult Feature',
-                            text: 'Are you sure you want to continue using the consult feature? This process may take some time, as our AI will learn from your current situation, including any symptoms or conditions you are experiencing.',
-                            showCancelButton: true,
-                            confirmButtonText: 'Yes',
-                            cancelButtonText: 'Cancel',
-                            confirmButtonColor: '#3085d6',
-                            cancelButtonColor: '#d33'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = "consult.php";
-                            }
-                        });
-                    });
-                </script>
+                </form>
             </div>
-
             <!-- User Details Panel -->
             <div class="user-panel w-1/3">
                 <h3>User Details</h3>
                 <table>
                     <tr>
                         <td>UID:</td>
-                        <td id="uid">Loading...</td>
+                        <td id="uid">N/A</td>
                     </tr>
                     <tr>
                         <td>Name:</td>
@@ -825,10 +583,35 @@ $currentDate = date("F j, Y");
                     </tr>
                 </table>
                 <div class="mt-4" id="myResultsButton" style="display: none;">
-                    <a href="my_results.php" id="myResultsLink" class="bg-green-500 text-white px-16 py-12 rounded-lg text-4xl font-bold hover:bg-green-800 block w-full h-40 flex items-center justify-center">TAP ID</a>
+                    <a href="my_results.php" class="bg-green-500 text-white px-16 py-12 rounded-lg text-4xl font-bold hover:bg-green-800 block w-full h-40 flex items-center justify-center">My Results</a>
                 </div>
             </div>
         </div>
+        <!-- AI Consultation Results in a separate container below the main flex container -->
+        <?php if (!empty($ai_responses)): ?>
+        <div id="ai-result" class="container mx-auto px-4 mt-10 mb-10">
+            <div class="w-full max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-2xl font-bold text-green-800 mb-4">AI Consultation Results</h3>
+                <ol class="list-decimal pl-6 space-y-2">
+                    <?php foreach ($ai_responses as $idx => $resp): ?>
+                        <li>
+                            <strong>Prompt <?= $idx + 1 ?>:</strong>
+                            <pre class="whitespace-pre-wrap break-words"><?= htmlspecialchars($resp) ?></pre>
+                        </li>
+                    <?php endforeach; ?>
+                </ol>
+            </div>
+        </div>
+        <script>
+            // Auto-scroll to the result after submission
+            window.onload = function() {
+                var result = document.getElementById('ai-result');
+                if (result) {
+                    result.scrollIntoView({ behavior: 'smooth' });
+                }
+            };
+        </script>
+        <?php endif; ?>
     </div>
 
     <!-- Scrolling Marquee -->
@@ -905,7 +688,7 @@ $currentDate = date("F j, Y");
             <div class="container d-flex flex-column flex-lg-row justify-content-center justify-content-lg-between align-items-center">
                 <div class="d-flex flex-column align-items-center align-items-lg-start">
                     <div>
-                        © Copyright <strong><span>AI-Vital</span></strong>. All Rights Reserved
+                        © Copyright <strong><span>AI-VITAL</span></strong>. All Rights Reserved
                     </div>
                     <div class="credits">
                         Designed by Einsbern</a>
@@ -924,7 +707,7 @@ $currentDate = date("F j, Y");
     <script>
         async function fetchSensorData() {
             try {
-                const response = await fetch("fetch_sample.php"); // Change to fetch_data.php for ESP data change to .sample
+                const response = await fetch("fetch_data.php"); // Change to fetch_data.php for ESP data change to .sample
                 const data = await response.json();
 
                 // Debugging: Log the fetched data
@@ -956,13 +739,10 @@ $currentDate = date("F j, Y");
 
                 // Show or hide the "My Results" button based on UID
                 const myResultsButton = document.getElementById("myResultsButton");
-                const myResultsLink = document.getElementById("myResultsLink");
                 if (uid) {
                     myResultsButton.style.display = "block";
-                    myResultsLink.textContent = "My Results";
                 } else {
-                    myResultsButton.style.display = "block";
-                    myResultsLink.textContent = "TAP ID";
+                    myResultsButton.style.display = "none";
                 }
 
                 if (uid) {
@@ -986,14 +766,6 @@ $currentDate = date("F j, Y");
                         document.getElementById("emailHeight").value = userData.height || "N/A";
                         document.getElementById("emailGender").value = userData.gender || "N/A";
                     }
-                } else {
-                    // Set all fields to N/A if no UID
-                    document.getElementById("name").innerText = "N/A";
-                    document.getElementById("email").innerText = "N/A";
-                    document.getElementById("age").innerText = "N/A";
-                    document.getElementById("weight").innerText = "N/A";
-                    document.getElementById("height").innerText = "N/A";
-                    document.getElementById("gender").innerText = "N/A";
                 }
             } catch (error) {
                 console.error("Error fetching UID or user details:", error);

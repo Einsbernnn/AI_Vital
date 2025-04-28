@@ -49,9 +49,11 @@ try {
     Database::disconnect();
 }
 
-// Function to send request to LLaMA 3 locally
+// Function to send request to DeepSeek AI locally
 function getAiDiagnosis($body_temp, $ecg, $pulse_rate, $spo2, $blood_pressure, $height, $weight) {
-    $endpoint = "http://localhost:11434/api/generate"; // Ollama API
+    $endpoint = "https://api.cohere.com/v2/chat";
+    $api_key = "F3LM9ycUnenzInMB2m94RWdRwHuQLnTH7cT2f5qB";
+    $model = "command-a-03-2025";
 
     $prompt = "You are a highly skilled virtual nurse with expertise in real-time patient diagnostics. 
     Your goal is to analyze a user's vital signs, determine their health status, and provide recommendations.
@@ -77,24 +79,47 @@ function getAiDiagnosis($body_temp, $ecg, $pulse_rate, $spo2, $blood_pressure, $
     9. Always state that the diagnosis is based on the data provided and is not 100% accurate. Advise seeking medical attention if needed.
     10. Always remind the user that the school nurse is available to assist them.";
 
-    $data = [
-        "model" => "llama3",
-        "prompt" => $prompt,
-        "stream" => false
+    $payload = [
+        "model" => $model,
+        "messages" => [
+            ["role" => "user", "content" => $prompt]
+        ]
     ];
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $endpoint);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: application/json"]);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "accept: application/json",
+        "content-type: application/json",
+        "Authorization: bearer $api_key"
+    ]);
 
     $response = curl_exec($ch);
     curl_close($ch);
 
     $response_data = json_decode($response, true);
-    return $response_data['response'] ?? "Sorry, I couldn't process your request.";
+
+    // Handle Cohere's nested response
+    if (isset($response_data['text'])) {
+        return $response_data['text'];
+    } elseif (isset($response_data['reply'])) {
+        return $response_data['reply'];
+    } elseif (isset($response_data['message']['content'][0]['text'])) {
+        return $response_data['message']['content'][0]['text'];
+    } elseif (isset($response_data['content'][0]['text'])) {
+        return $response_data['content'][0]['text'];
+    } elseif (isset($response_data['message'])) {
+        $msg = is_array($response_data['message']) ? json_encode($response_data['message']) : $response_data['message'];
+        return "API Error: " . $msg;
+    } elseif (isset($response_data['error'])) {
+        $err = is_array($response_data['error']) ? json_encode($response_data['error']) : $response_data['error'];
+        return "API Error: " . $err;
+    } else {
+        return "No response from AI. Raw: " . $response;
+    }
 }
 
 // Process form submission
