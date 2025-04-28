@@ -318,22 +318,77 @@ $currentDate = date("F j, Y");
     <script>
         document.getElementById("diagnosisButton").addEventListener("click", function (event) {
             const uid = document.getElementById("uid").innerText.trim();
+            const temp = document.getElementById("temp").innerText.trim();
+            const ecg = document.getElementById("ecg").innerText.trim();
+            const pulseRate = document.getElementById("pulse_rate").innerText.trim();
+            const spo2 = document.getElementById("spo2").innerText.trim();
+            const bp = document.getElementById("bp").innerText.trim();
+
+            // Collect all invalids
+            let invalids = [];
+
             if (!uid || uid === "N/A") {
-                event.preventDefault(); // Prevent form submission
+                event.preventDefault();
                 Swal.fire({
                     icon: 'warning',
                     title: 'No valid UID detected',
                     text: 'Please scan your RFID card.',
                     confirmButtonText: 'Okay',
                     confirmButtonColor: '#3085d6',
-                    timer: 3000, // Auto-dismiss after 3 seconds
-                    timerProgressBar: true,
-                    didOpen: () => {
-                        const progressBar = Swal.getHtmlContainer().querySelector('.swal2-timer-progress-bar');
-                        progressBar.style.animation = 'none'; // Reset animation
-                        progressBar.style.transformOrigin = 'left'; // Set origin to left
-                    }
+                    timer: 3500,
+                    timerProgressBar: true
                 });
+                return;
+            }
+            if (!temp || temp === "0.00 °C" || temp === "N/A °C") {
+                invalids.push("Body Temperature");
+            }
+            if (!ecg || ecg === "0.00" || ecg === "N/A") {
+                invalids.push("ECG");
+            }
+            if (!pulseRate || pulseRate === "0 BPM" || pulseRate === "N/A BPM") {
+                invalids.push("Pulse Rate");
+            }
+            if (!spo2 || spo2 === "0.00 %" || spo2 === "N/A %") {
+                invalids.push("SpO₂");
+            }
+            if (!bp || bp === "N/A mmHg") {
+                invalids.push("Blood Pressure");
+            }
+
+            if (invalids.length > 0) {
+                event.preventDefault();
+                let msg = "";
+                if (invalids.length === 1) {
+                    // Specific instructions for each
+                    switch (invalids[0]) {
+                        case "Body Temperature":
+                            msg = "Please retry. Body temperature not detected.";
+                            break;
+                        case "ECG":
+                            msg = "Please attach the ECG pads.";
+                            break;
+                        case "Pulse Rate":
+                        case "SpO₂":
+                            msg = "Please place your finger into the sensor.";
+                            break;
+                        case "Blood Pressure":
+                            msg = "Please press the BP button and attach the cuff properly.";
+                            break;
+                    }
+                } else {
+                    msg = "The following readings are missing or zero: " + invalids.join(", ") + ". Please check all sensors and try again.";
+                }
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invalid or Missing Readings',
+                    text: msg,
+                    confirmButtonText: 'Okay',
+                    confirmButtonColor: '#3085d6',
+                    timer: 4000,
+                    timerProgressBar: true
+                });
+                return;
             }
         });
 
@@ -516,22 +571,77 @@ $currentDate = date("F j, Y");
                 <script>
                     document.getElementById("diagnosisButton").addEventListener("click", function (event) {
                         const uid = document.getElementById("uid").innerText.trim();
+                        const temp = document.getElementById("temp").innerText.trim();
+                        const ecg = document.getElementById("ecg").innerText.trim();
+                        const pulseRate = document.getElementById("pulse_rate").innerText.trim();
+                        const spo2 = document.getElementById("spo2").innerText.trim();
+                        const bp = document.getElementById("bp").innerText.trim();
+
+                        // Collect all invalids
+                        let invalids = [];
+
                         if (!uid || uid === "N/A") {
-                            event.preventDefault(); // Prevent form submission
+                            event.preventDefault();
                             Swal.fire({
                                 icon: 'warning',
                                 title: 'No valid UID detected',
                                 text: 'Please scan your RFID card.',
                                 confirmButtonText: 'Okay',
                                 confirmButtonColor: '#3085d6',
-                                timer: 3000, // Auto-dismiss after 3 seconds
-                                timerProgressBar: true,
-                                didOpen: () => {
-                                    const progressBar = Swal.getHtmlContainer().querySelector('.swal2-timer-progress-bar');
-                                    progressBar.style.animation = 'none'; // Reset animation
-                                    progressBar.style.transformOrigin = 'left'; // Set origin to left
-                                }
+                                timer: 3500,
+                                timerProgressBar: true
                             });
+                            return;
+                        }
+                        if (!temp || temp === "0.00 °C" || temp === "N/A °C") {
+                            invalids.push("Body Temperature");
+                        }
+                        if (!ecg || ecg === "0.00" || ecg === "N/A") {
+                            invalids.push("ECG");
+                        }
+                        if (!pulseRate || pulseRate === "0 BPM" || pulseRate === "N/A BPM") {
+                            invalids.push("Pulse Rate");
+                        }
+                        if (!spo2 || spo2 === "0.00 %" || spo2 === "N/A %") {
+                            invalids.push("SpO₂");
+                        }
+                        if (!bp || bp === "N/A mmHg") {
+                            invalids.push("Blood Pressure");
+                        }
+
+                        if (invalids.length > 0) {
+                            event.preventDefault();
+                            let msg = "";
+                            if (invalids.length === 1) {
+                                // Specific instructions for each
+                                switch (invalids[0]) {
+                                    case "Body Temperature":
+                                        msg = "Please retry. Body temperature not detected.";
+                                        break;
+                                    case "ECG":
+                                        msg = "Please attach the ECG pads.";
+                                        break;
+                                    case "Pulse Rate":
+                                    case "SpO₂":
+                                        msg = "Please place your finger into the sensor.";
+                                        break;
+                                    case "Blood Pressure":
+                                        msg = "Please press the BP button and attach the cuff properly.";
+                                        break;
+                                }
+                            } else {
+                                msg = "The following readings are missing or zero: " + invalids.join(", ") + ". Please check all sensors and try again.";
+                            }
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Invalid or Missing Readings',
+                                text: msg,
+                                confirmButtonText: 'Okay',
+                                confirmButtonColor: '#3085d6',
+                                timer: 4000,
+                                timerProgressBar: true
+                            });
+                            return;
                         }
                     });
 

@@ -2,10 +2,10 @@
 header('Content-Type: application/json');
 
 echo json_encode([
-    "body_temp" => 38.0,
+    "body_temp" => 32,
     "ecg" => 90,
-    "pulse_rate" => 90,
-    "spo2" => 100,
-    "bp" => "140/90"
+    "pulse_rate" => 95,
+    "spo2" => 90,
+    "bp" => "120/80", // add mmHG when sampling
 ]);
 ?>
