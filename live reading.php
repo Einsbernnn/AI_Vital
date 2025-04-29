@@ -197,6 +197,89 @@ $currentDate = date("F j, Y");
                 transform: translateX(-100%);
             }
         }
+        .diagnosis-modal-content {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+            max-width: 700px;
+            width: 96vw;
+            min-width: 340px;
+            min-height: 260px;
+            padding: 36px 38px 28px 38px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            /* Rectangle landscape tab */
+            border-radius: 18px;
+        }
+        #diagnosisModal {
+            background: rgba(0,0,0,0.25) !important;
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            align-items: center; justify-content: center;
+        }
+        .diagnosis-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px;
+            white-space: nowrap;
+        }
+        .diagnosis-modal-header .bi-robot {
+            font-size: 2.8rem;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+        .diagnosis-modal-title {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #065f46;
+            line-height: 1.1;
+            flex-shrink: 1;
+        }
+        .diagnosis-modal-content .sensor-indicators {
+            display: flex;
+            justify-content: flex-start;
+            gap: 32px;
+            margin-bottom: 10px;
+            flex-wrap: nowrap;
+            width: 100%;
+            overflow-x: auto;
+        }
+        .diagnosis-modal-content .sensor-indicators > div {
+            min-width: 90px;
+            max-width: 120px;
+        }
+        @media (max-width: 900px) {
+            .diagnosis-modal-content {
+                max-width: 99vw;
+                padding: 18px 2vw 18px 2vw;
+            }
+            .diagnosis-modal-content .sensor-indicators {
+                gap: 16px;
+            }
+        }
+        @media (max-width: 600px) {
+            .diagnosis-modal-content {
+                max-width: 99vw;
+                min-width: 0;
+                padding: 10px 1vw 10px 1vw;
+            }
+            .diagnosis-modal-header .diagnosis-modal-title {
+                font-size: 1.2rem;
+            }
+            .diagnosis-modal-header .bi-robot {
+                font-size: 1.7rem;
+            }
+            .diagnosis-modal-content .sensor-indicators > div {
+                min-width: 70px;
+                max-width: 100px;
+            }
+        }
     </style>
     <script src="jquery.min.js"></script>
     <script>
@@ -324,11 +407,12 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
     const spo2 = document.getElementById("spo2").innerText.trim();
     const bp = document.getElementById("bp").innerText.trim();
 
-    // Collect all invalids
-    let invalids = [];
-
+    // Only block and SweetAlert for UID issues here
     if (!uid || uid === "N/A") {
         event.preventDefault();
+        // Hide the modal if it's visible before showing the alert
+        var modal = document.getElementById("diagnosisModal");
+        if (modal) modal.style.display = "none";
         Swal.fire({
             icon: 'warning',
             title: 'No valid UID detected',
@@ -340,28 +424,38 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
         });
         return;
     }
-    if (!temp || temp === "0.00 °C" || temp === "N/A °C") {
-        invalids.push("Body Temperature");
-    }
-    if (!ecg || ecg === "0.00" || ecg === "N/A") {
-        invalids.push("ECG");
-    }
-    if (!pulseRate || pulseRate === "0 BPM" || pulseRate === "N/A BPM") {
-        invalids.push("Pulse Rate");
-    }
-    if (!spo2 || spo2 === "0.00 %" || spo2 === "N/A %") {
-        invalids.push("SpO₂");
-    }
-    if (!bp || bp === "N/A mmHg") {
-        invalids.push("Blood Pressure");
-    }
 
-    // Modal logic: show modal only if all readings are valid
+    event.preventDefault();
+
+    // Build validMap for each sensor (0 or N/A is invalid)
+    var validMap = {
+        temp: !!(temp && !/^0(\.00)? ?°C$/.test(temp) && !/^N\/A ?°C$/.test(temp)),
+        ecg: !!(ecg && !/^0(\.00)?$/.test(ecg) && !/^N\/A$/.test(ecg)),
+        pulse: !!(pulseRate && !/^0 ?BPM$/.test(pulseRate) && !/^N\/A ?BPM$/.test(pulseRate)),
+        spo2: !!(spo2 && !/^0(\.00)? ?%$/.test(spo2) && !/^N\/A ?%$/.test(spo2)),
+        bp: !!(bp && !/^N\/A ?mmHg$/.test(bp) && !/^0(\/0)?( mmHg)?$/.test(bp))
+    };
+
+    showDiagnosisModal(validMap);
+
     function showDiagnosisModal(validMap) {
         const modal = document.getElementById("diagnosisModal");
         modal.style.display = "flex";
-        // Reset indicators to loader and status text, clear values
         const sensors = ["temp","ecg","pulse","spo2","bp"];
+        const sensorLabels = {
+            temp: "Body Temperature",
+            ecg: "ECG",
+            pulse: "Pulse Rate",
+            spo2: "SpO₂",
+            bp: "Blood Pressure"
+        };
+        const iconIds = {
+            temp: "indicator-temp-icon",
+            ecg: "indicator-ecg-icon",
+            pulse: "indicator-pulse-icon",
+            spo2: "indicator-spo2-icon",
+            bp: "indicator-bp-icon"
+        };
         const values = {
             temp: document.getElementById("temp").innerText,
             ecg: document.getElementById("ecg").innerText,
@@ -369,17 +463,28 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
             spo2: document.getElementById("spo2").innerText,
             bp: document.getElementById("bp").innerText
         };
+        // Help messages for each sensor
+        const helpMsgs = {
+            temp: "Body temperature not detected. Please try again and ensure your wrist is properly positioned.",
+            ecg: "ECG signal not detected. Please confirm that the ECG pads are securely attached.",
+            pulse: "Pulse rate not detected. Please place your finger on the sensor and remain still.",
+            spo2: "SpO₂ level not detected. Please place your finger on the sensor and minimize movement.",
+            bp: "Blood pressure not detected. Please attach the cuff securely and press the BP button to begin measurement."
+        };
+        let anyInvalid = false;
+        let invalidSensors = [];
         sensors.forEach(s => {
             document.getElementById(`indicator-${s}-status`).innerHTML = '<span class="sensor-loader"></span>';
             document.getElementById(`indicator-${s}-text`).textContent = "Processing…";
             document.getElementById(`indicator-${s}-text`).style.color = "#666";
             document.getElementById(`indicator-${s}-value`).textContent = "";
             document.getElementById(`indicator-${s}-value`).classList.remove("sensor-value-animate");
+            // Reset icon color to default gray
+            document.getElementById(iconIds[s]).style.color = "#888";
         });
         document.getElementById("diagnosisProgressBar").style.width = "0%";
         document.getElementById("diagnosisProgressText").textContent = "Validating sensors...";
-        document.getElementById("diagnosisModalActions").style.display = "none";
-        // Animate progress and update indicators with staggered delays, show value after validation
+
         let idx = 0;
         const keys = ["temp","ecg","pulse","spo2","bp"];
         function step() {
@@ -387,7 +492,6 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
                 const key = keys[idx];
                 setTimeout(() => {
                     document.getElementById(`indicator-${key}-status`).innerHTML = validMap[key] ? "✔️" : "❌";
-                    // Show value only after validation
                     const valueEl = document.getElementById(`indicator-${key}-value`);
                     valueEl.textContent = values[key] || "";
                     valueEl.classList.add("sensor-value-animate");
@@ -395,37 +499,15 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
                     if (validMap[key]) {
                         document.getElementById(`indicator-${key}-text`).textContent = "Valid Reading";
                         document.getElementById(`indicator-${key}-text`).style.color = "#22c55e";
+                        // Change thermometer icon color to green if valid
+                        document.getElementById(iconIds[key]).style.color = "#22c55e"; // green
                     } else {
                         document.getElementById(`indicator-${key}-text`).textContent = "Invalid: Value is N/A";
                         document.getElementById(`indicator-${key}-text`).style.color = "#ef4444";
-                        // Show SweetAlert for the first invalid sensor
-                        let msg = "";
-                        switch (key) {
-                            case "temp":
-                                msg = "Body temperature not detected, please try again.";
-                                break;
-                            case "ecg":
-                                msg = "ECG not detected, please attach the ECG pads.";
-                                break;
-                            case "pulse":
-                                msg = "Pulse rate not detected, please place your finger into the sensor.";
-                                break;
-                            case "spo2":
-                                msg = "SpO₂ not detected, please place your finger into the sensor.";
-                                break;
-                            case "bp":
-                                msg = "Blood pressure not detected, please press the BP button and attach the cuff properly.";
-                                break;
-                        }
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'warning',
-                            title: msg,
-                            showConfirmButton: false,
-                            timer: 3500,
-                            timerProgressBar: true
-                        });
+                        // Change thermometer icon color to red if invalid
+                        document.getElementById(iconIds[key]).style.color = "#ef4444"; // red
+                        anyInvalid = true;
+                        invalidSensors.push(sensorLabels[key]);
                     }
                     document.getElementById("diagnosisProgressBar").style.width = (((idx + 1) / keys.length) * 100) + "%";
                     idx++;
@@ -435,8 +517,6 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
                 setTimeout(() => {
                     document.getElementById("diagnosisProgressText").textContent = "Diagnosis ready! Please review and continue.";
                     document.getElementById("diagnosisProgressBar").style.width = "100%";
-                    document.getElementById("diagnosisModalActions").style.display = "block";
-                    // Hide the "Please wait..." message
                     var waitMsg = document.querySelector('#diagnosisModal span[style*="color:#888"]');
                     if (waitMsg) waitMsg.style.display = "none";
                     // Play notification sound
@@ -456,6 +536,28 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
                     if (window.navigator && window.navigator.vibrate) {
                         window.navigator.vibrate([100, 30, 100]);
                     }
+                    // After processing, handle valid/invalid
+                    setTimeout(() => {
+                        if (!anyInvalid) {
+                            // Show Proceed button, hide auto-submit
+                            document.getElementById("diagnosisProceedContainer").style.display = "flex";
+                            // On click, submit the form and hide modal
+                            document.getElementById("diagnosisProceedBtn").onclick = function() {
+                                modal.style.display = "none";
+                                document.getElementById("sendToMailForm").submit();
+                            };
+                        } else {
+                            // Some invalid: hide modal immediately, then show SweetAlert
+                            modal.style.display = "none";
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Missing/Invalid Readings',
+                                text: "The following readings are missing or invalid: " + invalidSensors.join(", ") + ". Please check all sensors and try again.",
+                                confirmButtonText: 'Okay',
+                                confirmButtonColor: '#ef4444'
+                            });
+                        }
+                    }, 6000);
                 }, 500);
             }
         }
@@ -464,91 +566,7 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
     function hideDiagnosisModal() {
         document.getElementById("diagnosisModal").style.display = "none";
     }
-
-    // Validate each sensor and build validMap
-    const validMap = {
-        temp: !!(temp && temp !== "0.00 °C" && temp !== "N/A °C"),
-        ecg: !!(ecg && ecg !== "0.00" && ecg !== "N/A"),
-        pulse: !!(pulseRate && pulseRate !== "0 BPM" && pulseRate !== "N/A BPM"),
-        spo2: !!(spo2 && spo2 !== "0.00 %" && spo2 !== "N/A %"),
-        bp: !!(bp && bp !== "N/A mmHg")
-    };
-
-    // If any invalid, prevent modal and show alert
-    if (!uid || uid === "N/A" || invalids.length > 0) {
-        hideDiagnosisModal();
-        if (!uid || uid === "N/A") {
-            Swal.fire({
-                icon: 'warning',
-                title: 'No valid UID detected',
-                text: 'Please scan your RFID card.',
-                confirmButtonText: 'Okay',
-                confirmButtonColor: '#3085d6',
-                timer: 3500,
-                timerProgressBar: true
-            });
-        } else {
-            let msg = "";
-            if (invalids.length === 1) {
-                // Specific instructions for each
-                switch (invalids[0]) {
-                    case "Body Temperature":
-                        msg = "Please retry. Body temperature not detected.";
-                        break;
-                    case "ECG":
-                        msg = "Please attach the ECG pads.";
-                        break;
-                    case "Pulse Rate":
-                    case "SpO₂":
-                        msg = "Please place your finger into the sensor.";
-                        break;
-                    case "Blood Pressure":
-                        msg = "Please press the BP button and attach the cuff properly.";
-                        break;
-                }
-            } else {
-                msg = "The following readings are missing or zero: " + invalids.join(", ") + ". Please check all sensors and try again.";
-            }
-            Swal.fire({
-                icon: 'warning',
-                title: 'Invalid or Missing Readings',
-                text: msg,
-                confirmButtonText: 'Okay',
-                confirmButtonColor: '#3085d6',
-                timer: 4000,
-                timerProgressBar: true
-            });
-        }
-        return;
-    }
-
-    // All valid, show modal
-    showDiagnosisModal(validMap);
-
-    // Remove auto-submit, show buttons instead
-    // Prevent default form submission to allow modal animation and user action
-    event.preventDefault();
-
-    // Button handlers
-    setTimeout(() => {
-        if (!window._diagnosisModalBtnHandlers) {
-            document.getElementById("diagnosisRetryBtn").onclick = function() {
-                hideDiagnosisModal();
-                // Optionally, you can re-trigger the diagnosisButton click or refresh sensor values here
-            };
-            document.getElementById("diagnosisDoneBtn").onclick = function() {
-                hideDiagnosisModal();
-                document.getElementById("sendToMailForm").submit();
-            };
-            // ❌ Cancel button handler
-            document.getElementById("diagnosisCancelBtn").onclick = function() {
-                hideDiagnosisModal();
-            };
-            window._diagnosisModalBtnHandlers = true;
-        }
-    }, 1000 * 5 + 600); // after all sensors processed and buttons shown
 });
-
         // Add event listener for Consult button
         document.getElementById("consultButton").addEventListener("click", function () {
             Swal.fire({
@@ -566,6 +584,11 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
                 }
             });
         });
+
+        // Close button logic
+        document.getElementById("diagnosisModalClose").onclick = function() {
+            document.getElementById("diagnosisModal").style.display = "none";
+        };
     </script>
 </head>
 <body class="bg-gradient-to-r from-green-200 to-green-400 min-h-screen flex flex-col">
@@ -713,76 +736,78 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
                     100% { transform: rotate(360deg);}
                 }
                 </style>
-                <div id="diagnosisModal" style="display:none; position:fixed; z-index:2000; top:0; left:0; width:100vw; height:100vh; background:rgba(255,255,255,0.95); align-items:center; justify-content:center; flex-direction:column;">
-                    <div style="text-align:center; position:relative;">
-                        <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:18px;">
-                            <span style="font-size:2.2rem; font-weight:bold; color:#065f46;">
-                                <i class="bi bi-robot" style="font-size:2.5rem; vertical-align:middle;"></i>
-                                Generating Diagnosis Report
-                            </span>
-                            <button id="diagnosisCancelBtn" type="button" aria-label="Cancel" style="background:none; border:none; font-size:2rem; color:#ef4444; cursor:pointer; z-index:10; margin-left:8px; display:flex;align-items:center;">
-                                <span style="font-size:2.1rem; font-family:monospace; border:1.5px solid #ef4444; border-radius:4px; padding:0 6px; line-height:1;">&#10006;</span>
-                            </button>
+                <div id="diagnosisModal" style="display:none; position:fixed; z-index:2000; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); align-items:center; justify-content:center;">
+                    <div class="diagnosis-modal-content" style="position:relative;">
+                        <!-- Close Button -->
+                        <button id="diagnosisModalClose" type="button" style="position:absolute;top:16px;right:16px;background:transparent;border:none;font-size:2rem;line-height:1;color:#888;cursor:pointer;z-index:10;" aria-label="Close">&times;</button>
+                        <div class="diagnosis-modal-header">
+                            <i class="bi bi-robot"></i>
+                            <span class="diagnosis-modal-title">Generating Diagnosis Report</span>
                         </div>
-                        <div style="width:340px; margin:0 auto 24px;">
+                        <div style="width:100%; max-width:600px; margin:0 auto 24px;">
                             <div style="background:#d1fae5; border-radius:8px; overflow:hidden;">
                                 <div id="diagnosisProgressBar" style="height:18px; width:0%; background:#22c55e; transition:width 0.5s;"></div>
                             </div>
                             <div style="font-size:1rem; color:#065f46; margin-top:6px;" id="diagnosisProgressText">Validating sensors...</div>
                         </div>
-                        <div style="display:flex; justify-content:center; gap:22px; margin-bottom:10px;">
+                        <div class="sensor-indicators">
                             <div id="indicator-temp" style="display:flex; flex-direction:column; align-items:center;">
-                                <span class="bi bi-thermometer" style="font-size:2rem;"></span>
+                                <span class="bi bi-thermometer" id="indicator-temp-icon" style="font-size:2rem; color:#888;"></span>
                                 <span style="font-size:0.95rem;">Temp</span>
                                 <span id="indicator-temp-status">
                                     <span class="sensor-loader"></span>
                                 </span>
                                 <span id="indicator-temp-value" style="font-size:1.05rem; color:#333; margin-top:2px;"></span>
-                                <span id="indicator-temp-text" style="font-size:0.92rem; color:#666;">Processing…</span>
+                                <span id="indicator-temp-text" style="font-size:0.92rem; color:#666; text-align:center; word-break:break-word;"></span>
+                                <span id="indicator-temp-help" style="display:none; color:#ef4444; font-size:0.92rem; margin-top:2px;"></span>
                             </div>
                             <div id="indicator-ecg" style="display:flex; flex-direction:column; align-items:center;">
-                                <span class="bi bi-activity" style="font-size:2rem;"></span>
+                                <span class="bi bi-activity" id="indicator-ecg-icon" style="font-size:2rem; color:#888;"></span>
                                 <span style="font-size:0.95rem;">ECG</span>
                                 <span id="indicator-ecg-status">
                                     <span class="sensor-loader"></span>
                                 </span>
                                 <span id="indicator-ecg-value" style="font-size:1.05rem; color:#333; margin-top:2px;"></span>
-                                <span id="indicator-ecg-text" style="font-size:0.92rem; color:#666;">Processing…</span>
+                                <span id="indicator-ecg-text" style="font-size:0.92rem; color:#666; text-align:center; word-break:break-word;"></span>
+                                <span id="indicator-ecg-help" style="display:none; color:#ef4444; font-size:0.92rem; margin-top:2px;"></span>
                             </div>
                             <div id="indicator-pulse" style="display:flex; flex-direction:column; align-items:center;">
-                                <span class="bi bi-heart-pulse" style="font-size:2rem;"></span>
+                                <span class="bi bi-heart-pulse" id="indicator-pulse-icon" style="font-size:2rem; color:#888;"></span>
                                 <span style="font-size:0.95rem;">Pulse</span>
                                 <span id="indicator-pulse-status">
                                     <span class="sensor-loader"></span>
                                 </span>
                                 <span id="indicator-pulse-value" style="font-size:1.05rem; color:#333; margin-top:2px;"></span>
-                                <span id="indicator-pulse-text" style="font-size:0.92rem; color:#666;">Processing…</span>
+                                <span id="indicator-pulse-text" style="font-size:0.92rem; color:#666; text-align:center; word-break:break-word;"></span>
+                                <span id="indicator-pulse-help" style="display:none; color:#ef4444; font-size:0.92rem; margin-top:2px;"></span>
                             </div>
                             <div id="indicator-spo2" style="display:flex; flex-direction:column; align-items:center;">
-                                <span class="bi bi-droplet-half" style="font-size:2rem;"></span>
+                                <span class="bi bi-droplet-half" id="indicator-spo2-icon" style="font-size:2rem; color:#888;"></span>
                                 <span style="font-size:0.95rem;">SpO₂</span>
                                 <span id="indicator-spo2-status">
                                     <span class="sensor-loader"></span>
                                 </span>
                                 <span id="indicator-spo2-value" style="font-size:1.05rem; color:#333; margin-top:2px;"></span>
-                                <span id="indicator-spo2-text" style="font-size:0.92rem; color:#666;">Processing…</span>
+                                <span id="indicator-spo2-text" style="font-size:0.92rem; color:#666; text-align:center; word-break:break-word;"></span>
+                                <span id="indicator-spo2-help" style="display:none; color:#ef4444; font-size:0.92rem; margin-top:2px;"></span>
                             </div>
                             <div id="indicator-bp" style="display:flex; flex-direction:column; align-items:center;">
-                                <span class="bi bi-activity" style="font-size:2rem;"></span>
+                                <span class="bi bi-activity" id="indicator-bp-icon" style="font-size:2rem; color:#888;"></span>
                                 <span style="font-size:0.95rem;">BP</span>
                                 <span id="indicator-bp-status">
                                     <span class="sensor-loader"></span>
                                 </span>
                                 <span id="indicator-bp-value" style="font-size:1.05rem; color:#333; margin-top:2px;"></span>
-                                <span id="indicator-bp-text" style="font-size:0.92rem; color:#666;">Processing…</span>
+                                <span id="indicator-bp-text" style="font-size:0.92rem; color:#666; text-align:center; word-break:break-word;"></span>
+                                <span id="indicator-bp-help" style="display:none; color:#ef4444; font-size:0.92rem; margin-top:2px;"></span>
                             </div>
                         </div>
                         <div style="margin-top:18px;">
                             <span style="color:#888; font-size:1rem;">Please wait while we validate your readings...</span>
                         </div>
-                        <div id="diagnosisModalActions" style="display:none; margin-top:24px;">
-                            <button id="diagnosisRetryBtn" type="button" style="background:#f59e0b; color:#fff; border:none; border-radius:6px; padding:8px 24px; font-size:1.1rem; margin-right:18px; cursor:pointer;">Retry</button>
-                            <button id="diagnosisDoneBtn" type="button" style="background:#22c55e; color:#fff; border:none; border-radius:6px; padding:8px 24px; font-size:1.1rem; cursor:pointer;">Done</button>
+                        <!-- Proceed Button (hidden by default) -->
+                        <div id="diagnosisProceedContainer" style="width:100%;display:none;justify-content:center;margin-top:24px;">
+                            <button id="diagnosisProceedBtn" type="button" class="bg-green-500 text-white px-8 py-2 rounded-md hover:bg-green-700 text-lg font-semibold">Proceed</button>
                         </div>
                     </div>
                 </div>
@@ -795,11 +820,12 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
                         const spo2 = document.getElementById("spo2").innerText.trim();
                         const bp = document.getElementById("bp").innerText.trim();
 
-                        // Collect all invalids
-                        let invalids = [];
-
+                        // Only block and SweetAlert for UID issues here
                         if (!uid || uid === "N/A") {
                             event.preventDefault();
+                            // Hide the modal if it's visible before showing the alert
+                            var modal = document.getElementById("diagnosisModal");
+                            if (modal) modal.style.display = "none";
                             Swal.fire({
                                 icon: 'warning',
                                 title: 'No valid UID detected',
@@ -811,28 +837,38 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
                             });
                             return;
                         }
-                        if (!temp || temp === "0.00 °C" || temp === "N/A °C") {
-                            invalids.push("Body Temperature");
-                        }
-                        if (!ecg || ecg === "0.00" || ecg === "N/A") {
-                            invalids.push("ECG");
-                        }
-                        if (!pulseRate || pulseRate === "0 BPM" || pulseRate === "N/A BPM") {
-                            invalids.push("Pulse Rate");
-                        }
-                        if (!spo2 || spo2 === "0.00 %" || spo2 === "N/A %") {
-                            invalids.push("SpO₂");
-                        }
-                        if (!bp || bp === "N/A mmHg") {
-                            invalids.push("Blood Pressure");
-                        }
 
-                        // Modal logic: show modal only if all readings are valid
+                        event.preventDefault();
+
+                        // Build validMap for each sensor (0 or N/A is invalid)
+                        var validMap = {
+                            temp: !!(temp && !/^0(\.00)? ?°C$/.test(temp) && !/^N\/A ?°C$/.test(temp)),
+                            ecg: !!(ecg && !/^0(\.00)?$/.test(ecg) && !/^N\/A$/.test(ecg)),
+                            pulse: !!(pulseRate && !/^0 ?BPM$/.test(pulseRate) && !/^N\/A ?BPM$/.test(pulseRate)),
+                            spo2: !!(spo2 && !/^0(\.00)? ?%$/.test(spo2) && !/^N\/A ?%$/.test(spo2)),
+                            bp: !!(bp && !/^N\/A ?mmHg$/.test(bp) && !/^0(\/0)?( mmHg)?$/.test(bp))
+                        };
+
+                        showDiagnosisModal(validMap);
+
                         function showDiagnosisModal(validMap) {
                             const modal = document.getElementById("diagnosisModal");
                             modal.style.display = "flex";
-                            // Reset indicators to loader and status text, clear values
                             const sensors = ["temp","ecg","pulse","spo2","bp"];
+                            const sensorLabels = {
+                                temp: "Body Temperature",
+                                ecg: "ECG",
+                                pulse: "Pulse Rate",
+                                spo2: "SpO₂",
+                                bp: "Blood Pressure"
+                            };
+                            const iconIds = {
+                                temp: "indicator-temp-icon",
+                                ecg: "indicator-ecg-icon",
+                                pulse: "indicator-pulse-icon",
+                                spo2: "indicator-spo2-icon",
+                                bp: "indicator-bp-icon"
+                            };
                             const values = {
                                 temp: document.getElementById("temp").innerText,
                                 ecg: document.getElementById("ecg").innerText,
@@ -840,17 +876,28 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
                                 spo2: document.getElementById("spo2").innerText,
                                 bp: document.getElementById("bp").innerText
                             };
+                            // Help messages for each sensor
+                            const helpMsgs = {
+                                temp: "Body temperature not detected. Please try again and ensure your wrist is properly positioned.",
+                                ecg: "ECG signal not detected. Please confirm that the ECG pads are securely attached.",
+                                pulse: "Pulse rate not detected. Please place your finger on the sensor and remain still.",
+                                spo2: "SpO₂ level not detected. Please place your finger on the sensor and minimize movement.",
+                                bp: "Blood pressure not detected. Please attach the cuff securely and press the BP button to begin measurement."
+                            };
+                            let anyInvalid = false;
+                            let invalidSensors = [];
                             sensors.forEach(s => {
                                 document.getElementById(`indicator-${s}-status`).innerHTML = '<span class="sensor-loader"></span>';
                                 document.getElementById(`indicator-${s}-text`).textContent = "Processing…";
                                 document.getElementById(`indicator-${s}-text`).style.color = "#666";
                                 document.getElementById(`indicator-${s}-value`).textContent = "";
                                 document.getElementById(`indicator-${s}-value`).classList.remove("sensor-value-animate");
+                                // Reset icon color to default gray
+                                document.getElementById(iconIds[s]).style.color = "#888";
                             });
                             document.getElementById("diagnosisProgressBar").style.width = "0%";
                             document.getElementById("diagnosisProgressText").textContent = "Validating sensors...";
-                            document.getElementById("diagnosisModalActions").style.display = "none";
-                            // Animate progress and update indicators with staggered delays, show value after validation
+
                             let idx = 0;
                             const keys = ["temp","ecg","pulse","spo2","bp"];
                             function step() {
@@ -858,7 +905,6 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
                                     const key = keys[idx];
                                     setTimeout(() => {
                                         document.getElementById(`indicator-${key}-status`).innerHTML = validMap[key] ? "✔️" : "❌";
-                                        // Show value only after validation
                                         const valueEl = document.getElementById(`indicator-${key}-value`);
                                         valueEl.textContent = values[key] || "";
                                         valueEl.classList.add("sensor-value-animate");
@@ -866,37 +912,15 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
                                         if (validMap[key]) {
                                             document.getElementById(`indicator-${key}-text`).textContent = "Valid Reading";
                                             document.getElementById(`indicator-${key}-text`).style.color = "#22c55e";
+                                            // Change thermometer icon color to green if valid
+                                            document.getElementById(iconIds[key]).style.color = "#22c55e"; // green
                                         } else {
                                             document.getElementById(`indicator-${key}-text`).textContent = "Invalid: Value is N/A";
                                             document.getElementById(`indicator-${key}-text`).style.color = "#ef4444";
-                                            // Show SweetAlert for the first invalid sensor
-                                            let msg = "";
-                                            switch (key) {
-                                                case "temp":
-                                                    msg = "Body temperature not detected, please try again.";
-                                                    break;
-                                                case "ecg":
-                                                    msg = "ECG not detected, please attach the ECG pads.";
-                                                    break;
-                                                case "pulse":
-                                                    msg = "Pulse rate not detected, please place your finger into the sensor.";
-                                                    break;
-                                                case "spo2":
-                                                    msg = "SpO₂ not detected, please place your finger into the sensor.";
-                                                    break;
-                                                case "bp":
-                                                    msg = "Blood pressure not detected, please press the BP button and attach the cuff properly.";
-                                                    break;
-                                            }
-                                            Swal.fire({
-                                                toast: true,
-                                                position: 'top-end',
-                                                icon: 'warning',
-                                                title: msg,
-                                                showConfirmButton: false,
-                                                timer: 3500,
-                                                timerProgressBar: true
-                                            });
+                                            // Change thermometer icon color to red if invalid
+                                            document.getElementById(iconIds[key]).style.color = "#ef4444"; // red
+                                            anyInvalid = true;
+                                            invalidSensors.push(sensorLabels[key]);
                                         }
                                         document.getElementById("diagnosisProgressBar").style.width = (((idx + 1) / keys.length) * 100) + "%";
                                         idx++;
@@ -906,8 +930,6 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
                                     setTimeout(() => {
                                         document.getElementById("diagnosisProgressText").textContent = "Diagnosis ready! Please review and continue.";
                                         document.getElementById("diagnosisProgressBar").style.width = "100%";
-                                        document.getElementById("diagnosisModalActions").style.display = "block";
-                                        // Hide the "Please wait..." message
                                         var waitMsg = document.querySelector('#diagnosisModal span[style*="color:#888"]');
                                         if (waitMsg) waitMsg.style.display = "none";
                                         // Play notification sound
@@ -927,6 +949,28 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
                                         if (window.navigator && window.navigator.vibrate) {
                                             window.navigator.vibrate([100, 30, 100]);
                                         }
+                                        // After processing, handle valid/invalid
+                                        setTimeout(() => {
+                                            if (!anyInvalid) {
+                                                // Show Proceed button, hide auto-submit
+                                                document.getElementById("diagnosisProceedContainer").style.display = "flex";
+                                                // On click, submit the form and hide modal
+                                                document.getElementById("diagnosisProceedBtn").onclick = function() {
+                                                    modal.style.display = "none";
+                                                    document.getElementById("sendToMailForm").submit();
+                                                };
+                                            } else {
+                                                // Some invalid: hide modal immediately, then show SweetAlert
+                                                modal.style.display = "none";
+                                                Swal.fire({
+                                                    icon: 'warning',
+                                                    title: 'Missing/Invalid Readings',
+                                                    text: "The following readings are missing or invalid: " + invalidSensors.join(", ") + ". Please check all sensors and try again.",
+                                                    confirmButtonText: 'Okay',
+                                                    confirmButtonColor: '#ef4444'
+                                                });
+                                            }
+                                        }, 6000);
                                     }, 500);
                                 }
                             }
@@ -935,89 +979,6 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
                         function hideDiagnosisModal() {
                             document.getElementById("diagnosisModal").style.display = "none";
                         }
-
-                        // Validate each sensor and build validMap
-                        const validMap = {
-                            temp: !!(temp && temp !== "0.00 °C" && temp !== "N/A °C"),
-                            ecg: !!(ecg && ecg !== "0.00" && ecg !== "N/A"),
-                            pulse: !!(pulseRate && pulseRate !== "0 BPM" && pulseRate !== "N/A BPM"),
-                            spo2: !!(spo2 && spo2 !== "0.00 %" && spo2 !== "N/A %"),
-                            bp: !!(bp && bp !== "N/A mmHg")
-                        };
-
-                        // If any invalid, prevent modal and show alert
-                        if (!uid || uid === "N/A" || invalids.length > 0) {
-                            hideDiagnosisModal();
-                            if (!uid || uid === "N/A") {
-                                Swal.fire({
-                                    icon: 'warning',
-                                    title: 'No valid UID detected',
-                                    text: 'Please scan your RFID card.',
-                                    confirmButtonText: 'Okay',
-                                    confirmButtonColor: '#3085d6',
-                                    timer: 3500,
-                                    timerProgressBar: true
-                                });
-                            } else {
-                                let msg = "";
-                                if (invalids.length === 1) {
-                                    // Specific instructions for each
-                                    switch (invalids[0]) {
-                                        case "Body Temperature":
-                                            msg = "Please retry. Body temperature not detected.";
-                                            break;
-                                        case "ECG":
-                                            msg = "Please attach the ECG pads.";
-                                            break;
-                                        case "Pulse Rate":
-                                        case "SpO₂":
-                                            msg = "Please place your finger into the sensor.";
-                                            break;
-                                        case "Blood Pressure":
-                                            msg = "Please press the BP button and attach the cuff properly.";
-                                            break;
-                                    }
-                                } else {
-                                    msg = "The following readings are missing or zero: " + invalids.join(", ") + ". Please check all sensors and try again.";
-                                }
-                                Swal.fire({
-                                    icon: 'warning',
-                                    title: 'Invalid or Missing Readings',
-                                    text: msg,
-                                    confirmButtonText: 'Okay',
-                                    confirmButtonColor: '#3085d6',
-                                    timer: 4000,
-                                    timerProgressBar: true
-                                });
-                            }
-                            return;
-                        }
-
-                        // All valid, show modal
-                        showDiagnosisModal(validMap);
-
-                        // Remove auto-submit, show buttons instead
-                        // Prevent default form submission to allow modal animation and user action
-                        event.preventDefault();
-
-                        // Button handlers
-                        setTimeout(() => {
-                            if (!window._diagnosisModalBtnHandlers) {
-                                document.getElementById("diagnosisRetryBtn").onclick = function() {
-                                    hideDiagnosisModal();
-                                    // Optionally, you can re-trigger the diagnosisButton click or refresh sensor values here
-                                };
-                                document.getElementById("diagnosisDoneBtn").onclick = function() {
-                                    hideDiagnosisModal();
-                                    document.getElementById("sendToMailForm").submit();
-                                };
-                                // ❌ Cancel button handler
-                                document.getElementById("diagnosisCancelBtn").onclick = function() {
-                                    hideDiagnosisModal();
-                                };
-                                window._diagnosisModalBtnHandlers = true;
-                            }
-                        }, 1000 * 5 + 600); // after all sensors processed and buttons shown
                     });
 
                     // Add event listener for Consult button
@@ -1037,6 +998,11 @@ document.getElementById("diagnosisButton").addEventListener("click", function (e
                             }
                         });
                     });
+
+                    // Close button logic
+                    document.getElementById("diagnosisModalClose").onclick = function() {
+                        document.getElementById("diagnosisModal").style.display = "none";
+                    };
                 </script>
             </div>
 
