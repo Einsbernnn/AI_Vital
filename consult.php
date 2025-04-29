@@ -9,17 +9,16 @@ $ai_responses = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
     $userInput = trim($_POST['consultInput']);
 
+    // If sensor_summary is present in POST, append it to $userInput if not already present
+    if (isset($_POST['sensor_summary']) && $_POST['sensor_summary']) {
+        $sensor_summary = trim($_POST['sensor_summary']);
+        if (strpos($userInput, $sensor_summary) === false) {
+            $userInput = trim($userInput . "\n\n" . $sensor_summary);
+        }
+    }
+
     $prompts = [
-        "Thank you for sharing your symptoms. Based on your input: \"$userInput\", we recommend monitoring your condition and seeing a healthcare professional if it worsens.",
-        "We’ve received your description: \"$userInput\". It seems like you might be experiencing symptoms related to [condition]. We suggest further investigation and consultation with a doctor.",
-        "Thank you for your input: \"$userInput\". We understand your symptoms are [severity]. Please note that our AI is learning your data and may offer insights as it analyzes more cases.",
-        "We’ve logged your symptoms: \"$userInput\". It’s important to rest and stay hydrated. If symptoms persist or worsen, please consult a medical professional.",
-        "Your symptoms have been noted: \"$userInput\". You may want to track them over the next few days and see if they follow any particular pattern. Let us know if you experience any changes.",
-        "Thank you for your description: \"$userInput\". We recommend watching for additional symptoms. If you have other concerns, feel free to update us at any time.",
-        "Your input has been received: \"$userInput\". Based on your symptoms, it’s possible that [condition] could be a factor. Please monitor your condition and consult a healthcare provider if necessary.",
-        "We’ve logged your symptoms: \"$userInput\". It’s important to track how they evolve. If there’s a drastic change, please seek medical attention.",
-        "Thank you for providing your health details: \"$userInput\". Based on our system’s analysis, we recommend further action based on your specific condition. Please consult with a specialist if needed.",
-        "Your health information has been successfully recorded: \"$userInput\". We’ll continue learning and provide more tailored advice as more data comes in. Stay safe and don’t hesitate to ask for further help!"
+        "Patient vital signs received:\n\n$userInput\n\nPlease analyze the values and provide a medically accurate interpretation. Identify any abnormalities (e.g., hypothermia, tachycardia, low SpO₂), explain the clinical implications, and recommend appropriate actions. Consider standard reference ranges for adults. Maintain a professional and empathetic tone. Conclude with guidance on whether to seek immediate medical attention or continue monitoring."
     ];
 
     $cohere_url = 'https://api.cohere.com/v2/chat';
@@ -72,6 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
         curl_close($ch);
     }
 }
+
+// Pre-fill textarea with sensor summary if provided via GET
+$sensor_summary = isset($_GET['sensor_summary']) ? $_GET['sensor_summary'] : '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -261,6 +263,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
             }
             to {
                 transform: translateX(-100%);
+            }
+        }
+        .sensor-summary-compact {
+            min-width: 160px;
+            max-width: 220px;
+            background: #f0fdf4;
+            border: 2px solid #22c55e;
+            border-radius: 8px;
+            color: #065f46;
+            font-size: 0.98rem;
+            padding: 10px 14px;
+            margin-right: 18px;
+            margin-bottom: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            height: 100%;
+        }
+        .sensor-summary-compact .title {
+            font-weight: bold;
+            margin-bottom: 4px;
+            font-size: 1.05rem;
+        }
+        .consult-form-flex {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            width: 100%;
+        }
+        .sensor-summary-compact {
+            /* Make the summary box stretch to match the textarea height */
+            align-self: stretch;
+        }
+        .consult-input-col {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        @media (max-width: 900px) {
+            .sensor-summary-compact {
+                min-width: 120px;
+                max-width: 99vw;
+                font-size: 0.93rem;
+                margin-right: 8px;
+            }
+        }
+        @media (max-width: 600px) {
+            .consult-form-flex {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .sensor-summary-compact {
+                min-width: 0;
+                max-width: 100vw;
+                font-size: 0.91rem;
+                margin-right: 0;
+                margin-bottom: 10px;
+                align-self: auto;
             }
         }
     </style>
@@ -511,6 +572,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
                 }
             });
         });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var form = document.querySelector('form[action=""]');
+            var textarea = document.getElementById("consultInput");
+            var sensorSummary = <?php echo json_encode($sensor_summary); ?>;
+            // Add hidden input for sensor_summary so it is always POSTed
+            if (form && sensorSummary) {
+                var hidden = document.createElement("input");
+                hidden.type = "hidden";
+                hidden.name = "sensor_summary";
+                hidden.value = sensorSummary;
+                form.appendChild(hidden);
+            }
+            if (form && textarea && sensorSummary) {
+                form.addEventListener("submit", function(e) {
+                    if (sensorSummary && textarea.value.indexOf(sensorSummary) === -1) {
+                        textarea.value = textarea.value.trim() + "\n\n" + sensorSummary;
+                    }
+                });
+            }
+        });
     </script>
 </head>
 <body class="bg-gradient-to-r from-green-200 to-green-400 min-h-screen flex flex-col">
@@ -540,12 +622,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
         <div class="container mx-auto px-4 py-8 flex space-x-8">
             <!-- Input box and submit button panel -->
             <div class="readings-panel flex-grow flex flex-col items-center justify-center">
-                <form action="" method="post" class="w-full flex flex-col items-center">
-                    <label for="consultInput" class="block text-2xl font-bold text-green-900 mb-4">Describe your symptoms or concerns:</label>
-                    <textarea id="consultInput" name="consultInput" rows="10" class="w-full max-w-2xl p-4 border-2 border-green-400 rounded-lg text-lg mb-6" placeholder="Type your message here..."><?php echo isset($_POST['consultInput']) ? htmlspecialchars($_POST['consultInput']) : ''; ?></textarea>
-                    <div class="flex space-x-4">
-                        <button type="submit" class="bg-green-500 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-green-700 transition">Submit</button>
-                        <a href="live reading.php" class="bg-gray-400 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-gray-600 transition flex items-center justify-center">Back</a>
+                <form action="" method="post" class="consult-form-flex">
+                    <?php if (!empty($sensor_summary)): ?>
+                    <div id="sensor-summary-container" class="sensor-summary-compact mr-4">
+                        <div class="title">Sensor Summary</div>
+                        <pre class="whitespace-pre-wrap break-words" style="margin:0; padding:0; background:none; border:none;"><?= htmlspecialchars($sensor_summary) ?></pre>
+                    </div>
+                    <?php endif; ?>
+                    <div class="consult-input-col">
+                        <label for="consultInput" class="block text-2xl font-bold text-green-900 mb-4">Describe your symptoms or concerns:</label>
+                        <textarea id="consultInput" name="consultInput" rows="10" class="w-full max-w-2xl p-4 border-2 border-green-400 rounded-lg text-lg mb-6" placeholder="Type your message here..."><?php
+                            if (isset($_POST['consultInput'])) {
+                                echo htmlspecialchars($_POST['consultInput']);
+                            }
+                        ?></textarea>
+                        <div class="flex space-x-4">
+                            <button type="submit" class="bg-green-500 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-green-700 transition">Submit</button>
+                            <a href="live reading.php" class="bg-gray-400 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-gray-600 transition flex items-center justify-center">Back</a>
+                        </div>
                     </div>
                 </form>
             </div>
