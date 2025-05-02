@@ -201,6 +201,127 @@ include 'header.php'; // Include your navigation/header file
             0% { transform: translateY(0) scale(1);}
             100% { transform: translateY(30px) scale(1.1);}
         }
+        /* --- Chat Modal Styles (copied from index.php) --- */
+        .floating-chat-btn {
+          position: fixed;
+          bottom: 32px;
+          left: 32px;
+          z-index: 9999;
+          width: 60px;
+          height: 60px;
+          background: #22c55e;
+          border-radius: 50%;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: box-shadow 0.2s, background 0.2s;
+          border: none;
+        }
+        .floating-chat-btn:hover {
+          box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+          background: #16a34a;
+        }
+        .floating-chat-btn i {
+          font-size: 2rem;
+          color: #fff;
+        }
+        .chat-modal-overlay {
+          position: fixed;
+          z-index: 10000;
+          left: 0; top: 0; width: 100vw; height: 100vh;
+          background: rgba(0,0,0,0.25);
+          display: flex;
+          align-items: flex-end;
+          justify-content: flex-start;
+          pointer-events: auto;
+        }
+        .chat-modal {
+          background: #fff;
+          border-radius: 16px 16px 0 0;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+          width: 340px;
+          max-width: 95vw;
+          margin: 0 0 24px 24px;
+          display: flex;
+          flex-direction: column;
+          max-height: 70vh;
+          overflow: hidden;
+          animation: chatModalIn 0.2s;
+        }
+        @keyframes chatModalIn {
+          from { transform: translateY(100px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .chat-modal-header {
+          background: #22c55e;
+          color: #fff;
+          padding: 12px 16px;
+          font-weight: 600;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .chat-modal-close {
+          background: none;
+          border: none;
+          color: #fff;
+          font-size: 1.5rem;
+          cursor: pointer;
+          line-height: 1;
+        }
+        .chat-modal-body {
+          flex: 1 1 auto;
+          padding: 16px;
+          overflow-y: auto;
+          background: #f8f9fa;
+          font-size: 0.97rem;
+        }
+        .chat-message {
+          margin-bottom: 10px;
+          padding: 8px 12px;
+          border-radius: 12px;
+          max-width: 80%;
+          word-break: break-word;
+          clear: both;
+        }
+        .chat-message.bot {
+          background: #22c55e;
+          color: #fff;
+          align-self: flex-start;
+        }
+        .chat-message.user {
+          background: #fff;
+          color: #222;
+          border: 1px solid #e0e0e0;
+          align-self: flex-end;
+          margin-left: auto;
+        }
+        .chat-modal-footer {
+          display: flex;
+          gap: 8px;
+          padding: 12px 16px;
+          background: #fff;
+          border-top: 1px solid #eee;
+        }
+        .chat-modal-footer input[type="text"] {
+          flex: 1 1 auto;
+          border-radius: 8px;
+        }
+        .chat-modal-footer button {
+          border-radius: 8px;
+          background: #22c55e;
+          border: none;
+          color: #fff;
+          transition: background 0.2s;
+        }
+        .chat-modal-footer button:hover {
+          background: #16a34a;
+        }
+        @media (max-width: 500px) {
+          .chat-modal { width: 98vw; margin-left: 1vw; }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-r from-green-200 to-green-400 min-h-screen flex flex-col">
@@ -458,6 +579,83 @@ include 'header.php'; // Include your navigation/header file
     </footer>
     <script>
         AOS.init();
+    </script>
+    <!-- Floating Chat Button -->
+    <a href="#" class="floating-chat-btn" title="Chat" id="openChatBtn">
+      <i class="bi bi-chat-left-heart"></i>
+    </a>
+    <!-- Chat Modal -->
+    <div id="chatModal" class="chat-modal-overlay" style="display:none;">
+      <div class="chat-modal">
+        <div class="chat-modal-header">
+          <span>Live Chat</span>
+          <button type="button" class="chat-modal-close" id="closeChatBtn" aria-label="Close">&times;</button>
+        </div>
+        <div class="chat-modal-body" id="chatBody">
+          <div class="chat-message bot">Hello! How can I help you today?</div>
+        </div>
+        <form class="chat-modal-footer" id="chatForm" autocomplete="off">
+          <input type="text" id="chatInput" class="form-control" placeholder="Type your message..." required />
+          <button type="submit" class="btn btn-secondary">Send</button>
+        </form>
+      </div>
+    </div>
+    <script>
+      // Chat Modal JS (copied from index.php)
+      document.addEventListener('DOMContentLoaded', function() {
+        var openBtn = document.getElementById('openChatBtn');
+        var closeBtn = document.getElementById('closeChatBtn');
+        var chatModal = document.getElementById('chatModal');
+        var chatForm = document.getElementById('chatForm');
+        var chatInput = document.getElementById('chatInput');
+        var chatBody = document.getElementById('chatBody');
+
+        openBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          chatModal.style.display = 'flex';
+          setTimeout(function() { chatInput.focus(); }, 200);
+        });
+        closeBtn.addEventListener('click', function() {
+          chatModal.style.display = 'none';
+        });
+        chatForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          var msg = chatInput.value.trim();
+          if (!msg) return;
+          // Add user message
+          var userMsg = document.createElement('div');
+          userMsg.className = 'chat-message user';
+          userMsg.textContent = msg;
+          chatBody.appendChild(userMsg);
+          chatBody.scrollTop = chatBody.scrollHeight;
+          chatInput.value = '';
+          // Show loading message
+          var botMsg = document.createElement('div');
+          botMsg.className = 'chat-message bot';
+          botMsg.textContent = "Thinking...";
+          chatBody.appendChild(botMsg);
+          chatBody.scrollTop = chatBody.scrollHeight;
+          // Fetch AI reply from chatbot.php
+          fetch('chatbot.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg })
+          })
+          .then(res => res.json())
+          .then(data => {
+            botMsg.textContent = data.reply ? data.reply : (data.error ? "Error: " + data.error : "No reply.");
+            chatBody.scrollTop = chatBody.scrollHeight;
+          })
+          .catch(err => {
+            botMsg.textContent = "Error: " + err;
+            chatBody.scrollTop = chatBody.scrollHeight;
+          });
+        });
+        // Optional: close modal when clicking outside
+        chatModal.addEventListener('click', function(e) {
+          if (e.target === chatModal) chatModal.style.display = 'none';
+        });
+      });
     </script>
 </body>
 </html>
