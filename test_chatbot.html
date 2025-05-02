@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chatbot API Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    #response { margin-top: 1em; padding: 1em; background: #f0f0f0; border-radius: 8px; }
+    label, input, button { font-size: 1em; }
+    input { width: 300px; padding: 0.5em; }
+    button { padding: 0.5em 1em; }
+  </style>
+</head>
+<body>
+  <h2>Test Chatbot API (Ollama Llama 3)</h2>
+  <form id="chatForm">
+    <label for="msg">Message:</label>
+    <input type="text" id="msg" required>
+    <button type="submit">Send</button>
+  </form>
+  <div id="response"></div>
+  <script>
+    document.getElementById('chatForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const msg = document.getElementById('msg').value;
+      document.getElementById('response').textContent = 'Waiting for reply...';
+      try {
+        const res = await fetch('chatbot.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await res.json();
+        if (data.reply) {
+          document.getElementById('response').textContent = 'AI: ' + data.reply;
+        } else if (data.error) {
+          document.getElementById('response').textContent = 'Error: ' + data.error;
+        } else {
+          document.getElementById('response').textContent = 'No reply received.';
+        }
+      } catch (err) {
+        document.getElementById('response').textContent = 'Request failed: ' + err;
+      }
+    });
+  </script>
+</body>
+</html>
