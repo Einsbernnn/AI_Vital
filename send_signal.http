@@ -1,0 +1,2 @@
+### Send signal to ESP32
+GET http://localhost/StazSys/send_signal.php

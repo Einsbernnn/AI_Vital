@@ -443,7 +443,7 @@
   <div class="container">
     <div class="row">
       <div class="col-lg-6 mb-4 mb-lg-0">
-        <img src="img/img_long_5.jpg" alt="Image " class="img-fluid img-overlap" data-aos="zoom-out">
+        <img src="img/img_long_6.jpg" alt="Image " class="img-fluid img-overlap" data-aos="zoom-out">
       </div>
       <div class="col-lg-5 ml-auto" data-aos="fade-up" data-aos-delay="100">
         <h3 class="content-subtitle text-white opacity-50">Why Choose Us</h3>
