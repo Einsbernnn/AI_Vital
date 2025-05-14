@@ -1007,8 +1007,64 @@ document.addEventListener('DOMContentLoaded', function() {
             printWindow.close();
         });
 
-        document.getElementById('confirm-submit').addEventListener('click', function() {
-            form.submit();
+        document.getElementById('confirm-submit').addEventListener('click', async function() {
+            // Gather sensor readings from the summary grid
+            let sensorReadings = [];
+            document.querySelectorAll('.sensor-box').forEach(box => {
+                const type = box.querySelector('.sensor-type')?.textContent?.trim();
+                const value = box.querySelector('.sensor-value')?.textContent?.trim();
+                if (type && value) {
+                    sensorReadings.push(`- ${type}: ${value}`);
+                }
+            });
+
+            // Gather user answers from the review section
+            let answers = [];
+            reviewSection.querySelectorAll('.review-content > div').forEach(div => {
+                const sensor = div.querySelector('.font-semibold')?.textContent?.trim();
+                const question = div.querySelector('.text-gray-700')?.textContent?.trim();
+                const answer = div.querySelector('.text-gray-600')?.textContent?.replace('Your answer: ', '').trim();
+                if (sensor && question && answer) {
+                    answers.push(`- ${sensor} Q: ${question}\n  A: ${answer}`);
+                }
+            });
+
+            // Optionally, get user context (age/gender)
+            const age = document.getElementById('age')?.innerText || '';
+            const gender = document.getElementById('gender')?.innerText || '';
+
+            // Build prompt
+            let prompt = "Sensor Readings:\n";
+            prompt += sensorReadings.join('\n') + "\n\n";
+            prompt += "Answers:\n";
+            prompt += answers.join('\n') + "\n\n";
+            prompt += `Patient context: Age: ${age}, Gender: ${gender}\n\n`;
+            prompt += "Please provide a medical diagnosis and explain the possible condition and next steps.";
+
+            // Show loading
+            const aiBox = document.getElementById('ai-diagnosis-result');
+            const aiContent = document.getElementById('ai-diagnosis-content');
+            aiBox.style.display = 'block';
+            aiContent.innerHTML = '<span class="text-gray-500">Consulting AI, please wait...</span>';
+            document.querySelector('.questions-container')?.remove();
+            reviewSection.remove();
+
+            // Send to backend for Cohere call
+            try {
+                const resp = await fetch('consult_diagnose.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+                const data = await resp.json();
+                if (data && data.diagnosis) {
+                    aiContent.textContent = data.diagnosis;
+                } else {
+                    aiContent.innerHTML = '<span class="text-red-600">No diagnosis received from AI.</span>';
+                }
+            } catch (err) {
+                aiContent.innerHTML = '<span class="text-red-600">Error contacting AI service.</span>';
+            }
         });
     });
 
@@ -1345,6 +1401,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         </form>
                     </div>
                 </form>
+                <div id="ai-diagnosis-result" style="display:none;" class="w-full max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6 mt-8">
+                    <h3 class="text-2xl font-bold text-green-800 mb-4">AI Diagnosis</h3>
+                    <div id="ai-diagnosis-content" class="whitespace-pre-wrap break-words text-gray-800"></div>
+                    <div id="ai-diagnosis-followup" class="mt-6"></div>
+                </div>
             </div>
             <!-- User Details Panel -->
             <div class="user-panel w-1/3">
