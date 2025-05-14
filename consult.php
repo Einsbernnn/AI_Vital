@@ -324,6 +324,247 @@ $sensor_summary = isset($_GET['sensor_summary']) ? $_GET['sensor_summary'] : '';
                 align-self: auto;
             }
         }
+        .sensor-summary-horizontal {
+            background: #f0fdf4;
+            border: 2px solid #22c55e;
+            border-radius: 8px;
+            color: #065f46;
+            font-size: 0.98rem;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            width: 100%;
+        }
+        .sensor-summary-horizontal .title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+        .sensor-summary-horizontal pre {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        @media (max-width: 768px) {
+            .sensor-summary-horizontal {
+                font-size: 0.9rem;
+                padding: 12px 15px;
+            }
+            .sensor-summary-horizontal pre {
+                gap: 10px;
+            }
+        }
+        .sensor-summary-grid {
+            background: #f0fdf4;
+            border: 2px solid #22c55e;
+            border-radius: 8px;
+            color: #065f46;
+            font-size: 0.98rem;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            width: 100%;
+        }
+        .sensor-summary-grid .title {
+            font-weight: bold;
+            font-size: 1.4rem;
+            color: #065f46;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            justify-content: center;
+        }
+        .sensor-box {
+            background: white;
+            border: 2px solid #22c55e;
+            border-radius: 8px;
+            padding: 12px 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 140px;
+        }
+        .sensor-box.severity-low {
+            border-color: #3b82f6;
+        }
+        .sensor-box.severity-high {
+            border-color: #ef4444;
+        }
+        .sensor-type {
+            font-weight: 600;
+            color: #065f46;
+            margin-bottom: 4px;
+            font-size: 0.95rem;
+        }
+        .sensor-value {
+            font-weight: 600;
+            color: #047857;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .gauge-container {
+            width: 100%;
+            padding: 5px 0;
+            position: relative;
+        }
+        .gauge {
+            width: 100%;
+            max-width: 80px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .gauge-body {
+            width: 100%;
+            height: 0;
+            padding-bottom: 50%;
+            background: #e5e7eb;
+            position: relative;
+            border-top-left-radius: 100% 200%;
+            border-top-right-radius: 100% 200%;
+            overflow: hidden;
+        }
+        .gauge-fill {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform-origin: center top;
+            transform: rotate(0.5turn);
+            transition: transform 0.2s ease-out, background 0.2s ease-out;
+        }
+        .gauge-cover {
+            width: 75%;
+            height: 150%;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 4px rgba(0,0,0,0.1);
+        }
+        .severity-indicator {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-top: 8px;
+        }
+        @media (max-width: 768px) {
+            .sensor-box {
+                min-height: 120px;
+            }
+            .sensor-value {
+                font-size: 1rem;
+                margin-bottom: 6px;
+            }
+            .gauge {
+                max-width: 65px;
+            }
+            .gauge-cover {
+                width: 70%;
+            }
+            .severity-indicator {
+                font-size: 0.7rem;
+            }
+        }
+        .questions-container {
+            position: relative;
+            overflow: hidden;
+            height: 600px; /* Fixed height */
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+        .question-slide {
+            display: none;
+            width: 100%;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            transition: opacity 0.3s ease;
+            overflow-y: auto; /* Make individual slides scrollable */
+            max-height: calc(100% - 100px); /* Leave space for navigation */
+            flex: 1;
+        }
+        .question-slide.active {
+            display: block;
+            opacity: 1;
+        }
+        .question-slide.previous {
+            display: none;
+        }
+        .sensor-questions {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px; /* Reduced margin */
+        }
+        .navigation-buttons {
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            border-radius: 0 0 8px 8px;
+            z-index: 10;
+            margin-top: auto; /* Push to bottom */
+        }
+        .progress-bar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .answers-group {
+            margin-top: 20px;
+        }
+        .answers-group label {
+            display: block;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .answers-group label:hover {
+            background: #f0fdf4;
+            border-color: #22c55e;
+        }
+        .answers-group input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+        .answers-group span {
+            font-size: 1.1rem;
+            color: #374151;
+            cursor: pointer;
+        }
     </style>
     <script src="jquery.min.js"></script>
     <script>
@@ -594,6 +835,186 @@ $sensor_summary = isset($_GET['sensor_summary']) ? $_GET['sensor_summary'] : '';
             }
         });
     </script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('questionnaire-form');
+    const questions = document.querySelectorAll('.question-slide');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const currentQuestionSpan = document.getElementById('current-question');
+    const currentQuestionNav = document.getElementById('current-question-nav');
+    const progressFill = document.getElementById('progress-fill');
+    let currentQuestion = 0;
+    const totalQuestions = questions.length;
+
+    function updateNavigation() {
+        const progress = ((currentQuestion + 1) / totalQuestions) * 100;
+        progressFill.style.width = `${progress}%`;
+        currentQuestionSpan.textContent = currentQuestion + 1;
+        currentQuestionNav.textContent = currentQuestion + 1;
+
+        questions.forEach((q, index) => {
+            q.classList.remove('active', 'previous');
+            if (index === currentQuestion) {
+                q.classList.add('active');
+            } else if (index < currentQuestion) {
+                q.classList.add('previous');
+            }
+        });
+
+        prevBtn.disabled = currentQuestion === 0;
+        if (currentQuestion === totalQuestions - 1) {
+            nextBtn.classList.add('hidden');
+            submitBtn.classList.remove('hidden');
+        } else {
+            nextBtn.classList.remove('hidden');
+            submitBtn.classList.add('hidden');
+        }
+    }
+
+    function areAllQuestionsAnswered(slide) {
+        const questionGroups = slide.querySelectorAll('.question-group');
+        return Array.from(questionGroups).every(group => {
+            const radioInputs = group.querySelectorAll('input[type="radio"]');
+            return Array.from(radioInputs).some(input => input.checked);
+        });
+    }
+
+    prevBtn.addEventListener('click', () => {
+        if (currentQuestion > 0) {
+            currentQuestion--;
+            updateNavigation();
+        }
+    });
+
+    nextBtn.addEventListener('click', () => {
+        const currentSlide = questions[currentQuestion];
+        if (!areAllQuestionsAnswered(currentSlide)) {
+            const unansweredCount = Array.from(currentSlide.querySelectorAll('.question-group')).filter(group => {
+                const radioInputs = group.querySelectorAll('input[type="radio"]');
+                return !Array.from(radioInputs).some(input => input.checked);
+            }).length;
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Incomplete Answers',
+                text: `Please answer all ${unansweredCount} remaining question${unansweredCount > 1 ? 's' : ''} before proceeding.`,
+                confirmButtonText: 'Okay',
+                confirmButtonColor: '#3085d6',
+                timer: 3000,
+                timerProgressBar: true
+            });
+            return;
+        }
+
+        if (currentQuestion < totalQuestions - 1) {
+            currentQuestion++;
+            updateNavigation();
+        }
+    });
+
+    questions.forEach(slide => {
+        const radioInputs = slide.querySelectorAll('input[type="radio"]');
+        radioInputs.forEach(input => {
+            input.addEventListener('change', () => {
+                const questionGroup = input.closest('.question-group');
+                if (input.checked) {
+                    questionGroup.style.border = 'none';
+                }
+            });
+        });
+    });
+
+    submitBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        const oldReview = document.querySelector('.review-section');
+        if (oldReview) oldReview.remove();
+
+        const reviewSection = document.createElement('div');
+        reviewSection.className = 'review-section bg-white rounded-lg shadow-lg p-6 mt-6';
+        reviewSection.innerHTML = `
+            <h3 class="text-2xl font-bold text-green-800 mb-4">Review Your Answers</h3>
+            <div class="review-content"></div>
+            <div class="flex justify-between mt-6">
+                <button type="button" id="edit-answers" class="bg-gray-500 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-gray-700 transition">Edit Answers</button>
+                <div>
+                    <button type="button" id="print-review" class="bg-blue-500 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-blue-700 transition mr-2">Print</button>
+                    <button type="button" id="confirm-submit" class="bg-green-500 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-green-700 transition">Confirm & Submit</button>
+                </div>
+            </div>
+        `;
+
+        const reviewContent = reviewSection.querySelector('.review-content');
+        let hasAnswers = false;
+
+        questions.forEach((slide, slideIndex) => {
+            const sensorType = slide.querySelector('.sensor-type') ? slide.querySelector('.sensor-type').textContent : '';
+            const sensorValue = slide.querySelector('.sensor-value') ? slide.querySelector('.sensor-value').textContent : '';
+
+            const questionGroups = slide.querySelectorAll('.question-group');
+            questionGroups.forEach((group, qIndex) => {
+                const question = group.querySelector('p').textContent;
+                const selectedAnswer = group.querySelector('input[type="radio"]:checked');
+                if (selectedAnswer) {
+                    hasAnswers = true;
+                    const answerDiv = document.createElement('div');
+                    answerDiv.className = 'mb-4 p-4 bg-gray-50 rounded-lg';
+                    // Remove () from sensorType/sensorValue display
+                    answerDiv.innerHTML = `
+                        <div class="font-semibold text-green-800">${sensorType} - ${sensorValue}</div>
+                        <div class="text-gray-700 mt-2">${question}</div>
+                        <div class="text-gray-600 mt-1">Your answer: ${selectedAnswer.value}</div>
+                    `;
+                    reviewContent.appendChild(answerDiv);
+                }
+            });
+        });
+
+        if (!hasAnswers) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Answers Selected',
+                text: 'Please answer at least one question before submitting.',
+                confirmButtonText: 'Okay',
+                confirmButtonColor: '#3085d6'
+            });
+            return;
+        }
+
+        document.querySelector('.questions-container').style.display = 'none';
+        document.querySelector('.consult-input-col').appendChild(reviewSection);
+
+        document.getElementById('edit-answers').addEventListener('click', function() {
+            reviewSection.remove();
+            document.querySelector('.questions-container').style.display = 'block';
+        });
+
+        // Print function for review
+        document.getElementById('print-review').addEventListener('click', function() {
+            const printContents = reviewSection.querySelector('.review-content').innerHTML;
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write('<html><head><title>Review Answers</title>');
+            printWindow.document.write('<style>body{font-family:sans-serif;padding:24px;} .font-semibold{font-weight:bold;} .text-green-800{color:#065f46;} .text-gray-700{color:#374151;} .text-gray-600{color:#4B5563;} .mb-4{margin-bottom:1rem;} .p-4{padding:1rem;} .bg-gray-50{background:#f9fafb;} .rounded-lg{border-radius:0.5rem;}</style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write('<h2>Review Your Answers</h2>');
+            printWindow.document.write(printContents);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        });
+
+        document.getElementById('confirm-submit').addEventListener('click', function() {
+            form.submit();
+        });
+    });
+
+    updateNavigation();
+});
+</script>
 </head>
 <body class="bg-gradient-to-r from-green-200 to-green-400 min-h-screen flex flex-col">
     <div class="bg-overlay min-h-screen">
@@ -622,24 +1043,306 @@ $sensor_summary = isset($_GET['sensor_summary']) ? $_GET['sensor_summary'] : '';
         <div class="container mx-auto px-4 py-8 flex space-x-8">
             <!-- Input box and submit button panel -->
             <div class="readings-panel flex-grow flex flex-col items-center justify-center">
-                <form action="" method="post" class="consult-form-flex">
+                <form action="" method="post" class="w-full">
                     <?php if (!empty($sensor_summary)): ?>
-                    <div id="sensor-summary-container" class="sensor-summary-compact mr-4">
-                        <div class="title">Sensor Summary</div>
-                        <pre class="whitespace-pre-wrap break-words" style="margin:0; padding:0; background:none; border:none;"><?= htmlspecialchars($sensor_summary) ?></pre>
+                    <div id="sensor-summary-container" class="sensor-summary-grid mb-6">
+                        <div class="title mb-4">Sensor Summary</div>
+                        <div class="sensor-grid">
+                            <?php
+                            $sensor_data = explode("\n", trim($sensor_summary));
+                            for ($i = 0; $i < count($sensor_data); $i += 2) {
+                                if (isset($sensor_data[$i]) && isset($sensor_data[$i + 1])) {
+                                    $type = trim($sensor_data[$i]);
+                                    $value = trim($sensor_data[$i + 1]);
+                                    
+                                    // Extract numeric value for gauge
+                                    $numeric_value = 0;
+                                    $severity = 'normal';
+                                    $max_value = 0;
+                                    
+                                    switch($type) {
+                                        case 'Temp':
+                                            $numeric_value = floatval(str_replace('°C', '', $value));
+                                            $max_value = 42; // Max temperature for gauge
+                                            if ($numeric_value < 36.1) $severity = 'low';
+                                            else if ($numeric_value > 37.2) $severity = 'high';
+                                            break;
+                                        case 'ECG':
+                                            $numeric_value = floatval($value);
+                                            $max_value = 150; // Max ECG for gauge
+                                            if ($numeric_value < 60) $severity = 'low';
+                                            else if ($numeric_value > 100) $severity = 'high';
+                                            break;
+                                        case 'Pulse':
+                                            $numeric_value = floatval(str_replace('BPM', '', $value));
+                                            $max_value = 150; // Max pulse for gauge
+                                            if ($numeric_value < 60) $severity = 'low';
+                                            else if ($numeric_value > 100) $severity = 'high';
+                                            break;
+                                        case 'SpO₂':
+                                            $numeric_value = floatval(str_replace('%', '', $value));
+                                            $max_value = 100; // Max SpO2 for gauge
+                                            if ($numeric_value < 95) $severity = 'low';
+                                            else if ($numeric_value > 100) $severity = 'high';
+                                            break;
+                                        case 'BP':
+                                            $bp_parts = explode('/', str_replace('mmHg', '', $value));
+                                            if (count($bp_parts) === 2) {
+                                                $systolic = floatval($bp_parts[0]);
+                                                $diastolic = floatval($bp_parts[1]);
+                                                $numeric_value = $systolic; // Use systolic for gauge
+                                                $max_value = 180; // Max BP for gauge
+                                                if ($systolic < 90 || $diastolic < 60) $severity = 'low';
+                                                else if ($systolic > 120 || $diastolic > 80) $severity = 'high';
+                                            }
+                                            break;
+                                    }
+                                    
+                                    // Calculate gauge rotation based on value and max
+                                    $gauge_rotation = min(($numeric_value / $max_value) * 180, 180);
+                                    
+                                    // Set gauge color based on severity
+                                    $gauge_color = '#22c55e'; // normal - green
+                                    if ($severity === 'low') {
+                                        $gauge_color = '#3b82f6'; // low - blue
+                                    } else if ($severity === 'high') {
+                                        $gauge_color = '#ef4444'; // high - red
+                                    }
+                                    
+                                    echo '<div class="sensor-box severity-' . $severity . '">
+                                            <div class="sensor-type">' . htmlspecialchars($type) . '</div>
+                                            <div class="sensor-value">' . htmlspecialchars($value) . '</div>
+                                            <div class="gauge-container">
+                                                <div class="gauge">
+                                                    <div class="gauge-body">
+                                                        <div class="gauge-fill" style="transform: rotate(' . $gauge_rotation . 'deg); background: ' . $gauge_color . ';"></div>
+                                                        <div class="gauge-cover"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="severity-indicator ' . $severity . '">
+                                                ' . ucfirst($severity) . '
+                                            </div>
+                                        </div>';
+                                }
+                            }
+                            ?>
+                        </div>
                     </div>
                     <?php endif; ?>
                     <div class="consult-input-col">
-                        <label for="consultInput" class="block text-2xl font-bold text-green-900 mb-4">Describe your symptoms or concerns:</label>
-                        <textarea id="consultInput" name="consultInput" rows="10" class="w-full max-w-2xl p-4 border-2 border-green-400 rounded-lg text-lg mb-6" placeholder="Type your message here..."><?php
-                            if (isset($_POST['consultInput'])) {
-                                echo htmlspecialchars($_POST['consultInput']);
+                        <form action="" method="post" class="w-full">
+                            <?php
+                            // Define questions for each sensor type
+                            $sensor_questions = [
+                                'Temp' => [
+                                    'high' => [
+                                        'Are you experiencing any fever or chills?',
+                                        'Do you feel unusually hot or sweaty?',
+                                        'Have you been exposed to hot environments recently?',
+                                        'Are you experiencing any fatigue or weakness?',
+                                        'Have you been taking any medications that might affect body temperature?'
+                                    ],
+                                    'low' => [
+                                        'Are you feeling unusually cold?',
+                                        'Have you been exposed to cold environments?',
+                                        'Are you experiencing any shivering?',
+                                        'Do you feel more tired than usual?',
+                                        'Have you been taking any medications that might affect body temperature?'
+                                    ]
+                                ],
+                                'ECG' => [
+                                    'high' => [
+                                        'Are you experiencing any chest pain or discomfort?',
+                                        'Do you feel your heart racing or beating irregularly?',
+                                        'Are you experiencing any shortness of breath?',
+                                        'Do you feel dizzy or lightheaded?',
+                                        'Have you been under significant stress recently?'
+                                    ],
+                                    'low' => [
+                                        'Are you feeling unusually tired or fatigued?',
+                                        'Do you feel dizzy or lightheaded?',
+                                        'Have you been exercising recently?',
+                                        'Are you taking any medications that might affect heart rate?',
+                                        'Do you feel weak or have difficulty with physical activity?'
+                                    ]
+                                ],
+                                'Pulse' => [
+                                    'high' => [
+                                        'Are you experiencing any chest pain?',
+                                        'Do you feel your heart racing?',
+                                        'Are you feeling anxious or stressed?',
+                                        'Have you been physically active recently?',
+                                        'Are you experiencing any shortness of breath?'
+                                    ],
+                                    'low' => [
+                                        'Are you feeling unusually tired?',
+                                        'Do you feel dizzy or lightheaded?',
+                                        'Have you been resting or inactive?',
+                                        'Are you taking any medications?',
+                                        'Do you feel weak or have low energy?'
+                                    ]
+                                ],
+                                'SpO₂' => [
+                                    'high' => [
+                                        'Are you breathing normally?',
+                                        'Do you feel any chest tightness?',
+                                        'Are you experiencing any shortness of breath?',
+                                        'Have you been at high altitudes recently?',
+                                        'Are you taking any respiratory medications?'
+                                    ],
+                                    'low' => [
+                                        'Are you experiencing any difficulty breathing?',
+                                        'Do you feel short of breath?',
+                                        'Are you feeling tired or fatigued?',
+                                        'Have you been coughing or wheezing?',
+                                        'Do you have any respiratory conditions?'
+                                    ]
+                                ],
+                                'BP' => [
+                                    'high' => [
+                                        'Are you experiencing any headaches?',
+                                        'Do you feel any chest pain?',
+                                        'Are you feeling dizzy or lightheaded?',
+                                        'Have you been under stress recently?',
+                                        'Are you taking any blood pressure medications?'
+                                    ],
+                                    'low' => [
+                                        'Are you feeling dizzy or lightheaded?',
+                                        'Do you feel weak or fatigued?',
+                                        'Have you been standing for long periods?',
+                                        'Are you taking any medications?',
+                                        'Do you feel nauseous or have blurred vision?'
+                                    ]
+                                ]
+                            ];
+
+                            // Track if we have any abnormal readings
+                            $has_abnormal_readings = false;
+                            $abnormal_sensors = [];
+
+                            // First pass: identify abnormal readings
+                            for ($i = 0; $i < count($sensor_data); $i += 2) {
+                                if (isset($sensor_data[$i]) && isset($sensor_data[$i + 1])) {
+                                    $type = trim($sensor_data[$i]);
+                                    $value = trim($sensor_data[$i + 1]);
+                                    
+                                    // Calculate severity
+                                    $severity = 'normal';
+                                    $numeric_value = 0;
+                                    
+                                    switch($type) {
+                                        case 'Temp':
+                                            $numeric_value = floatval(str_replace('°C', '', $value));
+                                            if ($numeric_value < 36.1) $severity = 'low';
+                                            else if ($numeric_value > 37.2) $severity = 'high';
+                                            break;
+                                        case 'ECG':
+                                            $numeric_value = floatval($value);
+                                            if ($numeric_value < 60) $severity = 'low';
+                                            else if ($numeric_value > 100) $severity = 'high';
+                                            break;
+                                        case 'Pulse':
+                                            $numeric_value = floatval(str_replace('BPM', '', $value));
+                                            if ($numeric_value < 60) $severity = 'low';
+                                            else if ($numeric_value > 100) $severity = 'high';
+                                            break;
+                                        case 'SpO₂':
+                                            $numeric_value = floatval(str_replace('%', '', $value));
+                                            if ($numeric_value < 95) $severity = 'low';
+                                            else if ($numeric_value > 100) $severity = 'high';
+                                            break;
+                                        case 'BP':
+                                            $bp_parts = explode('/', str_replace('mmHg', '', $value));
+                                            if (count($bp_parts) === 2) {
+                                                $systolic = floatval($bp_parts[0]);
+                                                $diastolic = floatval($bp_parts[1]);
+                                                if ($systolic < 90 || $diastolic < 60) $severity = 'low';
+                                                else if ($systolic > 120 || $diastolic > 80) $severity = 'high';
+                                            }
+                                            break;
+                                    }
+
+                                    if ($severity !== 'normal') {
+                                        $has_abnormal_readings = true;
+                                        $abnormal_sensors[] = [
+                                            'type' => $type,
+                                            'value' => $value,
+                                            'severity' => $severity
+                                        ];
+                                    }
+                                }
                             }
-                        ?></textarea>
-                        <div class="flex space-x-4">
-                            <button type="submit" class="bg-green-500 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-green-700 transition">Submit</button>
-                            <a href="live reading.php" class="bg-gray-400 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-gray-600 transition flex items-center justify-center">Back</a>
-                        </div>
+
+                            if ($has_abnormal_readings): ?>
+                                <div class="questions-container">
+                                    <div class="progress-bar">
+                                        <div class="progress-text text-sm text-gray-600 mb-2">
+                                            Question <span id="current-question">1</span> of <?php echo count($abnormal_sensors); ?>
+                                        </div>
+                                        <div class="progress-track bg-gray-200 rounded-full h-2">
+                                            <div id="progress-fill" class="bg-green-500 h-2 rounded-full" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+
+                                    <form action="" method="post" class="w-full" id="questionnaire-form">
+                                        <?php foreach ($abnormal_sensors as $index => $sensor): ?>
+                                            <div class="question-slide <?php echo $index === 0 ? 'active' : ''; ?>" data-question="<?php echo $index + 1; ?>">
+                                                <div class="sensor-questions">
+                                                    <h4 class="text-xl font-semibold text-green-800 mb-4">
+                                                        <?php echo ($index + 1) . '. ' . htmlspecialchars($sensor['type']) . ' - ' . htmlspecialchars($sensor['value']); ?>
+                                                    </h4>
+                                                    
+                                                    <?php
+                                                    // Get questions for this sensor type and severity
+                                                    $questions = $sensor_questions[$sensor['type']][$sensor['severity']] ?? [];
+                                                    foreach ($questions as $qIndex => $question): ?>
+                                                        <div class="question-group mb-6">
+                                                            <p class="text-lg text-gray-700 mb-4"><?php echo ($qIndex + 1) . '. ' . htmlspecialchars($question); ?></p>
+                                                            <div class="answers-group">
+                                                                <label class="flex items-center">
+                                                                    <input type="radio" name="<?php echo $sensor['type'] . '_' . $qIndex; ?>" value="yes" class="form-radio text-green-600">
+                                                                    <span>Yes</span>
+                                                                </label>
+                                                                <label class="flex items-center">
+                                                                    <input type="radio" name="<?php echo $sensor['type'] . '_' . $qIndex; ?>" value="no" class="form-radio text-green-600">
+                                                                    <span>No</span>
+                                                                </label>
+                                                                <label class="flex items-center">
+                                                                    <input type="radio" name="<?php echo $sensor['type'] . '_' . $qIndex; ?>" value="sometimes" class="form-radio text-green-600">
+                                                                    <span>Sometimes</span>
+                                                                </label>
+                                                                <label class="flex items-center">
+                                                                    <input type="radio" name="<?php echo $sensor['type'] . '_' . $qIndex; ?>" value="not_sure" class="form-radio text-green-600">
+                                                                    <span>Not sure</span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+
+                                        <div class="navigation-buttons">
+                                            <div class="flex justify-between items-center">
+                                                <button type="button" id="prev-btn" class="bg-gray-400 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-gray-600 transition" disabled>Previous</button>
+                                                <div class="text-gray-600">
+                                                    Question <span id="current-question-nav">1</span> of <?php echo count($abnormal_sensors); ?>
+                                                </div>
+                                                <button type="button" id="next-btn" class="bg-green-500 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-green-700 transition">Next</button>
+                                                <button type="submit" id="submit-btn" class="bg-green-500 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-green-700 transition hidden">Submit</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            <?php else: ?>
+                                <div class="text-center py-8">
+                                    <h3 class="text-2xl font-bold text-green-900 mb-4">All readings are within normal range</h3>
+                                    <p class="text-lg text-gray-700 mb-6">No additional questions are needed at this time.</p>
+                                    <a href="live reading.php" class="bg-green-500 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-green-700 transition inline-block">Back to Readings</a>
+                                </div>
+                            <?php endif; ?>
+                        </form>
                     </div>
                 </form>
             </div>

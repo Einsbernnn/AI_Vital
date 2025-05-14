@@ -588,7 +588,7 @@ $currentDate = date("F j, Y");
             bp: !!(bp && !/^N\/A ?mmHg$/.test(bp) && !/^0(\/0)?( mmHg)?$/.test(bp))
         };
         showDiagnosisModal(validMap, function() {
-            // Build sensor summary and redirect to consult.php with it as a GET param
+            // Always build the summary from the latest DOM values after modal validation
             const summary = encodeURIComponent(buildSensorSummary());
             window.location.href = "consult.php?sensor_summary=" + summary;
         });
@@ -888,7 +888,7 @@ $currentDate = date("F j, Y");
                             bp: !!(bp && !/^N\/A ?mmHg$/.test(bp) && !/^0(\/0)?( mmHg)?$/.test(bp))
                         };
                         showDiagnosisModal(validMap, function() {
-                            // Build sensor summary and redirect to consult.php with it as a GET param
+                            // Always build the summary from the latest DOM values after modal validation
                             const summary = encodeURIComponent(buildSensorSummary());
                             window.location.href = "consult.php?sensor_summary=" + summary;
                         });
@@ -1037,7 +1037,7 @@ $currentDate = date("F j, Y");
     <script>
         async function fetchSensorData() {
             try {
-                const response = await fetch("fetch_random.php"); // Change to fetch_data.php for ESP data change to .sample
+                const response = await fetch("fetch_sample.php"); // Change to fetch_data.php for ESP data change to .sample
                 const data = await response.json();
 
                 // Debugging: Log the fetched data
