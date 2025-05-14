@@ -3,6 +3,72 @@ header('Content-Type: application/json');
 $data = json_decode(file_get_contents('php://input'), true);
 $prompt = $data['prompt'] ?? '';
 
+// Sanitize and limit prompt length (max 2000 chars, strip tags)
+$prompt = strip_tags($prompt);
+$prompt = mb_substr($prompt, 0, 2000);
+
+// New: Use detailed markdown instructions for the AI
+$instruction = <<<EOT
+You are a professional virtual medical assistant. Based on the patient’s sensor readings and answers to health-related questions, provide a clear, human-readable medical analysis.
+
+Please format your response in **markdown**, using this structure:
+
+---
+
+### **AI Diagnosis**
+Based on the sensor readings, patient responses, and context, here’s a **possible medical diagnosis** and **next steps**:
+
+---
+
+### **Possible Condition:**
+Give the most likely condition in **bold**, followed by a concise medical name (e.g., **Heat Exhaustion with Respiratory Distress and Hypertension**)
+
+---
+
+### **Explanation:**
+Explain the diagnosis clearly, breaking it into sections if needed:
+1. **Body Temperature:** Explain if the temp is normal, high, or dangerous.
+2. **ECG:** Describe any arrhythmia, abnormalities, or if it’s normal.
+3. **Pulse Rate:** State if it’s bradycardic, tachycardic, or normal.
+4. **SpO₂:** Explain if oxygen saturation is safe or needs intervention.
+5. **Blood Pressure:** Indicate if it's normal, elevated, or hypertensive.
+
+Include related symptoms from the Q&A (e.g., fever, chills, dizziness, etc.).
+
+---
+
+### **Next Steps:**
+Split into 4 subcategories:
+1. **Immediate Actions:** Basic first aid steps, what to do right now.
+2. **Diagnostic Tests:** Suggested medical tests to confirm the issue.
+3. **Medical Management:** Medications or treatments that may be required.
+4. **Follow-Up:** Recommendations for what to monitor and when to consult a doctor.
+
+---
+
+### **Red Flags to Monitor:**
+List 2–3 danger signs based on the current data that would require urgent care.
+
+---
+
+### **Important Note:**
+This analysis is not a substitute for professional medical advice or treatment. Always consult a licensed healthcare provider for a proper diagnosis and care.
+
+---
+
+### **Tone Guidelines:**
+- Use **simple language** a patient can understand.
+- Write in short paragraphs or bullet points.
+- Avoid long medical jargon unless explained.
+- Be helpful, kind, and informative.
+
+---
+
+Now analyze this patient:
+EOT;
+
+$final_prompt = $instruction . "\n\n" . $prompt;
+
 if (!$prompt) {
     echo json_encode(['diagnosis' => 'No prompt provided.']);
     exit;
@@ -15,7 +81,7 @@ $model = 'command-a-03-2025';
 $payload = [
     'model' => $model,
     'messages' => [
-        ['role' => 'user', 'content' => $prompt]
+        ['role' => 'user', 'content' => $final_prompt]
     ]
 ];
 
@@ -33,24 +99,137 @@ if ($result === false) {
     curl_close($ch);
     exit;
 }
-$data = json_decode($result, true);
+$data_ai = json_decode($result, true);
 curl_close($ch);
 
 $diagnosis = '';
-if (isset($data['text'])) {
-    $diagnosis = $data['text'];
-} elseif (isset($data['reply'])) {
-    $diagnosis = $data['reply'];
-} elseif (isset($data['message']['content'][0]['text'])) {
-    $diagnosis = $data['message']['content'][0]['text'];
-} elseif (isset($data['content'][0]['text'])) {
-    $diagnosis = $data['content'][0]['text'];
-} elseif (isset($data['message'])) {
-    $diagnosis = is_array($data['message']) ? json_encode($data['message']) : $data['message'];
-} elseif (isset($data['error'])) {
-    $diagnosis = is_array($data['error']) ? json_encode($data['error']) : $data['error'];
+if (isset($data_ai['text'])) {
+    $diagnosis = $data_ai['text'];
+} elseif (isset($data_ai['reply'])) {
+    $diagnosis = $data_ai['reply'];
+} elseif (isset($data_ai['message']['content'][0]['text'])) {
+    $diagnosis = $data_ai['message']['content'][0]['text'];
+} elseif (isset($data_ai['content'][0]['text'])) {
+    $diagnosis = $data_ai['content'][0]['text'];
+} elseif (isset($data_ai['message'])) {
+    $diagnosis = is_array($data_ai['message']) ? json_encode($data_ai['message']) : $data_ai['message'];
+} elseif (isset($data_ai['error'])) {
+    $diagnosis = is_array($data_ai['error']) ? json_encode($data_ai['error']) : $data_ai['error'];
 } else {
     $diagnosis = "No response from AI. Raw: " . $result;
 }
 
-echo json_encode(['diagnosis' => $diagnosis]);
+// --- Store to health_consult table and send email using PHPMailer ---
+
+// Get and sanitize additional fields
+$uid = isset($data['uid']) ? substr(preg_replace('/[^A-Za-z0-9\-]/', '', $data['uid']), 0, 255) : '';
+$patient_name = isset($data['patient_name']) ? substr(strip_tags($data['patient_name']), 0, 255) : '';
+$temperature = isset($data['temperature']) ? floatval($data['temperature']) : null;
+$ecg_rate = isset($data['ecg_rate']) ? floatval($data['ecg_rate']) : null;
+$pulse_rate = isset($data['pulse_rate']) ? floatval($data['pulse_rate']) : null;
+$spo2_level = isset($data['spo2_level']) ? floatval($data['spo2_level']) : null;
+$blood_pressure = isset($data['blood_pressure']) ? substr(strip_tags($data['blood_pressure']), 0, 10) : '';
+$email = ''; // will be fetched from DB
+
+// Fetch email from DB based on UID (auto, not from client)
+if ($uid) {
+    $mysqli = new mysqli('localhost', 'root', '', 'health_consult');
+    if (!$mysqli->connect_errno) {
+        $stmt = $mysqli->prepare("SELECT email FROM health_diagnostics WHERE id = ?");
+        if ($stmt) {
+            $stmt->bind_param("s", $uid);
+            $stmt->execute();
+            $stmt->bind_result($db_email);
+            if ($stmt->fetch()) {
+                $email = $db_email;
+            }
+            $stmt->close();
+        }
+        $mysqli->close();
+    }
+}
+
+// Send email using PHPMailer (auto, using fetched $email)
+if ($email && $diagnosis) {
+    require_once 'PHPMailer/src/Exception.php';
+    require_once 'PHPMailer/src/PHPMailer.php';
+    require_once 'PHPMailer/src/SMTP.php';
+    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'einsbernsystem@gmail.com';
+        $mail->Password = 'bdov zsdz sidj bcsc';
+        $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+
+        $mail->setFrom('einsbernsystem@gmail.com', 'AI-Vital Diagnoser');
+        $mail->addAddress($email, $patient_name);
+
+        $mail->isHTML(true);
+        $mail->Subject = "Your AI-VITAL Medical Diagnosis";
+        $mail->Body = "
+            <h3>Hello $patient_name,</h3>
+            <p>Here are your health details and readings:</p>
+            <ul>
+                <li><strong>UID:</strong> $uid</li>
+                <li><strong>Name:</strong> $patient_name</li>
+                <li><strong>Email:</strong> $email</li>
+                <li><strong>Age:</strong> " . (isset($data['age']) ? htmlspecialchars($data['age']) : 'N/A') . "</li>
+                <li><strong>Weight:</strong> " . (isset($data['weight']) ? htmlspecialchars($data['weight']) : 'N/A') . " kg</li>
+                <li><strong>Height:</strong> " . (isset($data['height']) ? htmlspecialchars($data['height']) : 'N/A') . " cm</li>
+                <li><strong>Gender:</strong> " . (isset($data['gender']) ? htmlspecialchars($data['gender']) : 'N/A') . "</li>
+            </ul>
+            <p><strong>Vital Signs:</strong></p>
+            <ul>
+                <li><strong>Body Temperature:</strong> $temperature °C</li>
+                <li><strong>ECG Rate:</strong> $ecg_rate BPM</li>
+                <li><strong>Pulse Rate:</strong> $pulse_rate BPM</li>
+                <li><strong>SpO₂ Level:</strong> $spo2_level %</li>
+                <li><strong>Blood Pressure:</strong> $blood_pressure mmHg</li>
+            </ul>
+            <p><strong>Diagnosis:</strong></p>
+            <div style='white-space: pre-line;'>$diagnosis</div>
+            <p>Stay healthy and take care!</p>
+        ";
+        $mail->send();
+        $email_status = true;
+
+        // Save to health_consult table after email sent
+        if ($uid && $patient_name && $temperature !== null && $ecg_rate !== null && $pulse_rate !== null && $spo2_level !== null && $blood_pressure && $diagnosis) {
+            $mysqli = new mysqli('localhost', 'root', '', 'health_consult');
+            if (!$mysqli->connect_errno) {
+                $stmt = $mysqli->prepare("INSERT INTO health_consult (`id`, `patient_name`, `temperature`, `ecg_rate`, `pulse_rate`, `spo2_level`, `blood_pressure`, `consultation`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param(
+                        "ssdddsss",
+                        $uid,
+                        $patient_name,
+                        $temperature,
+                        $ecg_rate,
+                        $pulse_rate,
+                        $spo2_level,
+                        $blood_pressure,
+                        $diagnosis
+                    );
+                    $stmt->execute();
+                    $stmt->close();
+                }
+                $mysqli->close();
+            }
+        }
+
+    } catch (Exception $e) {
+        $email_status = false;
+    }
+}
+
+// Log the diagnosis with timestamp (simple file log, or replace with DB insert as needed)
+$log_entry = date('Y-m-d H:i:s') . "\nPrompt:\n" . $prompt . "\nDiagnosis:\n" . $diagnosis . "\n---\n";
+file_put_contents(__DIR__ . '/diagnosis_log.txt', $log_entry, FILE_APPEND);
+
+echo json_encode([
+    'diagnosis' => $diagnosis,
+    'email_sent' => isset($email_status) ? $email_status : null
+]);

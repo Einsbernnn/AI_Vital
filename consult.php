@@ -1059,6 +1059,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = await resp.json();
                 if (data && data.diagnosis) {
                     aiContent.textContent = data.diagnosis;
+                    // Show email sent message like in AI_send.php
+                    const email = document.getElementById('email')?.innerText || '';
+                    let sentMsg = document.createElement('div');
+                    sentMsg.className = 'mt-4 text-green-700 font-bold';
+                    if (email && email !== 'N/A') {
+                        sentMsg.innerHTML = `The diagnostic result has been sent to <span class='underline'>${email}</span> successfully.`;
+                    } else {
+                        sentMsg.innerHTML = `The diagnostic result has been sent to your registered email address.`;
+                    }
+                    if (aiContent.parentNode) {
+                        aiContent.parentNode.appendChild(sentMsg);
+                    }
                 } else {
                     aiContent.innerHTML = '<span class="text-red-600">No diagnosis received from AI.</span>';
                 }
@@ -1404,7 +1416,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div id="ai-diagnosis-result" style="display:none;" class="w-full max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6 mt-8">
                     <h3 class="text-2xl font-bold text-green-800 mb-4">AI Diagnosis</h3>
                     <div id="ai-diagnosis-content" class="whitespace-pre-wrap break-words text-gray-800"></div>
-                    <div id="ai-diagnosis-followup" class="mt-6"></div>
                 </div>
             </div>
             <!-- User Details Panel -->
