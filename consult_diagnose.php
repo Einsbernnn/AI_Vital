@@ -139,7 +139,9 @@ $blood_pressure = isset($data['blood_pressure']) ? substr(strip_tags($data['bloo
 $email = ''; // will be fetched from DB
 
 // Fetch email from DB based on UID (auto, not from client)
+$email_found = false;
 if ($uid) {
+    // Try both health_consult and health_diagnostics databases for robustness
     $mysqli = new mysqli('localhost', 'root', '', 'health_consult');
     if (!$mysqli->connect_errno) {
         $stmt = $mysqli->prepare("SELECT email FROM health_diagnostics WHERE id = ?");
@@ -149,18 +151,53 @@ if ($uid) {
             $stmt->bind_result($db_email);
             if ($stmt->fetch()) {
                 $email = $db_email;
+                $email_found = true;
             }
             $stmt->close();
         }
         $mysqli->close();
     }
+    if (!$email_found) {
+        // Try main database if not found in health_consult
+        $mysqli = new mysqli('localhost', 'root', '', 'main'); // Change 'main' to your main DB name if needed
+        if (!$mysqli->connect_errno) {
+            $stmt = $mysqli->prepare("SELECT email FROM health_diagnostics WHERE id = ?");
+            if ($stmt) {
+                $stmt->bind_param("s", $uid);
+                $stmt->execute();
+                $stmt->bind_result($db_email);
+                if ($stmt->fetch()) {
+                    $email = $db_email;
+                    $email_found = true;
+                }
+                $stmt->close();
+            }
+            $mysqli->close();
+        }
+    }
+}
+
+// If no email found, return error
+if (!$email_found) {
+    echo json_encode([
+        'diagnosis' => $diagnosis,
+        'email_sent' => false,
+        'error' => 'User email not found for UID: ' . $uid
+    ]);
+    exit;
 }
 
 // Send email using PHPMailer (auto, using fetched $email)
+$email_status = null;
+$email_error = null;
 if ($email && $diagnosis) {
     $mail = new PHPMailer(true);
     try {
-        $mail->SMTPDebug = SMTP::DEBUG_SERVER; // Enable verbose debug output
+        // Enable SMTP debug output and log to file
+        $mail->SMTPDebug = 2; // 2 = client and server messages
+        $mail->Debugoutput = function($str, $level) {
+            file_put_contents(__DIR__ . '/phpmailer_debug.log', $str . "\n", FILE_APPEND);
+        };
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
@@ -201,37 +238,39 @@ if ($email && $diagnosis) {
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $mail->send();
             $email_status = true;
-
-            // Save to health_consult table after email sent
-            if ($uid && $patient_name && $temperature !== null && $ecg_rate !== null && $pulse_rate !== null && $spo2_level !== null && $blood_pressure && $diagnosis) {
-                $mysqli = new mysqli('localhost', 'root', '', 'health_consult');
-                if (!$mysqli->connect_errno) {
-                    $stmt = $mysqli->prepare("INSERT INTO health_consult (`id`, `patient_name`, `temperature`, `ecg_rate`, `pulse_rate`, `spo2_level`, `blood_pressure`, `consultation`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                    if ($stmt) {
-                        $stmt->bind_param(
-                            "ssdddsss",
-                            $uid,
-                            $patient_name,
-                            $temperature,
-                            $ecg_rate,
-                            $pulse_rate,
-                            $spo2_level,
-                            $blood_pressure,
-                            $diagnosis
-                        );
-                        $stmt->execute();
-                        $stmt->close();
-                    }
-                    $mysqli->close();
-                }
-            }
         } else {
             $email_status = false;
-            error_log('Invalid email address: ' . $email);
+            $email_error = 'Invalid email address: ' . $email;
         }
     } catch (Exception $e) {
         $email_status = false;
-        error_log('PHPMailer Error: ' . $mail->ErrorInfo . ' Exception: ' . $e->getMessage());
+        $email_error = 'Failed to send the email. ' . $mail->ErrorInfo . ' Exception: ' . $e->getMessage();
+        // Also log error info
+        file_put_contents(__DIR__ . '/phpmailer_debug.log', 'PHPMailer Exception: ' . $mail->ErrorInfo . ' ' . $e->getMessage() . "\n", FILE_APPEND);
+    }
+}
+
+// Save to health_consult table regardless of email status
+if ($uid && $patient_name && $temperature !== null && $ecg_rate !== null && $pulse_rate !== null && $spo2_level !== null && $blood_pressure && $diagnosis) {
+    $mysqli = new mysqli('localhost', 'root', '', 'health_consult');
+    if (!$mysqli->connect_errno) {
+        $stmt = $mysqli->prepare("INSERT INTO health_consult (`id`, `patient_name`, `temperature`, `ecg_rate`, `pulse_rate`, `spo2_level`, `blood_pressure`, `consultation`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param(
+                "ssdddsss",
+                $uid,
+                $patient_name,
+                $temperature,
+                $ecg_rate,
+                $pulse_rate,
+                $spo2_level,
+                $blood_pressure,
+                $diagnosis
+            );
+            $stmt->execute();
+            $stmt->close();
+        }
+        $mysqli->close();
     }
 }
 
@@ -241,5 +280,6 @@ file_put_contents(__DIR__ . '/diagnosis_log.txt', $log_entry, FILE_APPEND);
 
 echo json_encode([
     'diagnosis' => $diagnosis,
-    'email_sent' => isset($email_status) ? $email_status : null
+    'email_sent' => $email_status,
+    'email_error' => $email_error,
 ]);
