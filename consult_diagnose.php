@@ -10,64 +10,61 @@ header('Content-Type: application/json');
 $data = json_decode(file_get_contents('php://input'), true);
 $prompt = $data['prompt'] ?? '';
 
-// Sanitize and limit prompt length (max 2000 chars, strip tags)
+// Sanitize prompt (strip tags, no length limitation for richer diagnosis)
 $prompt = strip_tags($prompt);
-$prompt = mb_substr($prompt, 0, 2000);
 
-// New: Use detailed markdown instructions for the AI
+// Improved instructions for more comprehensive and detailed diagnosis
 $instruction = <<<EOT
-You are a professional virtual medical assistant. Based on the patient’s sensor readings and answers to health-related questions, provide a clear, human-readable medical analysis.
+You are a highly skilled, empathetic, and thorough virtual medical assistant. Your job is to analyze the patient's sensor readings and answers to health-related questions, then provide a comprehensive, clear, and human-readable medical analysis.
 
 Please format your response in **markdown**, using this structure:
 
 ---
 
 ### **AI Diagnosis**
-Based on the sensor readings, patient responses, and context, here’s a **possible medical diagnosis** and **next steps**:
+Provide a detailed summary of the patient's health status based on all available data. Include both positive findings (what is normal) and negative findings (what is abnormal or concerning).
 
 ---
 
-### **Possible Condition:**
-Give the most likely condition in **bold**, followed by a concise medical name (e.g., **Heat Exhaustion with Respiratory Distress and Hypertension**)
+### **Possible Condition(s):**
+List all likely conditions, each in **bold**, with a concise medical name and a short layman's explanation. If there are multiple possible diagnoses, list them in order of likelihood.
 
 ---
 
-### **Explanation:**
-Explain the diagnosis clearly, breaking it into sections if needed:
-1. **Body Temperature:** Explain if the temp is normal, high, or dangerous.
-2. **ECG:** Describe any arrhythmia, abnormalities, or if it’s normal.
-3. **Pulse Rate:** State if it’s bradycardic, tachycardic, or normal.
-4. **SpO₂:** Explain if oxygen saturation is safe or needs intervention.
-5. **Blood Pressure:** Indicate if it's normal, elevated, or hypertensive.
-
-Include related symptoms from the Q&A (e.g., fever, chills, dizziness, etc.).
+### **Detailed Explanation:**
+For each vital sign and symptom, explain:
+- What the value means (normal/abnormal, and why)
+- What could cause abnormal results
+- How the findings relate to the possible conditions
+- If any values are critical or require urgent attention, highlight them
 
 ---
 
-### **Next Steps:**
-Split into 4 subcategories:
-1. **Immediate Actions:** Basic first aid steps, what to do right now.
-2. **Diagnostic Tests:** Suggested medical tests to confirm the issue.
-3. **Medical Management:** Medications or treatments that may be required.
-4. **Follow-Up:** Recommendations for what to monitor and when to consult a doctor.
+### **Personalized Recommendations:**
+Split into:
+1. **Immediate Actions:** What the patient should do right now (first aid, rest, hydration, etc.)
+2. **Diagnostic Tests:** What tests or follow-up should be done to confirm the diagnosis
+3. **Medical Management:** Medications, treatments, or lifestyle changes that may be required
+4. **Follow-Up:** What to monitor, when to seek further care, and any red flags
 
 ---
 
 ### **Red Flags to Monitor:**
-List 2–3 danger signs based on the current data that would require urgent care.
+List 2–5 danger signs based on the current data that would require urgent medical attention. Use bullet points and clear language.
 
 ---
 
 ### **Important Note:**
-This analysis is not a substitute for professional medical advice or treatment. Always consult a licensed healthcare provider for a proper diagnosis and care.
+This analysis is based on the provided data and is not a substitute for professional medical advice or treatment. Always consult a licensed healthcare provider for a proper diagnosis and care.
 
 ---
 
 ### **Tone Guidelines:**
-- Use **simple language** a patient can understand.
-- Write in short paragraphs or bullet points.
-- Avoid long medical jargon unless explained.
-- Be helpful, kind, and informative.
+- Use simple, supportive, and encouraging language
+- Write in short paragraphs or bullet points
+- Avoid unexplained medical jargon
+- Be thorough, kind, and informative
+- If the case is complex, explain the uncertainty and suggest next steps
 
 ---
 
@@ -81,24 +78,25 @@ if (!$prompt) {
     exit;
 }
 
-$cohere_url = 'https://api.cohere.com/v2/chat';
-$api_key = 'F3LM9ycUnenzInMB2m94RWdRwHuQLnTH7cT2f5qB';
-$model = 'command-a-03-2025';
+// Use OpenAI ChatGPT API instead of Cohere
+$openai_url = 'https://api.openai.com/v1/chat/completions';
+$openai_api_key = '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';
+$openai_model = 'gpt-4.1-nano';
 
-$payload = [
-    'model' => $model,
+$openai_payload = [
+    'model' => $openai_model,
     'messages' => [
         ['role' => 'user', 'content' => $final_prompt]
     ]
 ];
 
-$ch = curl_init($cohere_url);
+$ch = curl_init($openai_url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($openai_payload));
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'accept: application/json',
     'content-type: application/json',
-    'Authorization: bearer ' . $api_key
+    'Authorization: Bearer ' . $openai_api_key
 ]);
 $result = curl_exec($ch);
 if ($result === false) {
@@ -110,16 +108,8 @@ $data_ai = json_decode($result, true);
 curl_close($ch);
 
 $diagnosis = '';
-if (isset($data_ai['text'])) {
-    $diagnosis = $data_ai['text'];
-} elseif (isset($data_ai['reply'])) {
-    $diagnosis = $data_ai['reply'];
-} elseif (isset($data_ai['message']['content'][0]['text'])) {
-    $diagnosis = $data_ai['message']['content'][0]['text'];
-} elseif (isset($data_ai['content'][0]['text'])) {
-    $diagnosis = $data_ai['content'][0]['text'];
-} elseif (isset($data_ai['message'])) {
-    $diagnosis = is_array($data_ai['message']) ? json_encode($data_ai['message']) : $data_ai['message'];
+if (isset($data_ai['choices'][0]['message']['content'])) {
+    $diagnosis = $data_ai['choices'][0]['message']['content'];
 } elseif (isset($data_ai['error'])) {
     $diagnosis = is_array($data_ai['error']) ? json_encode($data_ai['error']) : $data_ai['error'];
 } else {
