@@ -1,4 +1,11 @@
 <?php
+require_once 'PHPMailer/src/PHPMailer.php';
+require_once 'PHPMailer/src/SMTP.php';
+require_once 'PHPMailer/src/Exception.php';
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\SMTP;
+
 header('Content-Type: application/json');
 $data = json_decode(file_get_contents('php://input'), true);
 $prompt = $data['prompt'] ?? '';
@@ -151,17 +158,15 @@ if ($uid) {
 
 // Send email using PHPMailer (auto, using fetched $email)
 if ($email && $diagnosis) {
-    require_once 'PHPMailer/src/Exception.php';
-    require_once 'PHPMailer/src/PHPMailer.php';
-    require_once 'PHPMailer/src/SMTP.php';
-    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+    $mail = new PHPMailer(true);
     try {
+        $mail->SMTPDebug = SMTP::DEBUG_SERVER; // Enable verbose debug output
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
         $mail->Username = 'einsbernsystem@gmail.com';
         $mail->Password = 'bdov zsdz sidj bcsc';
-        $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
 
         $mail->setFrom('einsbernsystem@gmail.com', 'AI-Vital Diagnoser');
@@ -193,35 +198,40 @@ if ($email && $diagnosis) {
             <div style='white-space: pre-line;'>$diagnosis</div>
             <p>Stay healthy and take care!</p>
         ";
-        $mail->send();
-        $email_status = true;
+        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $mail->send();
+            $email_status = true;
 
-        // Save to health_consult table after email sent
-        if ($uid && $patient_name && $temperature !== null && $ecg_rate !== null && $pulse_rate !== null && $spo2_level !== null && $blood_pressure && $diagnosis) {
-            $mysqli = new mysqli('localhost', 'root', '', 'health_consult');
-            if (!$mysqli->connect_errno) {
-                $stmt = $mysqli->prepare("INSERT INTO health_consult (`id`, `patient_name`, `temperature`, `ecg_rate`, `pulse_rate`, `spo2_level`, `blood_pressure`, `consultation`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                if ($stmt) {
-                    $stmt->bind_param(
-                        "ssdddsss",
-                        $uid,
-                        $patient_name,
-                        $temperature,
-                        $ecg_rate,
-                        $pulse_rate,
-                        $spo2_level,
-                        $blood_pressure,
-                        $diagnosis
-                    );
-                    $stmt->execute();
-                    $stmt->close();
+            // Save to health_consult table after email sent
+            if ($uid && $patient_name && $temperature !== null && $ecg_rate !== null && $pulse_rate !== null && $spo2_level !== null && $blood_pressure && $diagnosis) {
+                $mysqli = new mysqli('localhost', 'root', '', 'health_consult');
+                if (!$mysqli->connect_errno) {
+                    $stmt = $mysqli->prepare("INSERT INTO health_consult (`id`, `patient_name`, `temperature`, `ecg_rate`, `pulse_rate`, `spo2_level`, `blood_pressure`, `consultation`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                    if ($stmt) {
+                        $stmt->bind_param(
+                            "ssdddsss",
+                            $uid,
+                            $patient_name,
+                            $temperature,
+                            $ecg_rate,
+                            $pulse_rate,
+                            $spo2_level,
+                            $blood_pressure,
+                            $diagnosis
+                        );
+                        $stmt->execute();
+                        $stmt->close();
+                    }
+                    $mysqli->close();
                 }
-                $mysqli->close();
             }
+        } else {
+            $email_status = false;
+            error_log('Invalid email address: ' . $email);
         }
-
     } catch (Exception $e) {
         $email_status = false;
+        error_log('PHPMailer Error: ' . $mail->ErrorInfo . ' Exception: ' . $e->getMessage());
     }
 }
 
