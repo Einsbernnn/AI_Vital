@@ -111,12 +111,13 @@ $currentDate = date("F j, Y");
             }
         }
         .grid-item {
-            background: #f0fdf4; /* Light green background */
+            background: #f0fdf4;
             padding: 16px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
-            border: 2px solid #d1fae5; /* Green border */
+            border: 2px solid #d1fae5;
+            transition: all 0.3s ease;
         }
         .grid-item p {
             margin: 0;
@@ -125,22 +126,47 @@ $currentDate = date("F j, Y");
             font-size: 24px;
             font-weight: bold;
             color: #065f46; /* Dark green text */
+            position: relative;
+        }
+        .grid-item .label i.vital-icon {
+            position: relative;
+            z-index: 1;
         }
         .grid-item .value {
             font-size: 20px;
             font-weight: bold;
             margin-top: 6px;
         }
-        .grid-item.red { border-color: #EF4444; }
-        .grid-item.red .value { color: #EF4444; }
-        .grid-item.yellow { border-color: #F59E0B; }
-        .grid-item.yellow .value { color: #F59E0B; }
-        .grid-item.green { border-color: #10B981; }
-        .grid-item.green .value { color: #10B981; }
-        .grid-item.blue { border-color: #3B82F6; }
-        .grid-item.blue .value { color: #3B82F6; }
-        .grid-item.purple { border-color: #8B5CF6; }
-        .grid-item.purple .value { color: #8B5CF6; }
+        .grid-item.red {
+            border-color: #EF4444;
+            animation: borderPulse 2s infinite;
+        }
+        .grid-item.yellow {
+            border-color: #F59E0B;
+            animation: borderPulseYellow 2s infinite;
+        }
+        .grid-item.green {
+            border-color: #10B981;
+            animation: borderPulseGreen 2s infinite;
+        }
+        .grid-item.blue {
+            border-color: #3B82F6;
+            animation: borderPulseBlue 2s infinite;
+        }
+        .grid-item.purple {
+            border-color: #8B5CF6;
+            animation: borderPulsePurple 2s infinite;
+        }
+        .grid-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        /* Add a subtle gradient background to each grid item */
+        .grid-item.red { background: linear-gradient(145deg, #fff5f5, #f0fdf4); }
+        .grid-item.yellow { background: linear-gradient(145deg, #fffbeb, #f0fdf4); }
+        .grid-item.green { background: linear-gradient(145deg, #ecfdf5, #f0fdf4); }
+        .grid-item.blue { background: linear-gradient(145deg, #eff6ff, #f0fdf4); }
+        .grid-item.purple { background: linear-gradient(145deg, #f5f3ff, #f0fdf4); }
         .user-panel, .readings-panel {
             background: #ffffff;
             border: 1px solid #d1fae5;
@@ -278,6 +304,147 @@ $currentDate = date("F j, Y");
             .diagnosis-modal-content .sensor-indicators > div {
                 min-width: 70px;
                 max-width: 100px;
+            }
+        }
+        #ecgCanvas {
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .grid-item.yellow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        @keyframes iconPulse {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.1); filter: brightness(1.2); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        @keyframes iconColorShift {
+            0% { color: inherit; }
+            25% { color: #22c55e; }
+            50% { color: inherit; }
+            75% { color: #22c55e; }
+            100% { color: inherit; }
+        }
+
+        .vital-icon {
+            font-size: 1.2em;
+            margin-right: 4px;
+            animation: iconPulse 2s ease-in-out infinite, iconColorShift 3s ease-in-out infinite;
+        }
+
+        .vital-icon.temp { color: #EF4444; }
+        .vital-icon.ecg { color: #F59E0B; }
+        .vital-icon.pulse { color: #10B981; }
+        .vital-icon.spo2 { color: #3B82F6; }
+        .vital-icon.bp { color: #8B5CF6; }
+
+        .vital-icon:hover {
+            animation-play-state: paused;
+        }
+
+        /* Add glow effect on hover */
+        .vital-icon:hover {
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+
+        /* Add these styles before the existing styles */
+        @keyframes borderPulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        @keyframes borderPulseYellow {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        @keyframes borderPulseGreen {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        @keyframes borderPulseBlue {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        @keyframes borderPulsePurple {
+            0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(139, 92, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+        }
+
+        /* Add these styles to your existing styles */
+        #myResultsButton {
+            margin-top: 1.5rem;
+            padding: 0 1rem;
+        }
+
+        #myResultsLink {
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 8rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #myResultsLink span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            white-space: nowrap;
+        }
+
+        #myResultsLink:hover {
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        #myResultsLink:active {
+            transform: scale(0.98);
+        }
+
+        #myResultsIcon {
+            margin-top: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #myResultsLink {
+                min-height: 6rem;
+                font-size: 1.5rem;
+            }
+            
+            #myResultsLink span {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #myResultsLink {
+                min-height: 5rem;
+                font-size: 1.25rem;
+            }
+            
+            #myResultsLink span {
+                font-size: 1.25rem;
             }
         }
     </style>
@@ -438,7 +605,7 @@ $currentDate = date("F j, Y");
         let anyInvalid = false;
         let invalidSensors = [];
         sensors.forEach(s => {
-            document.getElementById(`indicator-${s}-status`).innerHTML = '<span class="sensor-loader"></span>';
+            document.getElementById(`indicator-${s}-status`).innerHTML = validMap[s] ? "✔️" : "❌";
             document.getElementById(`indicator-${s}-text`).textContent = "Processing…";
             document.getElementById(`indicator-${s}-text`).style.color = "#666";
             document.getElementById(`indicator-${s}-value`).textContent = "";
@@ -631,11 +798,13 @@ $currentDate = date("F j, Y");
                 <div class="grid grid-cols-2 gap-4 mt-4">
                     <div class="grid-item red">
                         <p class="label" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                            <i class="bi bi-thermometer-half vital-icon temp"></i>
                             Body Temperature
                             <span 
                                 tabindex="0"
-                                style="color:#888;outline:none;cursor:pointer;"
+                                style="color:#888;outline:none;cursor:pointer;touch-action:manipulation;"
                                 onclick="toggleInfo('bodyTempInfo', event)"
+                                onTouchStart="toggleInfo('bodyTempInfo', event)"
                             >
                                 <i class="bi bi-info-circle"></i>
                             </span>
@@ -647,11 +816,13 @@ $currentDate = date("F j, Y");
                     </div>
                     <div class="grid-item yellow">
                         <p class="label" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                            <i class="bi bi-activity vital-icon ecg"></i>
                             ECG
                             <span 
                                 tabindex="0"
-                                style="color:#888;outline:none;cursor:pointer;"
+                                style="color:#888;outline:none;cursor:pointer;touch-action:manipulation;"
                                 onclick="toggleInfo('ecgInfo', event)"
+                                onTouchStart="toggleInfo('ecgInfo', event)"
                             >
                                 <i class="bi bi-info-circle"></i>
                             </span>
@@ -660,14 +831,17 @@ $currentDate = date("F j, Y");
                             Normal: 60–100 BPM, regular rhythm<br>ECG measures heart electrical activity. Normal resting heart activity is steady and consistent.
                         </div>
                         <p class="value" id="ecg">0.00</p>
+                        <canvas id="ecgCanvas" width="200" height="60" style="width: 100%; height: 60px; margin-top: 10px; background: #f8fafc;"></canvas>
                     </div>
                     <div class="grid-item green">
                         <p class="label" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                            <i class="bi bi-heart-pulse vital-icon pulse"></i>
                             Pulse Rate
                             <span 
                                 tabindex="0"
-                                style="color:#888;outline:none;cursor:pointer;"
+                                style="color:#888;outline:none;cursor:pointer;touch-action:manipulation;"
                                 onclick="toggleInfo('pulseInfo', event)"
+                                onTouchStart="toggleInfo('pulseInfo', event)"
                             >
                                 <i class="bi bi-info-circle"></i>
                             </span>
@@ -679,11 +853,13 @@ $currentDate = date("F j, Y");
                     </div>
                     <div class="grid-item blue">
                         <p class="label" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                            <i class="bi bi-droplet-half vital-icon spo2"></i>
                             SpO₂
                             <span 
                                 tabindex="0"
-                                style="color:#888;outline:none;cursor:pointer;"
+                                style="color:#888;outline:none;cursor:pointer;touch-action:manipulation;"
                                 onclick="toggleInfo('spo2Info', event)"
+                                onTouchStart="toggleInfo('spo2Info', event)"
                             >
                                 <i class="bi bi-info-circle"></i>
                             </span>
@@ -695,11 +871,13 @@ $currentDate = date("F j, Y");
                     </div>
                     <div class="grid-item purple col-span-2">
                         <p class="label" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                            <i class="bi bi-heart vital-icon bp"></i>
                             Blood Pressure
                             <span 
                                 tabindex="0"
-                                style="color:#888;outline:none;cursor:pointer;"
+                                style="color:#888;outline:none;cursor:pointer;touch-action:manipulation;"
                                 onclick="toggleInfo('bpInfo', event)"
+                                onTouchStart="toggleInfo('bpInfo', event)"
                             >
                                 <i class="bi bi-info-circle"></i>
                             </span>
@@ -935,9 +1113,14 @@ $currentDate = date("F j, Y");
                     </tr>
                 </table>
                 <div class="mt-4" id="myResultsButton" style="display: none;">
-                    <a href="my_results.php" id="myResultsLink" class="bg-green-500 text-white px-16 py-12 rounded-lg text-4xl font-bold hover:bg-green-800 block w-full h-40 flex items-center justify-center">TAP ID</a>
-                    <div class="flex justify-center mt-2 text-green-600 text-5xl" id="myResultsIcon">
-                        <i class="bi bi-card-checklist"></i>
+                    <a href="my_results.php" id="myResultsLink" class="bg-green-500 text-white px-4 py-3 rounded-lg text-2xl font-bold hover:bg-green-800 block w-full h-32 flex items-center justify-center transition-all duration-300 transform hover:scale-105">
+                        <span class="flex items-center justify-center gap-3">
+                            <i class="bi bi-card-checklist text-3xl"></i>
+                            <span>My Results</span>
+                        </span>
+                    </a>
+                    <div class="flex justify-center mt-2 text-green-600 text-3xl" id="myResultsIcon">
+                        <i class="bi bi-broadcast"></i>
                     </div>
                 </div>
             </div>
@@ -1035,9 +1218,125 @@ $currentDate = date("F j, Y");
     </footer>
 
     <script>
+        let ecgData = [];
+        const maxDataPoints = 100;
+        let animationFrameId = null;
+        let lastECGValue = 0;
+
+        // Initialize ECG functionality when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('ecgCanvas');
+            if (!canvas) {
+                console.error('ECG canvas not found in DOM');
+                return;
+            }
+            console.log('ECG canvas found and initialized');
+            
+            // Start the ECG animation
+            animateECG();
+        });
+
+        function initECGCanvas() {
+            const canvas = document.getElementById('ecgCanvas');
+            if (!canvas) {
+                console.error('ECG canvas not found');
+                return null;
+            }
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size to match display size
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            return { canvas, ctx };
+        }
+
+        function drawECG(ctx, value) {
+            if (!ctx) return;
+            
+            const width = ctx.canvas.width;
+            const height = ctx.canvas.height;
+            const centerY = height / 2;
+            
+            // Add new data point
+            ecgData.push(value);
+            if (ecgData.length > maxDataPoints) {
+                ecgData.shift();
+            }
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw grid lines
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 0.5;
+            
+            // Vertical grid lines
+            for (let x = 0; x < width; x += 20) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            
+            // Horizontal grid lines
+            for (let y = 0; y < height; y += 20) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            
+            // Draw ECG line
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            const pointWidth = width / (maxDataPoints - 1);
+            
+            ecgData.forEach((point, index) => {
+                const x = index * pointWidth;
+                // Scale the value to fit the canvas height
+                const scaledValue = (point / 100) * (height * 0.4);
+                const y = centerY - scaledValue;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+        }
+
+        function animateECG() {
+            const canvasContext = initECGCanvas();
+            if (!canvasContext) return;
+            
+            const { ctx } = canvasContext;
+            
+            // Use the last ECG value from the sensor data
+            const currentValue = lastECGValue;
+            
+            // Add some noise to make it look more realistic
+            const noise = (Math.random() - 0.5) * 2;
+            drawECG(ctx, currentValue + noise);
+            
+            animationFrameId = requestAnimationFrame(animateECG);
+        }
+
+        // Clean up animation when page is unloaded
+        window.addEventListener('unload', () => {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        });
+
+        // Original fetchSensorData function with ECG value tracking added
         async function fetchSensorData() {
             try {
-                const response = await fetch("fetch_sample.php"); // Change to fetch_data.php for ESP data change to .sample
+                const response = await fetch("fetch_random.php"); // Keep original fetch_random.php
                 const data = await response.json();
 
                 // Debugging: Log the fetched data
@@ -1045,7 +1344,12 @@ $currentDate = date("F j, Y");
 
                 // Update the UI with fetched sensor data
                 document.getElementById("temp").innerText = data.body_temp !== null ? parseFloat(data.body_temp).toFixed(2) + " °C" : "0.00 °C";
-                document.getElementById("ecg").innerText = data.ecg !== null ? parseFloat(data.ecg).toFixed(2) : "0.00";
+                
+                // Update ECG value and store it for the graph
+                const ecgValue = data.ecg !== null ? parseFloat(data.ecg) : 0;
+                document.getElementById("ecg").innerText = ecgValue.toFixed(2);
+                lastECGValue = ecgValue; // Store the ECG value for the graph
+                
                 document.getElementById("pulse_rate").innerText = data.pulse_rate !== null ? parseInt(data.pulse_rate, 10) + " BPM" : "0 BPM";
                 document.getElementById("spo2").innerText = data.spo2 !== null ? parseFloat(data.spo2).toFixed(2) + " %" : "0.00 %";
                 document.getElementById("bp").innerText = data.bp || "N/A mmHg";
@@ -1060,6 +1364,16 @@ $currentDate = date("F j, Y");
                 console.error("Error fetching sensor data:", error);
             }
         }
+
+        // Make sure the canvas is properly initialized
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('ecgCanvas');
+            if (!canvas) {
+                console.error('ECG canvas not found in DOM');
+            } else {
+                console.log('ECG canvas found and initialized');
+            }
+        });
 
         async function fetchUID() {
             try {
@@ -1135,6 +1449,42 @@ $currentDate = date("F j, Y");
         setInterval(fetchSensorData, 2000); // Fetch sensor data every 2 seconds
         setInterval(fetchUID, 300); // Fetch UID every 300ms
         setInterval(updateDeviceTime, 1000); // Update time every second
+
+        // Add this function for handling info tooltips
+        function toggleInfo(id, event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const tooltip = document.getElementById(id);
+            const allTooltips = document.querySelectorAll('.sensor-tooltip');
+            
+            // Hide all other tooltips
+            allTooltips.forEach(t => {
+                if (t.id !== id) {
+                    t.style.display = 'none';
+                }
+            });
+            
+            // Toggle current tooltip
+            if (tooltip.style.display === 'none') {
+                tooltip.style.display = 'block';
+                
+                // Position the tooltip
+                const rect = event.target.getBoundingClientRect();
+                tooltip.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+                tooltip.style.left = (rect.left + window.scrollX) + 'px';
+                
+                // Add click outside listener
+                document.addEventListener('click', function closeTooltip(e) {
+                    if (!tooltip.contains(e.target) && !e.target.closest('.bi-info-circle')) {
+                        tooltip.style.display = 'none';
+                        document.removeEventListener('click', closeTooltip);
+                    }
+                });
+            } else {
+                tooltip.style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html>
