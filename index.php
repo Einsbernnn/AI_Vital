@@ -510,11 +510,10 @@
           <div class="row">
             <div class="col-md-6 mb-4 mb-md-4">
               <div class="testimonial">
-                <img src="img/developers/developer_1.jpg" alt="Testimonial author">
+                <img src="img/developers/Enrico.jpg" alt="Testimonial author">
                 <blockquote>
                   <p>
-                  “AI-Vital makes health monitoring incredibly easy and accessible. 
-                  The real-time data has helped me stay on top of my health like never before.”
+                  “AI-Vital empowers individuals to make informed health decisions with confidence and clarity by providing real-time insights making it a valuable asset in the medical field.”
                   </p>
                 </blockquote>
                 <p class="client-name">Enrico, Pamela R.</p>
@@ -522,12 +521,10 @@
             </div>
             <div class="col-md-6 mb-4 mb-md-4">
               <div class="testimonial">
-                <img src="img/developers/developer_2.jpg" alt="Testimonial author">
+                <img src="img/developers/Fraginal.jpg" alt="Testimonial author">
                 <blockquote>
                   <p>
-                    “Lorem ipsum dolor sit, amet consectetur adipisicing
-                    elit. Provident deleniti iusto molestias, dolore vel fugiat
-                    ab placeat ea?”
+                    “AI-Vital enhances care by continuously monitoring vital signs and redefining diagnosis with compassion and precision, thereby empowering health through intelligent insight.”
                   </p>
                 </blockquote>
                 <p class="client-name">Fraginal, John Lester P.</p>
@@ -535,12 +532,10 @@
             </div>
             <div class="col-md-6 mb-4 mb-md-4">
               <div class="testimonial">
-                <img src="img/developers/developer_3.jpg" alt="Testimonial author">
+                <img src="img/developers/Manuel.jpg" alt="Testimonial author">
                 <blockquote>
                   <p>
-                    “Lorem ipsum dolor sit, amet consectetur adipisicing
-                    elit. Provident deleniti iusto molestias, dolore vel fugiat
-                    ab placeat ea?”
+                    “AI-Vital empowers with real-time data-smart monitoring and precise diagnosis that guide toward better, informed health.”
                   </p>
                 </blockquote>
                 <p class="client-name">Manuel, Jeralyn R.</p>
@@ -548,12 +543,10 @@
             </div>
             <div class="col-md-6 mb-4 mb-md-4">
               <div class="testimonial">
-                <img src="img/developers/developer_4.jpg" alt="Testimonial author">
+                <img src="img/developers/Nuqui.jpg" alt="Testimonial author">
                 <blockquote>
                   <p>
-                    “Lorem ipsum dolor sit, amet consectetur adipisicing
-                    elit. Provident deleniti iusto molestias, dolore vel fugiat
-                    ab placeat ea?”
+                    “AI-Vital is a significant contribution to the medical industry because of its advanced capabilities, which are incorporated in one system, making it convenient for people seeking medical examinations.”
                   </p>
                 </blockquote>
                 <p class="client-name">Nuqui, Karylle S.</p>
@@ -561,12 +554,10 @@
             </div>
             <div class="col-md-6 mb-4 mb-md-4">
               <div class="testimonial">
-                <img src="img/developers/developer_5.jpg" alt="Testimonial author">
+                <img src="img/developers/Sacdalan.jpeg" alt="Testimonial author">
                 <blockquote>
                   <p>
-                    “Lorem ipsum dolor sit, amet consectetur adipisicing
-                    elit. Provident deleniti iusto molestias, dolore vel fugiat
-                    ab placeat ea?”
+                    “Vital signs are more than just data; with AI, they might be the key to proactive health, more accurate diagnosis, and improved outcomes.”
                   </p>
                 </blockquote>
                 <p class="client-name">Sacdalan, Mariela C.</p>
@@ -574,12 +565,10 @@
             </div>
             <div class="col-md-6 mb-4 mb-md-4">
               <div class="testimonial">
-                <img src="img/developers/developer_6.jpg" alt="Testimonial author">
+                <img src="img/developers/Serrano.jpg" alt="Testimonial author">
                 <blockquote>
                   <p>
-                    “Lorem ipsum dolor sit, amet consectetur adipisicing
-                    elit. Provident deleniti iusto molestias, dolore vel fugiat
-                    ab placeat ea?”
+                    “AI-Vital watches over every heartbeat and breath, ensuring life’s most important signals are never missed.”
                   </p>
                 </blockquote>
                 <p class="client-name">Serrano, Angela G.</p>
@@ -597,7 +586,7 @@
   <div class="container">
     <div class="row align-items-center">
       <div class="col-lg-6">
-        <h3>Register Now to Our System</h3>
+        <h3>Register Now to Our System!</h3>
         <p class="opacity-50">
           Note: Please get your RFID card at the clinic room look for the nurse on duty! 
         </p>
