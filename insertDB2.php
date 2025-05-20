@@ -102,8 +102,8 @@ function sendEmail($email, $name) {
 
         // Email Content
         $mail->isHTML(true);
-        $mail->Subject = 'Thank You for Registering to Our System!';
-        $mail->Body    = "<h3>Welcome, $name!</h3><p>Thank you for registering with The Einsbern System. Your details have been successfully saved.</p>";
+        $mail->Subject = 'Thank You for Registering to AI-Vital System!';
+        $mail->Body    = "<h3>Welcome, $name!</h3><p>Thank you for registering with AI-Vital System. Your details have been successfully saved. You can now use our systems features to get your health diagnosis -EinsbernSystem.</p>";
 
         $mail->send();
     } catch (Exception $e) {

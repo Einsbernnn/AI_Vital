@@ -186,7 +186,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <li><a href="registration2.php" class="">Registration</a></li>
                     <li><a href="userdata2.php" class="active">User Data</a></li>
                     <li><a href="live reading.php" class="">Live-Reading</a></li>
-                    <li><a href="results2.php" class="">Results</a></li>
                     <li><a href="about.php" class="">About Us</a></li>
                 </ul>
             </nav>
@@ -252,7 +251,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <li><a href="registration2.php">Registration</a></li>
                             <li><a href="userdata2.php">User Data</a></li>
                             <li><a href="live reading.php">Live-Reading</a></li>
-                            <li><a href="results2.php">Results</a></li>
                             <li><a href="about.php">About Us</a></li>
                         </ul>
                     </div>

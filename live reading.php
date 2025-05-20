@@ -783,7 +783,6 @@ $currentDate = date("F j, Y");
                     <li><a href="registration2.php">Registration</a></li>
                     <li><a href="userdata2.php">User Data</a></li>
                     <li><a href="live reading.php" class="active">Live-Reading</a></li>
-                    <li><a href="results2.php">Results</a></li>
                     <li><a href="about.php">About Us</a></li>
                 </ul>
             </nav>
@@ -889,7 +888,6 @@ $currentDate = date("F j, Y");
                     </div>
                 </div>
                 <div class="mt-4 flex justify-center space-x-4">
-                    <button id="quickSaveButton" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Quick Save</button>
                     <form action="AI_send.php" method="get" id="sendToMailForm">
                         <input type="hidden" name="uid" id="emailUid">
                         <input type="hidden" name="name" id="emailName">
@@ -1156,7 +1154,6 @@ $currentDate = date("F j, Y");
                             <li><a href="registration2.php">Registration</a></li>
                             <li><a href="userdata2.php">User Data</a></li>
                             <li><a href="live reading.php">Live-Reading</a></li>
-                            <li><a href="results2.php">Results</a></li>
                             <li><a href="about.php">About Us</a></li>
                         </ul>
                     </div>

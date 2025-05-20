@@ -168,7 +168,6 @@
           <li><a href="registration2.php">Registration</a></li>
           <li><a href="userdata2.php">User Data</a></li>
           <li><a href="live reading.php">Live-Reading</a></li>
-          <li><a href="results2.php">Results</a></li>
           <li><a href="about.php">About Us</a></li>
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
@@ -629,7 +628,6 @@
               <li><a href="registration2.php">Registration</a></li>
               <li><a href="userdata2.php">User Data</a></li>
               <li><a href="live reading.php">Live-Reading</a></li>
-              <li><a href="results2.php">Results</a></li>
               <li><a href="about.php">About Us</a></li>
             </ul>
           </div>

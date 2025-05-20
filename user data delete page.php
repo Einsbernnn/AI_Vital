@@ -143,7 +143,6 @@
         <a href="read tag.php">Read Tag</a>
         <a href="about.php">About Us</a>
         <a href="live reading.php">Live-Reading</a>
-        <a href="results2.php">Results</a>
     </div>
     <div class="container">
         <h2>Delete User</h2>
