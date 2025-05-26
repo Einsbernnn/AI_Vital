@@ -270,7 +270,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <h4>Hardware Used</h4>
                         <ul>
                             <li><a href="#">MLX90614</a></li>
-                            <li><a href="#">AD8323</a></li>
+                            <li><a href="#">AD8232</a></li>
                             <li><a href="#">MAX30100</a></li>
                             <li><a href="#">MFRC522</a></li>
                             <li><a href="#">ESP-32 Wroom</a></li>

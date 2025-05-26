@@ -492,7 +492,7 @@ Database::disconnect();
                         <li><a href="registration2.php">Registration</a></li>
                         <li><a href="userdata2.php">User Data</a></li>
                         <li><a href="live reading.php">Live-Reading</a></li>
-                        <li><a href="results2.php">Results</a></li>
+                        <li><a href="my_results.php">Results</a></li>
                         <li><a href="about.php">About Us</a></li>
                     </ul>
                 </nav>
@@ -604,7 +604,7 @@ Database::disconnect();
                             <h4>Hardware Used</h4>
                             <ul>
                                 <li><a href="#">MLX90614</a></li>
-                                <li><a href="#">AD8323</a></li>
+                                <li><a href="#">AD8232</a></li>
                                 <li><a href="#">MAX30100</a></li>
                                 <li><a href="#">MFRC522</a></li>
                                 <li><a href="#">ESP-32 Wroom</a></li>

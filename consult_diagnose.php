@@ -240,27 +240,31 @@ if ($email && $diagnosis) {
     }
 }
 
-// Save to health_consult table regardless of email status
+// Save to health_readings table using PDO (AI_send.php style)
 if ($uid && $patient_name && $temperature !== null && $ecg_rate !== null && $pulse_rate !== null && $spo2_level !== null && $blood_pressure && $diagnosis) {
-    $mysqli = new mysqli('localhost', 'root', '', 'health_consult');
-    if (!$mysqli->connect_errno) {
-        $stmt = $mysqli->prepare("INSERT INTO health_consult (`id`, `patient_name`, `temperature`, `ecg_rate`, `pulse_rate`, `spo2_level`, `blood_pressure`, `consultation`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        if ($stmt) {
-            $stmt->bind_param(
-                "ssdddsss",
-                $uid,
-                $patient_name,
-                $temperature,
-                $ecg_rate,
-                $pulse_rate,
-                $spo2_level,
-                $blood_pressure,
-                $diagnosis
-            );
-            $stmt->execute();
-            $stmt->close();
-        }
-        $mysqli->close();
+    try {
+        require_once __DIR__ . '/database.php'; // Make sure this file returns a PDO connection as $conn or Database::connect()
+        $conn = Database::connect();
+        $insertQuery = "
+            INSERT INTO health_readings 
+            (id, patient_name, temperature, ecg_rate, pulse_rate, spo2_level, blood_pressure, diagnosis) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ";
+        $insertStmt = $conn->prepare($insertQuery);
+        $insertStmt->execute([
+            $uid,
+            $patient_name,
+            $temperature,
+            $ecg_rate,
+            $pulse_rate,
+            $spo2_level,
+            $blood_pressure,
+            $diagnosis
+        ]);
+        Database::disconnect();
+    } catch (Exception $e) {
+        // Optionally log error
+        file_put_contents(__DIR__ . '/diagnosis_log.txt', "DB Insert Error: " . $e->getMessage() . "\n", FILE_APPEND);
     }
 }
 

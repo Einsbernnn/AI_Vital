@@ -152,7 +152,7 @@
         <a class="active" href="read tag.php">Read Tag ID</a>
         <a href="about.php">About Us</a>
         <a href="live reading.php">Live-Reading</a>
-        <a href="results2.php">Results</a>
+        <a href="my_results.php">Results</a>
     </div>
 
     <div class="container">

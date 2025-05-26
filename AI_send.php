@@ -191,8 +191,54 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         ]);
 
         $message = "The diagnostic result has been sent to \"$email\" successfully.";
+
+        // Add success notifications
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Email success notification
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Email Sent Successfully',
+                    text: 'Your diagnostic results have been sent to your email address.',
+                    confirmButtonText: 'Okay',
+                    confirmButtonColor: '#28a745',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: true
+                }).then(() => {
+                    // Database success notification
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Data Stored Successfully',
+                        text: 'Your diagnostic results have been saved to the database.',
+                        confirmButtonText: 'Okay',
+                        confirmButtonColor: '#28a745',
+                        timer: 3000,
+                        timerProgressBar: true,
+                        showConfirmButton: true
+                    });
+                });
+            });
+        </script>";
+
     } catch (Exception $e) {
         $message = "Failed to send the email. " . htmlspecialchars($e->getMessage());
+
+        // Add error notifications
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Operation Failed',
+                    text: 'Failed to send email and store data. Please try again later.',
+                    confirmButtonText: 'Okay',
+                    confirmButtonColor: '#d33',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: true
+                });
+            });
+        </script>";
     } finally {
         Database::disconnect();
     }
@@ -232,7 +278,90 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background-size: cover;
         }
         .bg-overlay {
-            background-color: rgba(255, 255, 255, 0.8); /* White overlay with reduced opacity */
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        /* Loading Animation */
+        .loading-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #22c55e;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        .loading-text {
+            font-size: 24px;
+            color: #065f46;
+            font-weight: bold;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Improved Result Display */
+        .diagnosis-result {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .diagnosis-result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .diagnosis-result h3 {
+            color: #065f46;
+            font-size: 28px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #22c55e;
+            padding-bottom: 10px;
+        }
+        .diagnosis-result p {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #374151;
+            margin-bottom: 16px;
+        }
+        /* iPad Optimizations */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .container {
+                max-width: 90%;
+                padding: 0 20px;
+            }
+            .vital-signs-container {
+                padding: 24px;
+            }
+            .vital-signs-container .grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 24px;
+            }
+            .diagnosis-result {
+                padding: 32px;
+            }
+            .diagnosis-result h3 {
+                font-size: 32px;
+            }
+            .diagnosis-result p {
+                font-size: 20px;
+            }
         }
         /* Nav menu as links only, no button style */
         #navmenu {
@@ -327,8 +456,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background-color: #218838;
         }
     </style>
+
+    <!-- Add SweetAlert2 CSS and JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
 </head>
 <body class="bg-gradient-to-r from-green-200 to-green-400 min-h-screen flex flex-col">
+    <!-- Loading Animation Container -->
+    <div class="loading-container" id="loadingContainer">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Generating AI Diagnosis...</div>
+    </div>
+
     <div class="bg-overlay min-h-screen">
         
     <!-- Header Section -->
@@ -345,7 +484,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <li><a href="registration2.php" class="">Registration</a></li>
                     <li><a href="userdata2.php" class="">User Data</a></li>
                     <li><a href="live reading.php" class="">Live-Reading</a></li>
-                    <li><a href="results2.php" class="">Results</a></li>
                     <li><a href="about.php" class="">About Us</a></li>
                 </ul>
             </nav>
@@ -390,8 +528,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <!-- Diagnosis Result -->
         <?php if ($_SERVER["REQUEST_METHOD"] == "POST") : ?>
-            <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
-                <h3 class="text-xl font-bold text-green-700 mb-4">AI Diagnosis Result:</h3>
+            <div class="diagnosis-result" id="diagnosisResult">
+                <h3>AI Diagnosis Result:</h3>
                 <p class="text-gray-700"><?php echo nl2br(htmlspecialchars($diagnosis)); ?></p>
             </div>
 
@@ -426,7 +564,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <li><a href="registration2.php">Registration</a></li>
                             <li><a href="userdata2.php">User Data</a></li>
                             <li><a href="live reading.php">Live-Reading</a></li>
-                            <li><a href="results2.php">Results</a></li>
                             <li><a href="about.php">About Us</a></li>
                         </ul>
                     </div>
@@ -446,7 +583,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <h4>Hardware Used</h4>
                         <ul>
                             <li><a href="#">MLX90614</a></li>
-                            <li><a href="#">AD8323</a></li>
+                            <li><a href="#">AD8232</a></li>
                             <li><a href="#">MAX30100</a></li>
                             <li><a href="#">MFRC522</a></li>
                             <li><a href="#">ESP-32 Wroom</a></li>
@@ -486,5 +623,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
         </div>
     </footer>
+
+    <!-- Add JavaScript for loading animation and result display -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const loadingContainer = document.getElementById('loadingContainer');
+            const diagnosisResult = document.getElementById('diagnosisResult');
+
+            if (form) {
+                form.addEventListener('submit', function() {
+                    loadingContainer.style.display = 'flex';
+                });
+            }
+
+            if (diagnosisResult) {
+                // Show the result with animation after a short delay
+                setTimeout(() => {
+                    diagnosisResult.classList.add('show');
+                }, 100);
+            }
+        });
+    </script>
 </body>
 </html>

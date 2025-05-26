@@ -7,6 +7,12 @@ ini_set('error_log', __DIR__ . '/php_errors.log');
 
 // Include required files
 require_once __DIR__ . '/database.php';
+require 'PHPMailer/src/Exception.php';
+require 'PHPMailer/src/PHPMailer.php';
+require 'PHPMailer/src/SMTP.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 // Ensure session is started for access to $_SESSION variables
 if (session_status() === PHP_SESSION_NONE) {
@@ -59,6 +65,83 @@ $ai_responses = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
     file_put_contents($logFile, "[$timestamp] POST request received with consultInput\n", FILE_APPEND);
     $userInput = trim($_POST['consultInput']);
+
+    // Get user details
+    $uid = isset($_POST['uid']) ? trim($_POST['uid']) : '';
+    $name = isset($_POST['name']) ? trim($_POST['name']) : '';
+    $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+    $age = isset($_POST['age']) ? trim($_POST['age']) : '';
+    $gender = isset($_POST['gender']) ? trim($_POST['gender']) : '';
+
+    // Parse sensor values from the sensor_summary
+    $temperature = 0.00;
+    $ecg_rate = 0.00;
+    $pulse_rate = 0.00;
+    $spo2_level = 0.00;
+    $blood_pressure = '';
+
+    if (isset($_POST['sensor_summary'])) {
+        $sensor_summary = $_POST['sensor_summary'];
+        
+        // Log the raw sensor summary for debugging
+        file_put_contents($logFile, "[$timestamp] Raw sensor summary:\n" . $sensor_summary . "\n", FILE_APPEND);
+        
+        // Extract temperature
+        if (preg_match('/Temp:\s*([\d.]+)\s*°C/i', $sensor_summary, $matches)) {
+            $temperature = floatval($matches[1]);
+            file_put_contents($logFile, "[$timestamp] Extracted temperature: $temperature\n", FILE_APPEND);
+        }
+        
+        // Extract ECG rate
+        if (preg_match('/ECG:\s*([\d.]+)/i', $sensor_summary, $matches)) {
+            $ecg_rate = floatval($matches[1]);
+            file_put_contents($logFile, "[$timestamp] Extracted ECG rate: $ecg_rate\n", FILE_APPEND);
+        }
+        
+        // Extract pulse rate
+        if (preg_match('/Pulse:\s*([\d.]+)\s*BPM/i', $sensor_summary, $matches)) {
+            $pulse_rate = floatval($matches[1]);
+            file_put_contents($logFile, "[$timestamp] Extracted pulse rate: $pulse_rate\n", FILE_APPEND);
+        }
+        
+        // Extract SpO2 level - try multiple patterns to handle different formats
+        if (preg_match('/SpO2:\s*([\d.]+)\s*%/i', $sensor_summary, $matches) || 
+            preg_match('/SpO₂:\s*([\d.]+)\s*%/i', $sensor_summary, $matches) ||
+            preg_match('/SpO2\s*:\s*([\d.]+)/i', $sensor_summary, $matches)) {
+            $spo2_level = floatval($matches[1]);
+            file_put_contents($logFile, "[$timestamp] Extracted SpO2 level: $spo2_level\n", FILE_APPEND);
+        } else {
+            file_put_contents($logFile, "[$timestamp] Failed to extract SpO2 level. Raw summary: $sensor_summary\n", FILE_APPEND);
+        }
+        
+        // Extract blood pressure
+        if (preg_match('/BP:\s*([\d\/]+)/i', $sensor_summary, $matches)) {
+            $blood_pressure = trim($matches[1]);
+            file_put_contents($logFile, "[$timestamp] Extracted blood pressure: $blood_pressure\n", FILE_APPEND);
+        }
+
+        // Log all extracted values
+        file_put_contents($logFile, "[$timestamp] All extracted values:\n", FILE_APPEND);
+        file_put_contents($logFile, "Temperature: $temperature\n", FILE_APPEND);
+        file_put_contents($logFile, "ECG Rate: $ecg_rate\n", FILE_APPEND);
+        file_put_contents($logFile, "Pulse Rate: $pulse_rate\n", FILE_APPEND);
+        file_put_contents($logFile, "SpO2 Level: $spo2_level\n", FILE_APPEND);
+        file_put_contents($logFile, "Blood Pressure: $blood_pressure\n", FILE_APPEND);
+    }
+
+    // Validate numeric values
+    $temperature = is_numeric($temperature) ? floatval($temperature) : 0.00;
+    $ecg_rate = is_numeric($ecg_rate) ? floatval($ecg_rate) : 0.00;
+    $pulse_rate = is_numeric($pulse_rate) ? floatval($pulse_rate) : 0.00;
+    $spo2_level = is_numeric($spo2_level) ? floatval($spo2_level) : 0.00;
+
+    // Log the validated values
+    file_put_contents($logFile, "[$timestamp] Validated values:\n", FILE_APPEND);
+    file_put_contents($logFile, "Temperature: $temperature\n", FILE_APPEND);
+    file_put_contents($logFile, "ECG Rate: $ecg_rate\n", FILE_APPEND);
+    file_put_contents($logFile, "Pulse Rate: $pulse_rate\n", FILE_APPEND);
+    file_put_contents($logFile, "SpO2 Level: $spo2_level\n", FILE_APPEND);
+    file_put_contents($logFile, "Blood Pressure: $blood_pressure\n", FILE_APPEND);
 
     // If sensor_summary is present in POST, append it to $userInput if not already present
     if (isset($_POST['sensor_summary']) && $_POST['sensor_summary']) {
@@ -121,57 +204,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
         }
         curl_close($ch);
     }
-}
 
-file_put_contents($logFile, "[$timestamp] ===== Script Ended =====\n", FILE_APPEND);
-
-// After AI response is received, send email using PHPMailer
-if (!empty($ai_responses)) {
-    file_put_contents($logFile, "[$timestamp] AI responses received, preparing to send email\n", FILE_APPEND);
-    file_put_contents($logFile, "[$timestamp] AI Response content: " . json_encode($ai_responses) . "\n", FILE_APPEND);
-    
-    // --- BEGIN ANTI-SPAM LOGIC ---
-    $uid = '';
-    // Try to get UID from POST, GET, or session
-    if (isset($_POST['uid'])) {
-        $uid = trim($_POST['uid']);
-        file_put_contents($logFile, "[$timestamp] UID found in POST: $uid\n", FILE_APPEND);
-    } elseif (isset($_GET['uid'])) {
-        $uid = trim($_GET['uid']);
-        file_put_contents($logFile, "[$timestamp] UID found in GET: $uid\n", FILE_APPEND);
-    } elseif (isset($_SESSION['uid'])) {
-        $uid = trim($_SESSION['uid']);
-        file_put_contents($logFile, "[$timestamp] UID found in SESSION: $uid\n", FILE_APPEND);
-    } else {
-        // Try to get UID from UIDContainer.php
-        $uid = trim(file_get_contents('UIDContainer.php'));
-        if ($uid) {
-            file_put_contents($logFile, "[$timestamp] UID found in UIDContainer: $uid\n", FILE_APPEND);
-        } else {
-            file_put_contents($logFile, "[$timestamp] UID not found\n", FILE_APPEND);
-            // If no UID is found, we should not proceed with the insert
-            return;
-        }
-    }
-
-    // Get user details from handle_rfid.php using the UID
-    $user_details = [];
-    try {
-        $pdo = Database::connect();
-        $stmt = $pdo->prepare("SELECT name FROM userdata WHERE id = ?");
-        $stmt->execute([$uid]);
-        $user_details = $stmt->fetch(PDO::FETCH_ASSOC);
-        Database::disconnect();
-    } catch (Exception $e) {
-        file_put_contents($logFile, "[$timestamp] Error fetching user details: " . $e->getMessage() . "\n", FILE_APPEND);
-    }
-
-    $email = isset($_POST['email']) ? $_POST['email'] : '';
-    $name = isset($_POST['name']) ? $_POST['name'] : ($user_details['name'] ?? '');
-    $age = isset($_POST['age']) ? $_POST['age'] : '';
-    $gender = isset($_POST['gender']) ? $_POST['gender'] : '';
-    $sensor_summary = isset($_POST['sensor_summary']) ? $_POST['sensor_summary'] : (isset($_GET['sensor_summary']) ? $_GET['sensor_summary'] : '');
-    // Convert AI responses to a single longtext string
+    // Convert AI responses to a single string
     $ai_result = '';
     if (is_array($ai_responses)) {
         $ai_result = implode("\n\n", array_map(function($response) {
@@ -180,61 +214,186 @@ if (!empty($ai_responses)) {
     } else {
         $ai_result = trim($ai_responses);
     }
-    $created_at = date('Y-m-d H:i:s');
 
-    // Extract sensor values from sensor_summary
-    $temperature = '';
-    $ecg_rate = '';
-    $pulse_rate = '';
-    $spo2_level = '';
-    $blood_pressure = '';
+    // Store to health_readings table
+    try {
+        $pdo = Database::connect();
+        $stmt = $pdo->prepare("INSERT INTO health_readings (id, patient_name, temperature, ecg_rate, pulse_rate, spo2_level, blood_pressure, diagnosis, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        
+        // Log the SQL parameters for debugging
+        file_put_contents($logFile, "[$timestamp] SQL Parameters:\n", FILE_APPEND);
+        file_put_contents($logFile, "UID: $uid\n", FILE_APPEND);
+        file_put_contents($logFile, "Name: $name\n", FILE_APPEND);
+        file_put_contents($logFile, "Temperature: $temperature\n", FILE_APPEND);
+        file_put_contents($logFile, "ECG Rate: $ecg_rate\n", FILE_APPEND);
+        file_put_contents($logFile, "Pulse Rate: $pulse_rate\n", FILE_APPEND);
+        file_put_contents($logFile, "SpO2 Level: $spo2_level\n", FILE_APPEND);
+        file_put_contents($logFile, "Blood Pressure: $blood_pressure\n", FILE_APPEND);
+        file_put_contents($logFile, "Diagnosis length: " . strlen($ai_result) . "\n", FILE_APPEND);
 
-    if ($sensor_summary) {
-        // Extract values using regex patterns
-        if (preg_match('/Temperature:\s*([\d.]+)/i', $sensor_summary, $matches)) {
-            $temperature = $matches[1];
-        }
-        if (preg_match('/ECG Rate:\s*([\d.]+)/i', $sensor_summary, $matches)) {
-            $ecg_rate = $matches[1];
-        }
-        if (preg_match('/Pulse Rate:\s*([\d.]+)/i', $sensor_summary, $matches)) {
-            $pulse_rate = $matches[1];
-        }
-        if (preg_match('/SpO2 Level:\s*([\d.]+)/i', $sensor_summary, $matches)) {
-            $spo2_level = $matches[1];
-        }
-        if (preg_match('/Blood Pressure:\s*([\d.]+)/i', $sensor_summary, $matches)) {
-            $blood_pressure = $matches[1];
-        }
+        $stmt->execute([
+            $uid,
+            $name,
+            $temperature,
+            $ecg_rate,
+            $pulse_rate,
+            $spo2_level,
+            $blood_pressure,
+            $ai_result
+        ]);
+        Database::disconnect();
+        file_put_contents($logFile, "[$timestamp] Successfully stored AI result and sensor values to health_readings table for UID: $uid\n", FILE_APPEND);
+    } catch (Exception $e) {
+        file_put_contents($logFile, "[$timestamp] Error storing to health_readings: " . $e->getMessage() . "\n", FILE_APPEND);
+        file_put_contents($logFile, "[$timestamp] Error trace: " . $e->getTraceAsString() . "\n", FILE_APPEND);
+    }
+}
+
+file_put_contents($logFile, "[$timestamp] ===== Script Ended =====\n", FILE_APPEND);
+
+// After AI response is received, send email using PHPMailer
+if (!empty($ai_responses)) {
+    file_put_contents($logFile, "[$timestamp] AI responses received, preparing to send email\n", FILE_APPEND);
+    
+    try {
+        // Create a new PHPMailer instance
+        $mail = new PHPMailer(true);
+
+        // Server settings
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'einsbernsystem@gmail.com';
+        $mail->Password = 'bdov zsdz sidj bcsc';
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+
+        // Recipients
+        $mail->setFrom('einsbernsystem@gmail.com', 'AI-Vital Diagnoser');
+        $mail->addAddress($email, $name);
+
+        // Content
+        $mail->isHTML(true);
+        $mail->Subject = "Your Health Diagnostic Results from AI-Vital";
+
+        // Prepare email body
+        $emailBody = "
+            <h3>Hello $name,</h3>
+            <p>Here are your health readings:</p>
+            <ul>
+                <li><strong>Body Temperature:</strong> $temperature °C</li>
+                <li><strong>ECG Rate:</strong> $ecg_rate BPM</li>
+                <li><strong>Pulse Rate:</strong> $pulse_rate BPM</li>
+                <li><strong>SpO₂ Level:</strong> $spo2_level %</li>
+                <li><strong>Blood Pressure:</strong> $blood_pressure mmHg</li>
+            </ul>
+            <p><strong>AI Diagnosis:</strong></p>
+            <p style='white-space: pre-line;'>$ai_result</p>
+            <p>Stay healthy and take care!</p>
+        ";
+
+        $mail->Body = $emailBody;
+        $mail->AltBody = strip_tags($emailBody);
+
+        // Send email
+        $mail->send();
+        file_put_contents($logFile, "[$timestamp] Email sent successfully to $email\n", FILE_APPEND);
+        
+        // Store email status in session
+        $_SESSION['email_sent'] = true;
+        $_SESSION['email_message'] = "The diagnostic result has been sent to \"$email\" successfully.";
+
+        // Add success notification for email
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Email Sent Successfully',
+                    text: 'Your diagnostic results have been sent to your email address.',
+                    confirmButtonText: 'Okay',
+                    confirmButtonColor: '#28a745',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: true
+                });
+            });
+        </script>";
+
+    } catch (Exception $e) {
+        file_put_contents($logFile, "[$timestamp] Email sending failed: " . $mail->ErrorInfo . "\n", FILE_APPEND);
+        $_SESSION['email_sent'] = false;
+        $_SESSION['email_message'] = "Failed to send email. Please try again later.";
+
+        // Add error notification for email
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Email Sending Failed',
+                    text: 'Failed to send email. Please try again later.',
+                    confirmButtonText: 'Okay',
+                    confirmButtonColor: '#d33',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: true
+                });
+            });
+        </script>";
     }
 
-    // Store to health_consult table
+    // Store to database
     try {
-        $response = file_get_contents('store_consultation.php', false, stream_context_create([
-            'http' => [
-                'method' => 'POST',
-                'header' => 'Content-Type: application/json',
-                'content' => json_encode([
-                    'uid' => $uid,
-                    'name' => $name,
-                    'temperature' => $temperature,
-                    'ecg_rate' => $ecg_rate,
-                    'pulse_rate' => $pulse_rate,
-                    'spo2_level' => $spo2_level,
-                    'blood_pressure' => $blood_pressure,
-                    'consultation' => $ai_result
-                ])
-            ]
-        ]));
+        $pdo = Database::connect();
+        $stmt = $pdo->prepare("INSERT INTO health_readings (id, patient_name, temperature, ecg_rate, pulse_rate, spo2_level, blood_pressure, diagnosis, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        
+        $stmt->execute([
+            $uid,
+            $name,
+            $temperature,
+            $ecg_rate,
+            $pulse_rate,
+            $spo2_level,
+            $blood_pressure,
+            $ai_result
+        ]);
+        Database::disconnect();
+        file_put_contents($logFile, "[$timestamp] Successfully stored AI result and sensor values to health_readings table for UID: $uid\n", FILE_APPEND);
 
-        $result = json_decode($response, true);
-        if ($result && $result['success']) {
-            file_put_contents($logFile, "[$timestamp] Stored AI result and sensor values to health_consult table for UID: $uid\n", FILE_APPEND);
-        } else {
-            file_put_contents($logFile, "[$timestamp] Error storing to health_consult: " . ($result['message'] ?? 'Unknown error') . "\n", FILE_APPEND);
-        }
+        // Add success notification for database storage
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Data Stored Successfully',
+                    text: 'Your diagnostic results have been saved to the database.',
+                    confirmButtonText: 'Okay',
+                    confirmButtonColor: '#28a745',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: true
+                });
+            });
+        </script>";
+
     } catch (Exception $e) {
-        file_put_contents($logFile, "[$timestamp] Error storing to health_consult: " . $e->getMessage() . "\n", FILE_APPEND);
+        file_put_contents($logFile, "[$timestamp] Error storing to health_readings: " . $e->getMessage() . "\n", FILE_APPEND);
+        file_put_contents($logFile, "[$timestamp] Error trace: " . $e->getTraceAsString() . "\n", FILE_APPEND);
+
+        // Add error notification for database storage
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Database Storage Failed',
+                    text: 'Failed to store your diagnostic results. Please try again later.',
+                    confirmButtonText: 'Okay',
+                    confirmButtonColor: '#d33',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: true
+                });
+            });
+        </script>";
     }
 }
 
@@ -394,6 +553,10 @@ for ($i = 0; $i < count($sensor_data); $i += 2) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Vital: Live Readings</title>
+
+    <!-- Add SweetAlert2 CSS and JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
 
     <!-- Favicons -->
     <link href="img/logo.png" rel="icon">
@@ -805,11 +968,11 @@ for ($i = 0; $i < count($sensor_data); $i += 2) {
         .questions-container {
             position: relative;
             overflow: hidden;
-            height: 600px; /* Fixed height */
+            height: 600px;
             background: white;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
         }
@@ -818,74 +981,245 @@ for ($i = 0; $i < count($sensor_data); $i += 2) {
             width: 100%;
             padding: 20px;
             background: white;
-            border-radius: 8px;
-            transition: opacity 0.3s ease;
-            overflow-y: auto; /* Make individual slides scrollable */
-            max-height: calc(100% - 100px); /* Leave space for navigation */
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            max-height: calc(100% - 100px);
             flex: 1;
         }
         .question-slide.active {
             display: block;
             opacity: 1;
+            animation: fadeIn 0.5s ease;
         }
         .question-slide.previous {
             display: none;
         }
         .sensor-questions {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px; /* Reduced margin */
-        }
-        .navigation-buttons {
-            position: sticky;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            padding: 20px;
-            border-top: 1px solid #e5e7eb;
-            border-radius: 0 0 8px 8px;
-            z-index: 10;
-            margin-top: auto; /* Push to bottom */
-        }
-        .progress-bar {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 24px;
             margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+        }
+        .question-group {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+        .question-group:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .question-group p {
+            font-size: 1.1rem;
+            color: #1f2937;
+            margin-bottom: 16px;
+            line-height: 1.5;
+            font-weight: 500;
         }
         .answers-group {
-            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
         }
         .answers-group label {
-            display: block;
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
+            display: flex;
+            align-items: center;
             padding: 12px 16px;
-            margin-bottom: 8px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
         }
         .answers-group label:hover {
             background: #f0fdf4;
             border-color: #22c55e;
+            transform: translateY(-1px);
         }
         .answers-group input[type="radio"] {
             width: 20px;
             height: 20px;
             margin-right: 12px;
             cursor: pointer;
+            position: relative;
+            z-index: 1;
+        }
+        .answers-group input[type="radio"]:checked + span {
+            color: #065f46;
+            font-weight: 600;
+        }
+        .answers-group label input[type="radio"]:checked + span::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #dcfce7;
+            z-index: -1;
+            border-radius: 6px;
         }
         .answers-group span {
-            font-size: 1.1rem;
-            color: #374151;
+            font-size: 1rem;
+            color: #4b5563;
             cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .progress-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+            border: 1px solid #e5e7eb;
+        }
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .progress-track {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        #progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .navigation-buttons {
+            background: white;
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            border-radius: 0 0 12px 12px;
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+        }
+        .navigation-buttons .flex {
+            gap: 16px;
+        }
+        .navigation-buttons button {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            min-width: 120px;
+        }
+        .navigation-buttons button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .navigation-buttons button:not(:disabled):hover {
+            transform: translateY(-1px);
+        }
+        /* iPad-specific optimizations */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .questions-container {
+                height: 700px;
+            }
+            .answers-group {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .question-group {
+                padding: 24px;
+            }
+            .answers-group label {
+                padding: 16px 20px;
+            }
+            .navigation-buttons button {
+                padding: 16px 32px;
+                font-size: 1.1rem;
+            }
+        }
+        /* Animation keyframes */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* Required field styling */
+        .question-group[data-required="true"] {
+            position: relative;
+        }
+        .question-group[data-required="true"] p {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .question-group[data-required="true"] .text-red-500 {
+            color: #ef4444;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        /* Review section styling */
+        .review-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .review-content > div {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #e5e7eb;
+        }
+        .review-content .font-semibold {
+            color: #065f46;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .review-content .text-gray-700 {
+            color: #4b5563;
+            margin-bottom: 8px;
+        }
+        .review-content .text-gray-600 {
+            color: #6b7280;
+        }
+        /* SweetAlert customization */
+        .my-swal {
+            z-index: 9999;
+        }
+        .my-swal .swal2-html-container {
+            text-align: left;
+            margin: 1em 1.6em 0.3em;
+        }
+        .my-swal .swal2-html-container ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0;
+        }
+        .my-swal .swal2-html-container li {
+            margin-bottom: 0.5em;
+            padding-left: 1.5em;
+            position: relative;
+        }
+        .my-swal .swal2-html-container li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #22c55e;
         }
         /* Updated container and panel styles for better iPad support */
         .container.mx-auto {
@@ -1127,6 +1461,183 @@ for ($i = 0; $i < count($sensor_data); $i += 2) {
                 font-size: 1.1rem;
             }
         }
+
+        /* Add these styles in the existing <style> section */
+        .ai-diagnosis-container {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s ease forwards;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .ai-diagnosis-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .ai-diagnosis-header h2 {
+            color: #065f46;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .ai-diagnosis-header p {
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+
+        .diagnosis-section {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #22c55e;
+        }
+
+        .diagnosis-section h3 {
+            color: #065f46;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .diagnosis-section p {
+            color: #374151;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .diagnosis-section ul {
+            list-style-type: disc;
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .diagnosis-section li {
+            color: #4b5563;
+            margin-bottom: 0.5rem;
+        }
+
+        .severity-indicator {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .severity-high {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        .severity-medium {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .severity-low {
+            background-color: #dcfce7;
+            color: #16a34a;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .highlight-box {
+            background: #f0fdf4;
+            border: 2px solid #22c55e;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .recommendation-box {
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .warning-box {
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        /* Add these styles to your existing styles */
+        .question-group[data-required="true"] {
+            position: relative;
+            padding: 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .question-group[data-required="true"]:hover {
+            background-color: #f8fafc;
+        }
+
+        .question-group[data-required="true"] p {
+            position: relative;
+        }
+
+        .question-group[data-required="true"] .text-red-500 {
+            margin-left: 4px;
+            font-weight: bold;
+        }
+
+        .my-swal {
+            z-index: 9999;
+        }
+
+        .my-swal .swal2-html-container {
+            text-align: left;
+            margin: 1em 1.6em 0.3em;
+        }
+
+        .my-swal .swal2-html-container ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0;
+        }
+
+        .my-swal .swal2-html-container li {
+            margin-bottom: 0.5em;
+        }
     </style>
     <script src="jquery.min.js"></script>
     <script>
@@ -1273,12 +1784,12 @@ for ($i = 0; $i < count($sensor_data); $i += 2) {
                         text: 'Please scan your RFID card.',
                         confirmButtonText: 'Okay',
                         confirmButtonColor: '#3085d6',
-                        timer: 3000, // Auto-dismiss after 3 seconds
+                        timer: 3000,
                         timerProgressBar: true,
                         didOpen: () => {
                             const progressBar = Swal.getHtmlContainer().querySelector('.swal2-timer-progress-bar');
-                            progressBar.style.animation = 'none'; // Reset animation
-                            progressBar.style.transformOrigin = 'left'; // Set origin to left
+                            progressBar.style.animation = 'none';
+                            progressBar.style.transformOrigin = 'left';
                         }
                     });
                     return;
@@ -1313,15 +1824,13 @@ for ($i = 0; $i < count($sensor_data); $i += 2) {
                         text: 'Reading successfully stored!',
                         confirmButtonText: 'Okay',
                         confirmButtonColor: '#28a745',
-                        timer: 3000, // Auto-dismiss after 3 seconds
+                        timer: 3000,
                         timerProgressBar: true,
                         didOpen: () => {
                             const progressBar = Swal.getHtmlContainer().querySelector('.swal2-timer-progress-bar');
-                            progressBar.style.animation = 'none'; // Reset animation
-                            progressBar.style.transformOrigin = 'left'; // Set origin to left
+                            progressBar.style.animation = 'none';
+                            progressBar.style.transformOrigin = 'left';
                         }
-                    }).then(() => {
-                        window.location.href = "results2.php"; // Redirect to results2.php
                     });
                 } else {
                     Swal.fire({
@@ -1330,12 +1839,12 @@ for ($i = 0; $i < count($sensor_data); $i += 2) {
                         text: 'Failed to store reading. Please try again.',
                         confirmButtonText: 'Okay',
                         confirmButtonColor: '#d33',
-                        timer: 3000, // Auto-dismiss after 3 seconds
+                        timer: 3000,
                         timerProgressBar: true,
                         didOpen: () => {
                             const progressBar = Swal.getHtmlContainer().querySelector('.swal2-timer-progress-bar');
-                            progressBar.style.animation = 'none'; // Reset animation
-                            progressBar.style.transformOrigin = 'left'; // Set origin to left
+                            progressBar.style.animation = 'none';
+                            progressBar.style.transformOrigin = 'left';
                         }
                     });
                 }
@@ -1347,12 +1856,12 @@ for ($i = 0; $i < count($sensor_data); $i += 2) {
                     text: 'An error occurred while storing the reading.',
                     confirmButtonText: 'Okay',
                     confirmButtonColor: '#d33',
-                    timer: 3000, // Auto-dismiss after 3 seconds
+                    timer: 3000,
                     timerProgressBar: true,
                     didOpen: () => {
                         const progressBar = Swal.getHtmlContainer().querySelector('.swal2-timer-progress-bar');
-                        progressBar.style.animation = 'none'; // Reset animation
-                        progressBar.style.transformOrigin = 'left'; // Set origin to left
+                        progressBar.style.animation = 'none';
+                        progressBar.style.transformOrigin = 'left';
                     }
                 });
             }
@@ -1435,11 +1944,34 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function areAllQuestionsAnswered(slide) {
-        const questionGroups = slide.querySelectorAll('.question-group');
-        return Array.from(questionGroups).every(group => {
+    function getUnansweredQuestions(slide) {
+        const unanswered = [];
+        const questionGroups = slide.querySelectorAll('.question-group[data-required="true"]');
+        questionGroups.forEach(group => {
             const radioInputs = group.querySelectorAll('input[type="radio"]');
-            return Array.from(radioInputs).some(input => input.checked);
+            const isAnswered = Array.from(radioInputs).some(input => input.checked);
+            if (!isAnswered) {
+                const questionText = group.querySelector('p').textContent.trim();
+                unanswered.push(questionText);
+            }
+        });
+        return unanswered;
+    }
+
+    function showUnansweredAlert(unanswered) {
+        const questionList = unanswered.map(q => `• ${q}`).join('\n');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Incomplete Answers',
+            html: `Please answer all required questions before proceeding:<br><br>
+                  <div style="text-align: left; margin-left: 20px;">
+                    ${unanswered.map(q => `• ${q}`).join('<br>')}
+                  </div>`,
+            confirmButtonText: 'Okay',
+            confirmButtonColor: '#3085d6',
+            customClass: {
+                container: 'my-swal'
+            }
         });
     }
 
@@ -1452,21 +1984,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     nextBtn.addEventListener('click', () => {
         const currentSlide = questions[currentQuestion];
-        if (!areAllQuestionsAnswered(currentSlide)) {
-            const unansweredCount = Array.from(currentSlide.querySelectorAll('.question-group')).filter(group => {
-                const radioInputs = group.querySelectorAll('input[type="radio"]');
-                return !Array.from(radioInputs).some(input => input.checked);
-            }).length;
-
-            Swal.fire({
-                icon: 'warning',
-                title: 'Incomplete Answers',
-                text: `Please answer all ${unansweredCount} remaining question${unansweredCount > 1 ? 's' : ''} before proceeding.`,
-                confirmButtonText: 'Okay',
-                confirmButtonColor: '#3085d6',
-                timer: 3000,
-                timerProgressBar: true
-            });
+        const unanswered = getUnansweredQuestions(currentSlide);
+        
+        if (unanswered.length > 0) {
+            showUnansweredAlert(unanswered);
             return;
         }
 
@@ -1476,21 +1997,51 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    questions.forEach(slide => {
-        const radioInputs = slide.querySelectorAll('input[type="radio"]');
-        radioInputs.forEach(input => {
-            input.addEventListener('change', () => {
-                const questionGroup = input.closest('.question-group');
-                if (input.checked) {
-                    questionGroup.style.border = 'none';
-                }
-            });
-        });
-    });
-
     submitBtn.addEventListener('click', function(e) {
         e.preventDefault();
+        
+        // Check all slides for unanswered questions
+        let allUnanswered = [];
+        questions.forEach((slide, index) => {
+            const unanswered = getUnansweredQuestions(slide);
+            if (unanswered.length > 0) {
+                allUnanswered.push({
+                    slide: index + 1,
+                    questions: unanswered
+                });
+            }
+        });
 
+        if (allUnanswered.length > 0) {
+            const totalUnanswered = allUnanswered.reduce((sum, slide) => sum + slide.questions.length, 0);
+            const htmlContent = allUnanswered.map(slide => 
+                `<strong>Question Set ${slide.slide}:</strong><br>
+                 ${slide.questions.map(q => `• ${q}`).join('<br>')}`
+            ).join('<br><br>');
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Incomplete Questionnaire',
+                html: `Please answer all ${totalUnanswered} remaining question${totalUnanswered > 1 ? 's' : ''} before submitting:<br><br>
+                      ${htmlContent}`,
+                confirmButtonText: 'Go to Questions',
+                confirmButtonColor: '#3085d6',
+                showCancelButton: true,
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    container: 'my-swal'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Go to the first slide with unanswered questions
+                    currentQuestion = allUnanswered[0].slide - 1;
+                    updateNavigation();
+                }
+            });
+            return;
+        }
+
+        // If all questions are answered, proceed with the review section
         const oldReview = document.querySelector('.review-section');
         if (oldReview) oldReview.remove();
 
@@ -1644,6 +2195,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 formData.append('age', age);
                 formData.append('gender', gender);
 
+                // Add sensor summary
+                const sensorSummary = sensorReadings.join('\n');
+                formData.append('sensor_summary', sensorSummary);
+
+                // Add sensor values
+                const sensorValues = {};
+                document.querySelectorAll('.sensor-box').forEach(box => {
+                    const type = box.querySelector('.sensor-type')?.textContent?.trim();
+                    const value = box.querySelector('.sensor-value')?.textContent?.trim();
+                    if (type && value) {
+                        switch(type) {
+                            case 'Temp':
+                                sensorValues.temperature = parseFloat(value.replace('°C', '').trim()) || 0;
+                                break;
+                            case 'ECG':
+                                sensorValues.ecg_rate = parseFloat(value.trim()) || 0;
+                                break;
+                            case 'Pulse':
+                                sensorValues.pulse_rate = parseFloat(value.replace('BPM', '').trim()) || 0;
+                                break;
+                            case 'SpO₂':
+                                sensorValues.spo2_level = parseFloat(value.replace('%', '').trim()) || 0;
+                                break;
+                            case 'BP':
+                                sensorValues.blood_pressure = value.replace('mmHg', '').trim();
+                                break;
+                        }
+                    }
+                });
+
+                // Add sensor values to formData
+                Object.entries(sensorValues).forEach(([key, value]) => {
+                    formData.append(key, value);
+                });
+
                 const response = await fetch('consult.php', {
                     method: 'POST',
                     body: formData
@@ -1666,23 +2252,59 @@ document.addEventListener('DOMContentLoaded', function() {
                 const aiContainer = document.createElement('div');
                 aiContainer.className = 'ai-diagnosis-container';
                 aiContainer.innerHTML = `
-                    <div class="ai-diagnosis-header text-center mb-6">
-                        <h2 class="text-3xl font-bold text-green-800">AI Diagnosis Result</h2>
-                        <p class="text-gray-600">Based on your vital signs and responses</p>
+                    <div class="ai-diagnosis-header">
+                        <h2>AI Diagnosis Result</h2>
+                        <p>Based on your vital signs and responses</p>
                     </div>
                     <div class="ai-diagnosis-content">
                         <div class="diagnosis-section">
                             ${aiResponse}
                         </div>
+                        <div class="highlight-box">
+                            <h3>Key Findings</h3>
+                            <p>Please review the diagnosis carefully and consult with a healthcare professional if needed.</p>
+                        </div>
+                        <div class="recommendation-box">
+                            <h3>Next Steps</h3>
+                            <p>Follow the recommendations provided in the diagnosis and monitor your condition.</p>
+                        </div>
                     </div>
                 `;
 
-                // Scroll to top immediately before showing results
-                window.scrollTo(0, 0);
+                // Add this after creating the AI container
+                const highlightBoxes = aiContainer.querySelectorAll('.highlight-box, .recommendation-box');
+                highlightBoxes.forEach((box, index) => {
+                    box.style.opacity = '0';
+                    box.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        box.style.transition = 'all 0.5s ease';
+                        box.style.opacity = '1';
+                        box.style.transform = 'translateY(0)';
+                    }, 500 + (index * 300));
+                });
 
                 // Replace loading state with results
                 container.innerHTML = '';
                 container.appendChild(aiContainer);
+
+                // Add pulse animation to important elements
+                const importantElements = aiContainer.querySelectorAll('h2, h3, .severity-indicator');
+                importantElements.forEach(element => {
+                    element.classList.add('pulse-animation');
+                });
+
+                // Show success message with a slight delay
+                setTimeout(() => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Your consultation has been stored successfully!',
+                        confirmButtonText: 'Okay',
+                        confirmButtonColor: '#28a745',
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                }, 1000);
 
             } catch (error) {
                 console.error('Error:', error);
@@ -1693,6 +2315,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     confirmButtonText: 'Okay'
                 });
             }
+        });
+    });
+
+    // Add visual feedback for required questions
+    questions.forEach(slide => {
+        const radioInputs = slide.querySelectorAll('input[type="radio"]');
+        radioInputs.forEach(input => {
+            input.addEventListener('change', () => {
+                const questionGroup = input.closest('.question-group');
+                if (input.checked) {
+                    questionGroup.style.border = 'none';
+                    questionGroup.style.backgroundColor = 'transparent';
+                }
+            });
         });
     });
 
@@ -1717,7 +2353,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     <li><a href="registration2.php">Registration</a></li>
                     <li><a href="userdata2.php">User Data</a></li>
                     <li><a href="live reading.php" class="active">Live-Reading</a></li>
-                    <li><a href="results2.php">Results</a></li>
                     <li><a href="about.php">About Us</a></li>
                 </ul>
             </nav>
@@ -1843,23 +2478,26 @@ document.addEventListener('DOMContentLoaded', function() {
                                                     // Get questions for this sensor type and severity
                                                     $questions = $sensor_questions[$sensor['type']][$sensor['severity']] ?? [];
                                                     foreach ($questions as $qIndex => $question): ?>
-                                                        <div class="question-group mb-6">
-                                                            <p class="text-lg text-gray-700 mb-4"><?php echo ($qIndex + 1) . '. ' . htmlspecialchars($question); ?></p>
+                                                        <div class="question-group mb-6" data-required="true">
+                                                            <p class="text-lg text-gray-700 mb-4">
+                                                                <?php echo ($qIndex + 1) . '. ' . htmlspecialchars($question); ?>
+                                                                <span class="text-red-500">*</span>
+                                                            </p>
                                                             <div class="answers-group">
                                                                 <label class="flex items-center">
-                                                                    <input type="radio" name="<?php echo $sensor['type'] . '_' . $qIndex; ?>" value="yes" class="form-radio text-green-600">
+                                                                    <input type="radio" name="<?php echo $sensor['type'] . '_' . $qIndex; ?>" value="yes" class="form-radio text-green-600" required>
                                                                     <span>Yes</span>
                                                                 </label>
                                                                 <label class="flex items-center">
-                                                                    <input type="radio" name="<?php echo $sensor['type'] . '_' . $qIndex; ?>" value="no" class="form-radio text-green-600">
+                                                                    <input type="radio" name="<?php echo $sensor['type'] . '_' . $qIndex; ?>" value="no" class="form-radio text-green-600" required>
                                                                     <span>No</span>
                                                                 </label>
                                                                 <label class="flex items-center">
-                                                                    <input type="radio" name="<?php echo $sensor['type'] . '_' . $qIndex; ?>" value="sometimes" class="form-radio text-green-600">
+                                                                    <input type="radio" name="<?php echo $sensor['type'] . '_' . $qIndex; ?>" value="sometimes" class="form-radio text-green-600" required>
                                                                     <span>Sometimes</span>
                                                                 </label>
                                                                 <label class="flex items-center">
-                                                                    <input type="radio" name="<?php echo $sensor['type'] . '_' . $qIndex; ?>" value="not_sure" class="form-radio text-green-600">
+                                                                    <input type="radio" name="<?php echo $sensor['type'] . '_' . $qIndex; ?>" value="not_sure" class="form-radio text-green-600" required>
                                                                     <span>Not sure</span>
                                                                 </label>
                                                             </div>
