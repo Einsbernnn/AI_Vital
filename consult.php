@@ -100,8 +100,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
             $ai_responses[] = "Error: " . curl_error($ch);
         } else {
             $data = json_decode($result, true);
-            file_put_contents('cohere_debug.log', $result . PHP_EOL, FILE_APPEND);
-
             // Handle Cohere's nested response
             if (isset($data['text'])) {
                 $ai_responses[] = $data['text'];
@@ -136,149 +134,107 @@ if (!empty($ai_responses)) {
     $uid = '';
     // Try to get UID from POST, GET, or session
     if (isset($_POST['uid'])) {
-        $uid = $_POST['uid'];
+        $uid = trim($_POST['uid']);
         file_put_contents($logFile, "[$timestamp] UID found in POST: $uid\n", FILE_APPEND);
     } elseif (isset($_GET['uid'])) {
-        $uid = $_GET['uid'];
+        $uid = trim($_GET['uid']);
         file_put_contents($logFile, "[$timestamp] UID found in GET: $uid\n", FILE_APPEND);
     } elseif (isset($_SESSION['uid'])) {
-        $uid = $_SESSION['uid'];
+        $uid = trim($_SESSION['uid']);
         file_put_contents($logFile, "[$timestamp] UID found in SESSION: $uid\n", FILE_APPEND);
     } else {
-        // Try to get from UIDContainer.php
-        $uidFile = __DIR__ . '/UIDContainer.php';
-        if (file_exists($uidFile)) {
-            $uidContent = file_get_contents($uidFile);
-            if (preg_match("/\$UIDresult='([^']*)'/", $uidContent, $matches)) {
-                $uid = trim($matches[1]);
-                file_put_contents($logFile, "[$timestamp] UID found in UIDContainer: $uid\n", FILE_APPEND);
-            }
-        }
-    }
-
-    if (!$uid || $uid === 'N/A') {
-        file_put_contents($logFile, "[$timestamp] No valid UID found\n", FILE_APPEND);
-        $uid = '';
-    }
-
-    // Only send once per UID per session
-    if ($uid) {
-        file_put_contents($logFile, "[$timestamp] Attempting to send email for UID: $uid\n", FILE_APPEND);
-        
-        require_once __DIR__ . '/PHPMailer/src/Exception.php';
-        require_once __DIR__ . '/PHPMailer/src/PHPMailer.php';
-        require_once __DIR__ . '/PHPMailer/src/SMTP.php';
-        
-        $name = '';
-        $email = '';
-        
-        // Try to get user info from database
-        try {
-            file_put_contents($logFile, "[$timestamp] Attempting database connection\n", FILE_APPEND);
-            $conn = Database::connect();
-            $query = "SELECT name, email FROM health_diagnostics WHERE id = ?";
-            $stmt = $conn->prepare($query);
-            $stmt->execute([$uid]);
-            $user = $stmt->fetch();
-            if ($user) {
-                $name = $user['name'];
-                $email = $user['email'];
-                file_put_contents($logFile, "[$timestamp] User found in database - Name: $name, Email: $email\n", FILE_APPEND);
-            } else {
-                file_put_contents($logFile, "[$timestamp] No user found in database for UID: $uid\n", FILE_APPEND);
-            }
-        } catch (Exception $e) {
-            file_put_contents($logFile, "[$timestamp] database error: " . $e->getMessage() . "\n", FILE_APPEND);
-            // Fallback to POST/SESSION data
-            $name = $_POST['name'] ?? $_SESSION['name'] ?? 'User';
-            $email = $_POST['email'] ?? $_SESSION['email'] ?? '';
-            file_put_contents($logFile, "[$timestamp] Using fallback data - Name: $name, Email: $email\n", FILE_APPEND);
-        } finally {
-            if (isset($conn)) {
-                database::disconnect();
-            }
-        }
-
-        // Only proceed if we have an email address
-        if ($email && $email !== 'N/A') {
-            // Compose subject and message
-            $subject = 'Your AI-Vital Diagnostic Result';
-            $messageBody = '<h3>Hello ' . htmlspecialchars($name) . ',</h3>';
-            $messageBody .= '<p>Here is your AI-Vital diagnostic result:</p>';
-            foreach ($ai_responses as $idx => $resp) {
-                $messageBody .= '<h4>Result ' . ($idx + 1) . ':</h4>';
-                $messageBody .= '<div style="white-space:pre-line;">' . nl2br(htmlspecialchars($resp)) . '</div>';
-            }
-            $messageBody .= '<p>Stay healthy and take care!</p>';
-
-            // Send the email using PHPMailer
-            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-            try {
-                // Set up logging first
-                $logFile = __DIR__ . '/mail_debug.log';
-                $timestamp = date('Y-m-d H:i:s');
-                
-                // Log email attempt
-                file_put_contents($logFile, "[$timestamp] Starting email process for $email\n", FILE_APPEND);
-                
-                // Server settings
-                $mail->isSMTP();
-                $mail->Host = 'smtp.gmail.com';
-                $mail->SMTPAuth = true;
-                $mail->Username = 'einsbernsystem@gmail.com';
-                $mail->Password = 'bdov zsdz sidj bcsc';
-                $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
-                $mail->Port = 465;
-                $mail->SMTPOptions = array(
-                    'ssl' => array(
-                        'verify_peer' => false,
-                        'verify_peer_name' => false,
-                        'allow_self_signed' => true
-                    )
-                );
-                
-                // Debug output
-                $mail->SMTPDebug = 3;
-                $mail->Debugoutput = function($str, $level) use ($logFile) {
-                    $timestamp = date('Y-m-d H:i:s');
-                    $logMessage = "[$timestamp] Level $level: $str\n";
-                    file_put_contents($logFile, $logMessage, FILE_APPEND);
-                };
-                
-                // Recipients
-                $mail->setFrom('einsbernsystem@gmail.com', 'AI-Vital Diagnoser');
-                $mail->addAddress($email, $name);
-                
-                // Content
-                $mail->isHTML(true);
-                $mail->Subject = $subject;
-                $mail->Body = $messageBody;
-                
-                // Log before sending
-                file_put_contents($logFile, "[$timestamp] Attempting to send email to $email\n", FILE_APPEND);
-                
-                // Send email
-                if (!$mail->send()) {
-                    throw new Exception("Mailer Error: " . $mail->ErrorInfo);
-                }
-                
-                // Log successful email
-                $successMessage = "[$timestamp] Email successfully sent to $email\n";
-                file_put_contents($logFile, $successMessage, FILE_APPEND);
-                
-            } catch (Exception $e) {
-                // Log the error
-                $timestamp = date('Y-m-d H:i:s');
-                $errorMessage = "[$timestamp] Error sending email: " . $e->getMessage() . "\n";
-                file_put_contents($logFile, $errorMessage, FILE_APPEND);
-                
-                // Set error in session for display
-                $_SESSION['email_error'] = "Failed to send email: " . $e->getMessage();
-            }
+        // Try to get UID from UIDContainer.php
+        $uid = trim(file_get_contents('UIDContainer.php'));
+        if ($uid) {
+            file_put_contents($logFile, "[$timestamp] UID found in UIDContainer: $uid\n", FILE_APPEND);
         } else {
-            file_put_contents($logFile, "[$timestamp] No valid email address found for UID: $uid\n", FILE_APPEND);
-            $_SESSION['email_error'] = "No valid email address found for sending the diagnostic result.";
+            file_put_contents($logFile, "[$timestamp] UID not found\n", FILE_APPEND);
+            // If no UID is found, we should not proceed with the insert
+            return;
         }
+    }
+
+    // Get user details from handle_rfid.php using the UID
+    $user_details = [];
+    try {
+        $pdo = Database::connect();
+        $stmt = $pdo->prepare("SELECT name FROM userdata WHERE id = ?");
+        $stmt->execute([$uid]);
+        $user_details = $stmt->fetch(PDO::FETCH_ASSOC);
+        Database::disconnect();
+    } catch (Exception $e) {
+        file_put_contents($logFile, "[$timestamp] Error fetching user details: " . $e->getMessage() . "\n", FILE_APPEND);
+    }
+
+    $email = isset($_POST['email']) ? $_POST['email'] : '';
+    $name = isset($_POST['name']) ? $_POST['name'] : ($user_details['name'] ?? '');
+    $age = isset($_POST['age']) ? $_POST['age'] : '';
+    $gender = isset($_POST['gender']) ? $_POST['gender'] : '';
+    $sensor_summary = isset($_POST['sensor_summary']) ? $_POST['sensor_summary'] : (isset($_GET['sensor_summary']) ? $_GET['sensor_summary'] : '');
+    // Convert AI responses to a single longtext string
+    $ai_result = '';
+    if (is_array($ai_responses)) {
+        $ai_result = implode("\n\n", array_map(function($response) {
+            return trim($response);
+        }, $ai_responses));
+    } else {
+        $ai_result = trim($ai_responses);
+    }
+    $created_at = date('Y-m-d H:i:s');
+
+    // Extract sensor values from sensor_summary
+    $temperature = '';
+    $ecg_rate = '';
+    $pulse_rate = '';
+    $spo2_level = '';
+    $blood_pressure = '';
+
+    if ($sensor_summary) {
+        // Extract values using regex patterns
+        if (preg_match('/Temperature:\s*([\d.]+)/i', $sensor_summary, $matches)) {
+            $temperature = $matches[1];
+        }
+        if (preg_match('/ECG Rate:\s*([\d.]+)/i', $sensor_summary, $matches)) {
+            $ecg_rate = $matches[1];
+        }
+        if (preg_match('/Pulse Rate:\s*([\d.]+)/i', $sensor_summary, $matches)) {
+            $pulse_rate = $matches[1];
+        }
+        if (preg_match('/SpO2 Level:\s*([\d.]+)/i', $sensor_summary, $matches)) {
+            $spo2_level = $matches[1];
+        }
+        if (preg_match('/Blood Pressure:\s*([\d.]+)/i', $sensor_summary, $matches)) {
+            $blood_pressure = $matches[1];
+        }
+    }
+
+    // Store to health_consult table
+    try {
+        $response = file_get_contents('store_consultation.php', false, stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => 'Content-Type: application/json',
+                'content' => json_encode([
+                    'uid' => $uid,
+                    'name' => $name,
+                    'temperature' => $temperature,
+                    'ecg_rate' => $ecg_rate,
+                    'pulse_rate' => $pulse_rate,
+                    'spo2_level' => $spo2_level,
+                    'blood_pressure' => $blood_pressure,
+                    'consultation' => $ai_result
+                ])
+            ]
+        ]));
+
+        $result = json_decode($response, true);
+        if ($result && $result['success']) {
+            file_put_contents($logFile, "[$timestamp] Stored AI result and sensor values to health_consult table for UID: $uid\n", FILE_APPEND);
+        } else {
+            file_put_contents($logFile, "[$timestamp] Error storing to health_consult: " . ($result['message'] ?? 'Unknown error') . "\n", FILE_APPEND);
+        }
+    } catch (Exception $e) {
+        file_put_contents($logFile, "[$timestamp] Error storing to health_consult: " . $e->getMessage() . "\n", FILE_APPEND);
     }
 }
 
@@ -602,13 +558,26 @@ for ($i = 0; $i < count($sensor_data); $i += 2) {
             font-weight: bold;
             overflow: hidden;
             white-space: nowrap;
-            position: fixed; /* Fix the marquee at the bottom of the viewport */
+            position: fixed;
             bottom: 0;
             width: 100%;
             z-index: 1000;
         }
+        .marquee span {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee 30s linear infinite;
+        }
+        @keyframes marquee {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
         footer {
-            margin-bottom: 60px; /* Add space above the marquee */
+            margin-bottom: 60px;
         }
         @keyframes scrollLeft {
             from {
@@ -917,6 +886,246 @@ for ($i = 0; $i < count($sensor_data); $i += 2) {
             font-size: 1.1rem;
             color: #374151;
             cursor: pointer;
+        }
+        /* Updated container and panel styles for better iPad support */
+        .container.mx-auto {
+            width: 100%;
+            padding: 2rem;
+            box-sizing: border-box;
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 2rem;
+            max-width: 100%;
+            min-height: calc(100vh - 200px);
+            flex-wrap: nowrap !important;
+        }
+        .readings-panel {
+            flex: 2 1 auto !important;
+            min-width: 0;
+            margin-right: 2rem;
+            max-width: calc(100% - 400px);
+            background: #ffffff;
+            border: 1px solid #d1fae5;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .user-panel {
+            flex: 0 0 350px !important;
+            min-width: 350px !important;
+            max-width: 350px !important;
+            position: sticky;
+            top: 2rem;
+            align-self: flex-start;
+            height: fit-content;
+            background: #ffffff;
+            border: 1px solid #d1fae5;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        /* Media queries for different screen sizes */
+        @media (max-width: 1200px) {
+            .container.mx-auto {
+                padding: 1.5rem;
+                gap: 1.5rem;
+            }
+            .readings-panel {
+                max-width: calc(100% - 350px);
+            }
+        }
+        @media (max-width: 1024px) {
+            .container.mx-auto {
+                padding: 1rem;
+                gap: 1rem;
+            }
+            .readings-panel {
+                margin-right: 1rem;
+                max-width: calc(100% - 350px);
+            }
+        }
+        @media (max-width: 768px) {
+            .container.mx-auto {
+                flex-direction: column !important;
+                padding: 0.5rem;
+            }
+            .readings-panel {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 1rem;
+                max-width: 100%;
+            }
+            .user-panel {
+                width: 100%;
+                min-width: 100% !important;
+                max-width: 100% !important;
+                position: relative;
+                top: 0;
+            }
+            .sensor-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 480px) {
+            .sensor-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* Reset container styles */
+        .container.mx-auto {
+            width: 100%;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+        
+        /* New flex container */
+        .flex-container {
+            display: flex;
+            flex-direction: row;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        /* Panel styles */
+        .readings-panel {
+            flex: 1;
+            min-width: 0;
+            background: #ffffff;
+            border: 1px solid #d1fae5;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-panel {
+            width: 350px;
+            flex-shrink: 0;
+            background: #ffffff;
+            border: 1px solid #d1fae5;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Media queries */
+        @media (max-width: 1200px) {
+            .flex-container {
+                gap: 1.5rem;
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .flex-container {
+                gap: 1rem;
+            }
+            .user-panel {
+                width: 300px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .flex-container {
+                flex-direction: column;
+            }
+            .readings-panel {
+                width: 100%;
+            }
+            .user-panel {
+                width: 100%;
+            }
+            .sensor-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .sensor-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Animation Styles */
+        .ai-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+            max-width: 1200px;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #22c55e;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1.5rem;
+        }
+
+        .loading-text {
+            font-size: 1.25rem;
+            color: #374151;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 4px;
+            margin-top: 1rem;
+        }
+
+        .loading-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: dotPulse 1.4s ease-in-out infinite;
+        }
+
+        .loading-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes dotPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .ai-loading {
+                min-height: 250px;
+                padding: 1.5rem;
+            }
+
+            .loading-spinner {
+                width: 50px;
+                height: 50px;
+            }
+
+            .loading-text {
+                font-size: 1.1rem;
+            }
         }
     </style>
     <script src="jquery.min.js"></script>
@@ -1294,7 +1503,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button type="button" id="edit-answers" class="bg-gray-500 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-gray-700 transition">Edit Answers</button>
                 <div>
                     <button type="button" id="print-review" class="bg-blue-500 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-blue-700 transition mr-2">Print</button>
-                    <button type="button" id="confirm-submit" class="bg-green-500 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-green-700 transition">Confirm & Submit</button>
+                    <button type="button" id="confirm-submit" class="bg-green-500 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-green-700 transition">Submit</button>
                 </div>
             </div>
         `;
@@ -1361,7 +1570,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         document.getElementById('confirm-submit').addEventListener('click', async function(e) {
-            e.preventDefault(); // Prevent default form submission
+            e.preventDefault();
             
             try {
                 // Gather sensor readings from the summary grid
@@ -1377,9 +1586,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Gather user answers from the review section
                 let answers = [];
                 reviewSection.querySelectorAll('.review-content > div').forEach(div => {
-                    const sensor = div.querySelector('.font-semibold')?.textContent?.trim();
-                    const question = div.querySelector('.text-gray-700')?.textContent?.trim();
-                    const answer = div.querySelector('.text-gray-600')?.textContent?.replace('Your answer: ', '').trim();
+                    const sensor = div.querySelector('.font-semibold')?.innerText?.trim();
+                    const question = div.querySelector('.text-gray-700')?.innerText?.trim();
+                    const answer = div.querySelector('.text-gray-600')?.innerText?.replace('Your answer: ', '').trim();
                     if (sensor && question && answer) {
                         answers.push(`- ${sensor} Q: ${question}\n  A: ${answer}`);
                     }
@@ -1410,65 +1619,71 @@ document.addEventListener('DOMContentLoaded', function() {
                 prompt += `Patient context: Age: ${age}, Gender: ${gender}\n\n`;
                 prompt += "Please provide a medical diagnosis and explain the possible condition and next steps.";
 
-                // Show loading
-                const aiBox = document.getElementById('ai-diagnosis-result');
-                const aiContent = document.getElementById('ai-diagnosis-content');
-                aiBox.style.display = 'block';
-                aiContent.innerHTML = '<span class="text-gray-500">Consulting AI, please wait...</span>';
-                document.querySelector('.questions-container')?.remove();
-                reviewSection.remove();
+                // Show loading state with animation
+                const container = document.querySelector('.container.mx-auto');
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'ai-loading';
+                loadingDiv.innerHTML = `
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Consulting AI, please wait...</div>
+                    <div class="loading-dots">
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                    </div>
+                `;
+                container.innerHTML = '';
+                container.appendChild(loadingDiv);
 
-                // First try to send via AJAX
-                try {
-                    const response = await fetch('consult.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: new URLSearchParams({
-                            'consultInput': prompt,
-                            'uid': uid,
-                            'email': email,
-                            'name': name,
-                            'age': age,
-                            'gender': gender
-                        })
-                    });
+                // Send request to consult.php
+                const formData = new FormData();
+                formData.append('consultInput', prompt);
+                formData.append('uid', uid);
+                formData.append('email', email);
+                formData.append('name', name);
+                formData.append('age', age);
+                formData.append('gender', gender);
 
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
+                const response = await fetch('consult.php', {
+                    method: 'POST',
+                    body: formData
+                });
 
-                    const result = await response.text();
-                    aiContent.innerHTML = result;
-                } catch (error) {
-                    console.error('AJAX error:', error);
-                    
-                    // Fallback to form submission
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = 'consult.php';
-
-                    const fields = {
-                        'consultInput': prompt,
-                        'uid': uid,
-                        'email': email,
-                        'name': name,
-                        'age': age,
-                        'gender': gender
-                    };
-
-                    for (const [key, value] of Object.entries(fields)) {
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = key;
-                        input.value = value;
-                        form.appendChild(input);
-                    }
-
-                    document.body.appendChild(form);
-                    form.submit();
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
+
+                const result = await response.text();
+                
+                // Create a temporary div to parse the HTML response
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = result;
+
+                // Extract the AI response content
+                const aiResponse = tempDiv.querySelector('.prose')?.innerHTML || result;
+                
+                // Create and display the AI diagnosis container
+                const aiContainer = document.createElement('div');
+                aiContainer.className = 'ai-diagnosis-container';
+                aiContainer.innerHTML = `
+                    <div class="ai-diagnosis-header text-center mb-6">
+                        <h2 class="text-3xl font-bold text-green-800">AI Diagnosis Result</h2>
+                        <p class="text-gray-600">Based on your vital signs and responses</p>
+                    </div>
+                    <div class="ai-diagnosis-content">
+                        <div class="diagnosis-section">
+                            ${aiResponse}
+                        </div>
+                    </div>
+                `;
+
+                // Scroll to top immediately before showing results
+                window.scrollTo(0, 0);
+
+                // Replace loading state with results
+                container.innerHTML = '';
+                container.appendChild(aiContainer);
+
             } catch (error) {
                 console.error('Error:', error);
                 Swal.fire({
@@ -1511,9 +1726,11 @@ document.addEventListener('DOMContentLoaded', function() {
     </header>
     <?php endif; ?>
 
-        <div class="container mx-auto px-4 py-8 flex space-x-8">
+    <div class="container mx-auto px-4 py-8">
+        <?php if (empty($ai_responses)): ?>
+        <div class="flex-container">
             <!-- Input box and submit button panel -->
-            <div class="readings-panel flex-grow flex flex-col items-center justify-center">
+            <div class="readings-panel">
                 <form action="" method="post" class="w-full">
                     <?php if (!empty($sensor_summary)): ?>
                     <div id="sensor-summary-container" class="sensor-summary-grid mb-6">
@@ -1603,149 +1820,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <?php endif; ?>
                     <div class="consult-input-col">
                         <form action="" method="post" class="w-full">
-                            <?php
-                            // Define questions for each sensor type
-                            $sensor_questions = [
-                                'Temp' => [
-                                    'high' => [
-                                        'Are you experiencing any fever or chills?',
-                                        'Do you feel unusually hot or sweaty?',
-                                        'Have you been exposed to hot environments recently?',
-                                        'Are you experiencing any fatigue or weakness?',
-                                        'Have you been taking any medications that might affect body temperature?'
-                                    ],
-                                    'low' => [
-                                        'Are you feeling unusually cold?',
-                                        'Have you been exposed to cold environments?',
-                                        'Are you experiencing any shivering?',
-                                        'Do you feel more tired than usual?',
-                                        'Have you been taking any medications that might affect body temperature?'
-                                    ]
-                                ],
-                                'ECG' => [
-                                    'high' => [
-                                        'Are you experiencing any chest pain or discomfort?',
-                                        'Do you feel your heart racing or beating irregularly?',
-                                        'Are you experiencing any shortness of breath?',
-                                        'Do you feel dizzy or lightheaded?',
-                                        'Have you been under significant stress recently?'
-                                    ],
-                                    'low' => [
-                                        'Are you feeling unusually tired or fatigued?',
-                                        'Do you feel dizzy or lightheaded?',
-                                        'Have you been exercising recently?',
-                                        'Are you taking any medications that might affect heart rate?',
-                                        'Do you feel weak or have difficulty with physical activity?'
-                                    ]
-                                ],
-                                'Pulse' => [
-                                    'high' => [
-                                        'Are you experiencing any chest pain?',
-                                        'Do you feel your heart racing?',
-                                        'Are you feeling anxious or stressed?',
-                                        'Have you been physically active recently?',
-                                        'Are you experiencing any shortness of breath?'
-                                    ],
-                                    'low' => [
-                                        'Are you feeling unusually tired?',
-                                        'Do you feel dizzy or lightheaded?',
-                                        'Have you been resting or inactive?',
-                                        'Are you taking any medications?',
-                                        'Do you feel weak or have low energy?'
-                                    ]
-                                ],
-                                'SpO₂' => [
-                                    'high' => [
-                                        'Are you breathing normally?',
-                                        'Do you feel any chest tightness?',
-                                        'Are you experiencing any shortness of breath?',
-                                        'Have you been at high altitudes recently?',
-                                        'Are you taking any respiratory medications?'
-                                    ],
-                                    'low' => [
-                                        'Are you experiencing any difficulty breathing?',
-                                        'Do you feel short of breath?',
-                                        'Are you feeling tired or fatigued?',
-                                        'Have you been coughing or wheezing?',
-                                        'Do you have any respiratory conditions?'
-                                    ]
-                                ],
-                                'BP' => [
-                                    'high' => [
-                                        'Are you experiencing any headaches?',
-                                        'Do you feel any chest pain?',
-                                        'Are you feeling dizzy or lightheaded?',
-                                        'Have you been under stress recently?',
-                                        'Are you taking any blood pressure medications?'
-                                    ],
-                                    'low' => [
-                                        'Are you feeling dizzy or lightheaded?',
-                                        'Do you feel weak or fatigued?',
-                                        'Have you been standing for long periods?',
-                                        'Are you taking any medications?',
-                                        'Do you feel nauseous or have blurred vision?'
-                                    ]
-                                ]
-                            ];
-
-                            // Track if we have any abnormal readings
-                            $has_abnormal_readings = false;
-                            $abnormal_sensors = [];
-
-                            // First pass: identify abnormal readings
-                            for ($i = 0; $i < count($sensor_data); $i += 2) {
-                                if (isset($sensor_data[$i]) && isset($sensor_data[$i + 1])) {
-                                    $type = trim($sensor_data[$i]);
-                                    $value = trim($sensor_data[$i + 1]);
-                                    
-                                    // Calculate severity
-                                    $severity = 'normal';
-                                    $numeric_value = 0;
-                                    
-                                    switch($type) {
-                                        case 'Temp':
-                                            $numeric_value = floatval(str_replace('°C', '', $value));
-                                            if ($numeric_value < 36.1) $severity = 'low';
-                                            else if ($numeric_value > 37.2) $severity = 'high';
-                                            break;
-                                        case 'ECG':
-                                            $numeric_value = floatval($value);
-                                            if ($numeric_value < 60) $severity = 'low';
-                                            else if ($numeric_value > 100) $severity = 'high';
-                                            break;
-                                        case 'Pulse':
-                                            $numeric_value = floatval(str_replace('BPM', '', $value));
-                                            if ($numeric_value < 60) $severity = 'low';
-                                            else if ($numeric_value > 100) $severity = 'high';
-                                            break;
-                                        case 'SpO₂':
-                                            $numeric_value = floatval(str_replace('%', '', $value));
-                                            if ($numeric_value < 95) $severity = 'low';
-                                            else if ($numeric_value > 100) $severity = 'high';
-                                            break;
-                                        case 'BP':
-                                            $bp_parts = explode('/', str_replace('mmHg', '', $value));
-                                            if (count($bp_parts) === 2) {
-                                                $systolic = floatval($bp_parts[0]);
-                                                $diastolic = floatval($bp_parts[1]);
-                                                if ($systolic < 90 || $diastolic < 60) $severity = 'low';
-                                                else if ($systolic > 120 || $diastolic > 80) $severity = 'high';
-                                            }
-                                            break;
-                                    }
-
-                                    if ($severity !== 'normal') {
-                                        $has_abnormal_readings = true;
-                                        $abnormal_sensors[] = [
-                                            'type' => $type,
-                                            'value' => $value,
-                                            'severity' => $severity
-                                        ];
-                                    }
-                                }
-                            }
-
-                            if ($has_abnormal_readings): ?>
+                            <?php if ($has_abnormal_readings): ?>
                                 <div class="questions-container">
                                     <div class="progress-bar">
                                         <div class="progress-text text-sm text-gray-600 mb-2">
@@ -1807,25 +1882,18 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </form>
                                 </div>
                             <?php else: ?>
-                                <?php if (empty($ai_responses)): ?>
                                 <div class="text-center py-8 bg-white rounded-lg shadow-lg">
                                     <h3 class="text-2xl font-bold text-green-900 mb-4">All readings are within normal range</h3>
                                     <p class="text-lg text-gray-700 mb-6">No additional questions are needed at this time.</p>
                                     <a href="live reading.php" class="bg-green-500 text-white px-8 py-3 rounded-md text-xl font-semibold hover:bg-green-700 transition inline-block">Back to Readings</a>
                                 </div>
-                                <?php endif; ?>
                             <?php endif; ?>
                         </form>
                     </div>
                 </form>
-                <div id="ai-diagnosis-result" style="display:none;" class="w-full max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6 mt-8">
-                    <h3 class="text-2xl font-bold text-green-800 mb-4">AI Diagnosis</h3>
-                    <div id="ai-diagnosis-content" class="whitespace-pre-wrap break-words text-gray-800"></div>
-                </div>
             </div>
             <!-- User Details Panel -->
-            <?php if (empty($ai_responses)): ?>
-            <div class="user-panel w-1/3">
+            <div class="user-panel">
                 <h3>User Details</h3>
                 <table>
                     <tr>
@@ -1861,280 +1929,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     <a href="my_results.php" class="bg-green-500 text-white px-16 py-12 rounded-lg text-4xl font-bold hover:bg-green-800 block w-full h-40 flex items-center justify-center">My Results</a>
                 </div>
             </div>
-            <?php endif; ?>
         </div>
-
-        <!-- AI Consultation Results -->
-        <?php if (!empty($ai_responses)): ?>
-        <div class="sensor-summary-grid" style="margin-top:0 !important; padding-top:0 !important;">
-            <div class="title text-green-800 text-2xl font-bold mb-4">AI Diagnosis Result</div>
-            <?php foreach ($ai_responses as $idx => $resp): ?>
-                <div class="prose max-w-none" style="margin-top:0 !important; padding-top:0 !important;">
-                    <?= nl2br(htmlspecialchars($resp)) ?>
-                </div>
-            <?php endforeach; ?>
+        <?php else: ?>
+        <!-- AI Diagnosis Results -->
+        <div class="ai-diagnosis-container">
+            <div class="ai-diagnosis-content">
+                <?php foreach ($ai_responses as $idx => $resp): ?>
+                    <div class="diagnosis-section">
+                        <?= nl2br(htmlspecialchars($resp)) ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
         </div>
-        <style>
-        .sensor-summary-grid { margin-top: 0 !important; padding-top: 0 !important; }
-        .sensor-summary-grid .prose { margin-top: 0 !important; padding-top: 0 !important; }
-        </style>
         <?php endif; ?>
     </div>
-
-    <?php if (empty($ai_responses)): ?>
-    <!-- Scrolling Marquee -->
-    <div class="marquee">
-        <span>To use AI-VITAL, first tap your RFID card provided by the school nurse on the scanner and complete the registration process. Once registered, tap your RFID again to log in. Secure the blood pressure (BP) strap on your upper arm, close to your heart. Attach the electrode pads to your chest as instructed. Ensure the pulse oximeter is clipped onto your finger. Wait for the readings to stabilize and view your results on the screen. For further assistance, contact the school nurse.</span>
-    </div>
-
-    <!-- Footer Section -->
-    <footer id="footer" class="footer dark-background">
-        <div class="footer-top">
-            <div class="container">
-                <div class="row gy-4">
-                    <div class="col-lg-4 col-md-6 footer-about">
-                        <a href="index.php" class="logo d-flex align-items-center">
-                            <span class="sitename">AI-VITAL</span>
-                        </a>
-                        <div class="footer-contact pt-3">
-                            <p>MICROCITY OF BUSINESS AND TECHNOLOGY, INC.</p>
-                            <p>Narra St., Capitol Drive, Tenejero, Balanga, Bataan </p>
-                            <p class="mt-3"><strong>Phone:</strong> <span>(047-) 275-0786 / 09811865703</span></p>
-                            <p><strong>Email:</strong> <span>info@microcitycomputercollege.com</span></p>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-2 col-md-3 footer-links">
-                        <h4>Start Using </h4>
-                        <ul>
-                            <li><a href="index.php">Home</a></li>
-                            <li><a href="registration2.php">Registration</a></li>
-                            <li><a href="userdata2.php">User Data</a></li>
-                            <li><a href="live reading.php">Live-Reading</a></li>
-                            <li><a href="results2.php">Results</a></li>
-                            <li><a href="about.php">About Us</a></li>
-                        </ul>
-                    </div>
-
-                    <div class="col-lg-2 col-md-3 footer-links">
-                        <h4>What is?</h4>
-                        <ul>
-                            <li><a href="https://en.wikipedia.org/wiki/Blood_pressure" target="_blank">...Blood Pressure</a></li>
-                            <li><a href="https://en.wikipedia.org/wiki/Human_body_temperature" target="_blank">...Body Temperature</a></li>
-                            <li><a href="https://en.wikipedia.org/wiki/Electrocardiography" target="_blank">...Electrocardiogram</a></li>
-                            <li><a href="https://en.wikipedia.org/wiki/Oxygen_saturation_(medicine)" target="_blank">...Oxygen Saturation (spO2)</a></li>
-                            <li><a href="https://en.wikipedia.org/wiki/Pulse" target="_blank">...Pulse Rate</a></li>
-                        </ul>
-                    </div>
-
-                    <div class="col-lg-2 col-md-3 footer-links">
-                        <h4>Hardware Used</h4>
-                        <ul>
-                            <li><a href="#">MLX90614</a></li>
-                            <li><a href="#">AD8323</a></li>
-                            <li><a href="#">MAX30100</a></li>
-                            <li><a href="#">MFRC522</a></li>
-                            <li><a href="#">ESP-32 Wroom</a></li>
-                            <li><a href="#">ESP-8266 </a></li>
-                            <li><a href="#">Arduino Uno</a></li>
-                        </ul>
-                    </div>
-
-                    <div class="col-lg-2 col-md-3 footer-links">
-                        <h4>Tech Stack Used</h4>
-                        <ul>
-                            <li><a href="#">Languages: C++, Php, Javascript</a></li>
-                            <li><a href="#">Frameworks/Libraries: Bootstrap, Tailwind CSS</a></li>
-                            <li><a href="#">Data Base: MySQL</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="copyright text-center">
-            <div class="container d-flex flex-column flex-lg-row justify-content-center justify-content-lg-between align-items-center">
-                <div class="d-flex flex-column align-items-center align-items-lg-start">
-                    <div>
-                        © Copyright <strong><span>AI-VITAL</span></strong>. All Rights Reserved
-                    </div>
-                    <div class="credits">
-                        Designed by Einsbern</a>
-                    </div>
-                </div>
-
-                <div class="social-links order-first order-lg-last mb-3 mb-lg-0">
-                    <a href="https://www.microcitycollege.com/" target="_blank"><i class="bi bi-browser-chrome"></i></a>
-                    <a href="https://www.facebook.com/microcity.balanga" target="_blank"><i class="bi bi-facebook"></i></a>
-                    <a href="mailto:einsbernsystem@gmail.com?subject=Send%20Feedback%20to%20Developer"><i class="bi bi-envelope"></i></a>
-                </div>
-            </div>
-        </div>
-    </footer>
-    <?php endif; ?>
-
-    <style>
-        /* Clean up the prose styling */
-        .prose {
-            max-width: 100%;
-            color: #374151;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            font-family: inherit;
-            margin: 0;
-            padding: 0;
-        }
-        .prose h4 {
-            color: #065f46;
-            font-weight: 600;
-            margin-top: 1.5em;
-            margin-bottom: 0.75em;
-        }
-        .prose p {
-            margin-bottom: 1em;
-        }
-        .prose ul {
-            list-style-type: disc;
-            padding-left: 1.5em;
-            margin-bottom: 1em;
-        }
-        .prose li {
-            margin-bottom: 0.5em;
-        }
-        #ai-result {
-            position: relative;
-            z-index: 1;
-            margin: 0;
-            padding: 0;
-        }
-        #ai-result .container {
-            margin: 0;
-            padding: 0;
-        }
-        #ai-result .w-full {
-            margin: 0;
-            padding: 0;
-        }
-        .bg-overlay {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            flex: 1;
-        }
-        .footer {
-            position: relative;
-            z-index: 2;
-            margin-top: auto;
-        }
-        .marquee {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-        }
-        .readings-panel {
-            flex: 1;
-            margin-right: 2rem;
-        }
-        .user-panel {
-            flex: 0 0 33.333333%;
-        }
-        @media (max-width: 1024px) {
-            .container.mx-auto {
-                flex-direction: column;
-            }
-            .readings-panel {
-                margin-right: 0;
-                margin-bottom: 2rem;
-            }
-            .user-panel {
-                flex: 0 0 100%;
-            }
-        }
-    </style>
-
-    <script>
-        async function fetchSensorData() {
-            try {
-                const response = await fetch("fetch_data.php"); // Change to fetch_data.php for ESP data change to .sample
-                const data = await response.json();
-
-                // Debugging: Log the fetched data
-                console.log("Fetched Sensor Data:", data);
-
-                // Update the UI with fetched sensor data
-                document.getElementById("temp").innerText = data.body_temp !== null ? parseFloat(data.body_temp).toFixed(2) + " °C" : "0.00 °C";
-                document.getElementById("ecg").innerText = data.ecg !== null ? parseFloat(data.ecg).toFixed(2) : "0.00";
-                document.getElementById("pulse_rate").innerText = data.pulse_rate !== null ? parseInt(data.pulse_rate, 10) + " BPM" : "0 BPM";
-                document.getElementById("spo2").innerText = data.spo2 !== null ? parseFloat(data.spo2).toFixed(2) + " %" : "0.00 %";
-                document.getElementById("bp").innerText = data.bp || "N/A mmHg";
-
-                // Populate hidden email form fields
-                document.getElementById("emailBodyTemp").value = data.body_temp || "0.00";
-                document.getElementById("emailEcg").value = data.ecg || "0.00";
-                document.getElementById("emailPulseRate").value = data.pulse_rate || "0";
-                document.getElementById("emailSpo2").value = data.spo2 || "0.00";
-                document.getElementById("emailBp").value = data.bp || "N/A";
-            } catch (error) {
-                console.error("Error fetching sensor data:", error);
-            }
-        }
-
-        async function fetchUID() {
-            try {
-                const response = await fetch("UIDContainer.php", { cache: "no-store" });
-                const uid = (await response.text()).trim();
-                document.getElementById("uid").innerText = uid || "N/A";
-
-                // Show or hide the "My Results" button based on UID
-                const myResultsButton = document.getElementById("myResultsButton");
-                if (uid) {
-                    myResultsButton.style.display = "block";
-                } else {
-                    myResultsButton.style.display = "none";
-                }
-
-                if (uid) {
-                    const userResponse = await fetch(`handle_rfid.php?uid=${encodeURIComponent(uid)}`, { cache: "no-store" });
-                    const userData = await userResponse.json();
-
-                    if (!userData.error) {
-                        document.getElementById("name").innerText = userData.name || "N/A";
-                        document.getElementById("email").innerText = userData.email || "N/A";
-                        document.getElementById("age").innerText = userData.age ? `${userData.age} years old` : "N/A";
-                        document.getElementById("weight").innerText = userData.weight ? `${userData.weight} kg` : "N/A";
-                        document.getElementById("height").innerText = userData.height ? `${userData.height} cm` : "N/A";
-                        document.getElementById("gender").innerText = userData.gender || "N/A";
-
-                        // Populate hidden email form fields
-                        document.getElementById("emailUid").value = uid;
-                        document.getElementById("emailName").value = userData.name || "N/A";
-                        document.getElementById("emailEmail").value = userData.email || "N/A";
-                        document.getElementById("emailAge").value = userData.age || "N/A";
-                        document.getElementById("emailWeight").value = userData.weight || "N/A";
-                        document.getElementById("emailHeight").value = userData.height || "N/A";
-                        document.getElementById("emailGender").value = userData.gender || "N/A";
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching UID or user details:", error);
-            }
-        }
-
-        function updateDeviceTime() {
-            const now = new Date();
-            const formattedTime = now.toLocaleString();
-            document.getElementById("currentTime").innerText = formattedTime;
-        }
-
-        setInterval(fetchSensorData, 2000); // Fetch sensor data every 2 seconds
-        setInterval(fetchUID, 300); // Fetch UID every 300ms
-        setInterval(updateDeviceTime, 1000); // Update time every second
-    </script>
 </body>
 </html>
