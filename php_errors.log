@@ -4,3 +4,9 @@
 [26-May-2025 07:07:11 Europe/Berlin] [2025-05-26 07:07:11] PHP Error [2]: preg_match(): Unknown modifier ']' in /Applications/XAMPP/xamppfiles/htdocs/StazSys/consult.php on line 101
 
 [26-May-2025 07:07:11 Europe/Berlin] PHP Warning:  preg_match(): Unknown modifier ']' in /Applications/XAMPP/xamppfiles/htdocs/StazSys/consult.php on line 101
+[03-Jun-2025 05:53:47 Europe/Berlin] [2025-06-03 05:53:47] Uncaught Exception: Division by zero
+Stack trace: #0 {main}
+
+[03-Jun-2025 05:54:32 Europe/Berlin] [2025-06-03 05:54:32] Uncaught Exception: Division by zero
+Stack trace: #0 {main}
+

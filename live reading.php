@@ -1333,7 +1333,7 @@ $currentDate = date("F j, Y");
         // Original fetchSensorData function with ECG value tracking added
         async function fetchSensorData() {
             try {
-                const response = await fetch("fetch_sample.php"); // Keep original fetch_random.php
+                const response = await fetch("fetch_data.php"); // Keep original fetch_random.php
                 const data = await response.json();
 
                 // Debugging: Log the fetched data
