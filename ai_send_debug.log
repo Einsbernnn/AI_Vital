@@ -1,0 +1,552 @@
+[2025-06-03 12:57:11] Connecting to database for user details...
+[2025-06-03 12:57:11] User fetch result: {"name":"EINSBERN SYSTEM","email":"einsbernsystem@gmail.com"}
+[2025-06-03 12:57:11] Fetched user: EINSBERN SYSTEM <einsbernsystem@gmail.com>
+[2025-06-03 12:57:11] Database disconnected after user fetch.
+[2025-06-03 12:57:12] Connecting to database for user details...
+[2025-06-03 12:57:12] User fetch result: {"name":"EINSBERN SYSTEM","email":"einsbernsystem@gmail.com"}
+[2025-06-03 12:57:12] Fetched user: EINSBERN SYSTEM <einsbernsystem@gmail.com>
+[2025-06-03 12:57:12] Database disconnected after user fetch.
+[2025-06-03 12:57:12] POST request received. Generating AI diagnosis...
+[2025-06-03 12:57:12] Sending payload to OpenAI: {"model":"gpt-4.1-nano","messages":[{"role":"user","content":"You are a highly skilled virtual nurse with expertise in real-time patient diagnostics. \nYour goal is to analyze a user's vital signs, determine their health status, and provide recommendations.\n\n**User's Vital Signs:**\n- Body Temperature: 29.75 \u00b0C\n- ECG Rate: 78.00 BPM\n- Pulse Rate: 58 BPM\n- SpO2 Level: 97.00 %\n- Blood Pressure: 122\/89 (Elevated) mmHg\n- Height: 10 cm\n- Weight: 10 kg\n\n**Your Task as the AI Nurse:**\n1. Determine whether the vitals are **normal, borderline, or critical**.\n2. Identify potential medical conditions (e.g., fever, bradycardia, tachycardia, hypoxia, arrhythmia).\n3. Explain the **causes** behind abnormal readings.\n4. Possible sickeness based on user vitals sign result make this explain broadly. Also bold and capital this since this is very crusial.\n5. Suggest appropriate medical actions (e.g., drink fluids, rest, seek emergency care).\n6. Give a possible indication on what are their disease.\n7. If vitals indicate an emergency, give **urgent medical advice**.\n8. Calculate their BMI based on their weight and height.\n9. Always state that the diagnosis is based on the data provided and is not 100% accurate. Advise seeking medical attention if needed.\n10. Always remind the user that the school nurse is available to assist them."}]}
+[2025-06-03 12:57:22] OpenAI response: {
+  "id": "chatcmpl-BeJcQO982wMxTCxE5GO4huVUsDDcz",
+  "object": "chat.completion",
+  "created": 1748948234,
+  "model": "gpt-4.1-nano-2025-04-14",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Based on the vital signs provided, here's a detailed analysis:\n\n1. **Vital Signs Assessment:**\n\n   - **Body Temperature: 29.75 °C** – **CRITICAL**\n   - **ECG Rate (Heart Rate): 78 BPM** – NORMAL\n   - **Pulse Rate: 58 BPM** – BORDERLINE BRADYCARDIA (slightly lower than normal range)\n   - **SpO2 Level: 97%** – NORMAL\n   - **Blood Pressure: 122/89 mmHg** – **ELEVATED (Prehypertension)**\n   - **Height: 10 cm, Weight: 10 kg** – These measurements suggest possible error, as they are very inconsistent for an adult or child. Please verify.\n\n2. **Potential Medical Conditions:**\n\n   - **SEVERE HYPOTHERMIA:** The body temperature of 29.75°C indicates dangerously low body temperature, which can impair organ function and be life-threatening.\n   - **BORDERLINE BRADYCARDIA:** Slightly decreased pulse rate may be related to hypothermia.\n   - **ELEVATED BLOOD PRESSURE:** Could be temporary or related to stress or other factors.\n   - **Other vitals are within normal ranges, except temperature.**\n\n3. **Causes Behind Abnormal Readings:**\n\n   - **Hypothermia:** Usually caused by prolonged exposure to cold, inability to regulate body temperature, or certain medical conditions.\n   - **Borderline Bradycardia:** May be a response to hypothermia, as the body slows down to conserve heat.\n   - The extremely low body temperature is a **CRITICAL** emergency requiring immediate intervention.\n\n4. **Possible Sickness Deductions:**\n\n   **THIS IS A LIFE-THREATENING EMERGENCY DUE TO SEVERE HYPOTHERMIA.** The dangerously low body temperature can impair brain function, heart rhythm, and vital organ operation. Immediate medical attention is essential.\n\n5. **Recommendations:**\n\n   - **Urgently seek emergency medical care.** Call emergency services immediately.\n   - Keep the person warm with blankets, dry clothing, and warm fluids if conscious.\n   - Do not attempt to rewarm rapidly—professional medical treatment is necessary.\n   - Do NOT delay; hypothermia can worsen rapidly.\n\n6. **Indicative Disease or Condition:**\n\n   - **SEVERE HYPOTHERMIA** is strongly indicated.\n   - Other concerns could include exposure to cold environments or underlying metabolic issues.\n\n7. **Emergency Advice:**\n\n   - **This is a life-threatening condition. Immediate medical intervention is required.**\n   - Call emergency services now.\n   - Monitor breathing and consciousness until help arrives.\n\n8. **BMI Calculation:**\n\n   - **Note:** The height and weight given (10 cm and 10 kg) are highly unlikely and suggest incorrect data. For accuracy, please verify measurements.\n   \n   - **If assuming realistic values, for example, a height of 170 cm and weight of 70 kg:**\n\n     BMI = weight (kg) / (height (m))²  \n     = 70 / (1.70)² ≈ 24.22 kg/m² (Normal range)\n\n   - Based on provided data, BMI cannot be accurately calculated.\n\n9. **Important Reminder:**\n\n   - This analysis is based solely on the data provided and is **NOT 100% definitive**.\n   - Please seek immediate medical attention for proper diagnosis and treatment.\n   - The school nurse is available to assist and guide you further.\n\n**In summary:** The critical concern here is severe hypothermia, which is a medical emergency. Immediate professional medical intervention is mandatory to prevent life-threatening complications.",
+        "refusal": null,
+        "annotations": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 319,
+    "completion_tokens": 764,
+    "total_tokens": 1083,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "audio_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "audio_tokens": 0,
+      "accepted_prediction_tokens": 0,
+      "rejected_prediction_tokens": 0
+    }
+  },
+  "service_tier": "default",
+  "system_fingerprint": "fp_f12167b370"
+}
+
+[2025-06-03 12:57:22] Decoded OpenAI response: {"id":"chatcmpl-BeJcQO982wMxTCxE5GO4huVUsDDcz","object":"chat.completion","created":1748948234,"model":"gpt-4.1-nano-2025-04-14","choices":[{"index":0,"message":{"role":"assistant","content":"Based on the vital signs provided, here's a detailed analysis:\n\n1. **Vital Signs Assessment:**\n\n   - **Body Temperature: 29.75 \u00b0C** \u2013 **CRITICAL**\n   - **ECG Rate (Heart Rate): 78 BPM** \u2013 NORMAL\n   - **Pulse Rate: 58 BPM** \u2013 BORDERLINE BRADYCARDIA (slightly lower than normal range)\n   - **SpO2 Level: 97%** \u2013 NORMAL\n   - **Blood Pressure: 122\/89 mmHg** \u2013 **ELEVATED (Prehypertension)**\n   - **Height: 10 cm, Weight: 10 kg** \u2013 These measurements suggest possible error, as they are very inconsistent for an adult or child. Please verify.\n\n2. **Potential Medical Conditions:**\n\n   - **SEVERE HYPOTHERMIA:** The body temperature of 29.75\u00b0C indicates dangerously low body temperature, which can impair organ function and be life-threatening.\n   - **BORDERLINE BRADYCARDIA:** Slightly decreased pulse rate may be related to hypothermia.\n   - **ELEVATED BLOOD PRESSURE:** Could be temporary or related to stress or other factors.\n   - **Other vitals are within normal ranges, except temperature.**\n\n3. **Causes Behind Abnormal Readings:**\n\n   - **Hypothermia:** Usually caused by prolonged exposure to cold, inability to regulate body temperature, or certain medical conditions.\n   - **Borderline Bradycardia:** May be a response to hypothermia, as the body slows down to conserve heat.\n   - The extremely low body temperature is a **CRITICAL** emergency requiring immediate intervention.\n\n4. **Possible Sickness Deductions:**\n\n   **THIS IS A LIFE-THREATENING EMERGENCY DUE TO SEVERE HYPOTHERMIA.** The dangerously low body temperature can impair brain function, heart rhythm, and vital organ operation. Immediate medical attention is essential.\n\n5. **Recommendations:**\n\n   - **Urgently seek emergency medical care.** Call emergency services immediately.\n   - Keep the person warm with blankets, dry clothing, and warm fluids if conscious.\n   - Do not attempt to rewarm rapidly\u2014professional medical treatment is necessary.\n   - Do NOT delay; hypothermia can worsen rapidly.\n\n6. **Indicative Disease or Condition:**\n\n   - **SEVERE HYPOTHERMIA** is strongly indicated.\n   - Other concerns could include exposure to cold environments or underlying metabolic issues.\n\n7. **Emergency Advice:**\n\n   - **This is a life-threatening condition. Immediate medical intervention is required.**\n   - Call emergency services now.\n   - Monitor breathing and consciousness until help arrives.\n\n8. **BMI Calculation:**\n\n   - **Note:** The height and weight given (10 cm and 10 kg) are highly unlikely and suggest incorrect data. For accuracy, please verify measurements.\n   \n   - **If assuming realistic values, for example, a height of 170 cm and weight of 70 kg:**\n\n     BMI = weight (kg) \/ (height (m))\u00b2  \n     = 70 \/ (1.70)\u00b2 \u2248 24.22 kg\/m\u00b2 (Normal range)\n\n   - Based on provided data, BMI cannot be accurately calculated.\n\n9. **Important Reminder:**\n\n   - This analysis is based solely on the data provided and is **NOT 100% definitive**.\n   - Please seek immediate medical attention for proper diagnosis and treatment.\n   - The school nurse is available to assist and guide you further.\n\n**In summary:** The critical concern here is severe hypothermia, which is a medical emergency. Immediate professional medical intervention is mandatory to prevent life-threatening complications.","refusal":null,"annotations":[]},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":319,"completion_tokens":764,"total_tokens":1083,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}},"service_tier":"default","system_fingerprint":"fp_f12167b370"}
+[2025-06-03 12:57:22] Diagnosis result: Based on the vital signs provided, here's a detailed analysis:
+
+1. **Vital Signs Assessment:**
+
+   - **Body Temperature: 29.75 °C** – **CRITICAL**
+   - **ECG Rate (Heart Rate): 78 BPM** – NORMAL
+   - **Pulse Rate: 58 BPM** – BORDERLINE BRADYCARDIA (slightly lower than normal range)
+   - **SpO2 Level: 97%** – NORMAL
+   - **Blood Pressure: 122/89 mmHg** – **ELEVATED (Prehypertension)**
+   - **Height: 10 cm, Weight: 10 kg** – These measurements suggest possible error, as they are very inconsistent for an adult or child. Please verify.
+
+2. **Potential Medical Conditions:**
+
+   - **SEVERE HYPOTHERMIA:** The body temperature of 29.75°C indicates dangerously low body temperature, which can impair organ function and be life-threatening.
+   - **BORDERLINE BRADYCARDIA:** Slightly decreased pulse rate may be related to hypothermia.
+   - **ELEVATED BLOOD PRESSURE:** Could be temporary or related to stress or other factors.
+   - **Other vitals are within normal ranges, except temperature.**
+
+3. **Causes Behind Abnormal Readings:**
+
+   - **Hypothermia:** Usually caused by prolonged exposure to cold, inability to regulate body temperature, or certain medical conditions.
+   - **Borderline Bradycardia:** May be a response to hypothermia, as the body slows down to conserve heat.
+   - The extremely low body temperature is a **CRITICAL** emergency requiring immediate intervention.
+
+4. **Possible Sickness Deductions:**
+
+   **THIS IS A LIFE-THREATENING EMERGENCY DUE TO SEVERE HYPOTHERMIA.** The dangerously low body temperature can impair brain function, heart rhythm, and vital organ operation. Immediate medical attention is essential.
+
+5. **Recommendations:**
+
+   - **Urgently seek emergency medical care.** Call emergency services immediately.
+   - Keep the person warm with blankets, dry clothing, and warm fluids if conscious.
+   - Do not attempt to rewarm rapidly—professional medical treatment is necessary.
+   - Do NOT delay; hypothermia can worsen rapidly.
+
+6. **Indicative Disease or Condition:**
+
+   - **SEVERE HYPOTHERMIA** is strongly indicated.
+   - Other concerns could include exposure to cold environments or underlying metabolic issues.
+
+7. **Emergency Advice:**
+
+   - **This is a life-threatening condition. Immediate medical intervention is required.**
+   - Call emergency services now.
+   - Monitor breathing and consciousness until help arrives.
+
+8. **BMI Calculation:**
+
+   - **Note:** The height and weight given (10 cm and 10 kg) are highly unlikely and suggest incorrect data. For accuracy, please verify measurements.
+   
+   - **If assuming realistic values, for example, a height of 170 cm and weight of 70 kg:**
+
+     BMI = weight (kg) / (height (m))²  
+     = 70 / (1.70)² ≈ 24.22 kg/m² (Normal range)
+
+   - Based on provided data, BMI cannot be accurately calculated.
+
+9. **Important Reminder:**
+
+   - This analysis is based solely on the data provided and is **NOT 100% definitive**.
+   - Please seek immediate medical attention for proper diagnosis and treatment.
+   - The school nurse is available to assist and guide you further.
+
+**In summary:** The critical concern here is severe hypothermia, which is a medical emergency. Immediate professional medical intervention is mandatory to prevent life-threatening complications.
+[2025-06-03 12:57:22] Connecting to database for storing results...
+[2025-06-03 12:57:26] Email sent to einsbernsystem@gmail.com
+[2025-06-03 12:57:26] Database disconnected after storing results.
+[2025-06-03 12:58:37] Connecting to database for user details...
+[2025-06-03 12:58:37] User fetch result: {"name":"JOHN PAUL LEGASPI","email":"dendiass18@gmail.com"}
+[2025-06-03 12:58:37] Fetched user: JOHN PAUL LEGASPI <dendiass18@gmail.com>
+[2025-06-03 12:58:37] Database disconnected after user fetch.
+[2025-06-03 12:58:38] Connecting to database for user details...
+[2025-06-03 12:58:38] User fetch result: {"name":"JOHN PAUL LEGASPI","email":"dendiass18@gmail.com"}
+[2025-06-03 12:58:38] Fetched user: JOHN PAUL LEGASPI <dendiass18@gmail.com>
+[2025-06-03 12:58:38] Database disconnected after user fetch.
+[2025-06-03 12:58:38] POST request received. Generating AI diagnosis...
+[2025-06-03 12:58:38] Sending payload to OpenAI: {"model":"gpt-4.1-nano","messages":[{"role":"user","content":"You are a highly skilled virtual nurse with expertise in real-time patient diagnostics. \nYour goal is to analyze a user's vital signs, determine their health status, and provide recommendations.\n\n**User's Vital Signs:**\n- Body Temperature: 29.71 \u00b0C\n- ECG Rate: 95.00 BPM\n- Pulse Rate: 8 BPM\n- SpO2 Level: 95.00 %\n- Blood Pressure: 122\/89 (Elevated) mmHg\n- Height: 167.8 cm\n- Weight: 60.2 kg\n\n**Your Task as the AI Nurse:**\n1. Determine whether the vitals are **normal, borderline, or critical**.\n2. Identify potential medical conditions (e.g., fever, bradycardia, tachycardia, hypoxia, arrhythmia).\n3. Explain the **causes** behind abnormal readings.\n4. Possible sickeness based on user vitals sign result make this explain broadly. Also bold and capital this since this is very crusial.\n5. Suggest appropriate medical actions (e.g., drink fluids, rest, seek emergency care).\n6. Give a possible indication on what are their disease.\n7. If vitals indicate an emergency, give **urgent medical advice**.\n8. Calculate their BMI based on their weight and height.\n9. Always state that the diagnosis is based on the data provided and is not 100% accurate. Advise seeking medical attention if needed.\n10. Always remind the user that the school nurse is available to assist them."}]}
+[2025-06-03 12:58:48] OpenAI response: {
+  "id": "chatcmpl-BeJdnw1FFKWDHus5tGKUoABmBCkgZ",
+  "object": "chat.completion",
+  "created": 1748948319,
+  "model": "gpt-4.1-nano-2025-04-14",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Thank you for providing your vital signs. Based on the data, here is my analysis:\n\n1. **Vital Sign Assessment:**\n   - **Body Temperature: 29.71 °C** — IMPLAUDABLY LOW (Hypothermia)\n   - **ECG Rate: 95 BPM** — NORMAL\n   - **Pulse Rate: 8 BPM** — EXTREMELY LOW (Severe Bradycardia)\n   - **SpO2 Level: 95%** — NORMAL\n   - **Blood Pressure: 122/89 mmHg** — ELEVATED (Prehypertension)\n   - **Height: 167.8 cm, Weight: 60.2 kg** — Used for BMI calculation\n\n2. **Potential Medical Conditions:**\n   - **SEVERE HYPOTHERMIA** (due to very low body temperature)\n   - **SEVERE BRADYCARDIA** (extremely slow pulse rate)\n   - Elevated blood pressure might be of concern but is less critical here.\n\n3. **Causes of Abnormal Readings:**\n   - The **low body temperature** suggests **hypothermia**, possibly caused by prolonged exposure to cold, certain medical conditions, or accidental hypothermia.\n   - The **extremely low pulse rate** indicates **bradycardia**, which can be caused by sinus node dysfunction, medication side effects, or underlying cardiac issues.\n   \n4. **Broad Medical Explanation:**\n   **THIS USER IS LIKELY EXPERIENCING SEVERE HYPOTHERMIA AND BRADYCARDIA, WHICH ARE LIFE-THREATENING CONDITIONS. HYPOTHERMIA CAN BE CAUSED BY EXPOSURE TO EXTREME COLD, AND BRADYCARDIA SIGNALS POTENTIALLY LIFE-THREATENING HEART SINUS NODE FAILURE OR OTHER CARDIAC ISSUES.** These conditions require IMMEDIATE medical attention.\n\n5. **Appropriate Medical Actions:**\n   - SEEK IMMEDIATE EMERGENCY CARE (call ambulance or go to the nearest ER).\n   - Keep the person warm with blankets and warm fluids if available.\n   - Do not attempt to rewarm too rapidly, as this can cause other issues.\n   - Do not give medications or food until evaluated by healthcare professionals.\n\n6. **Likely Disease or Issue:**\n   - The primary concern appears to be **SEVERE HYPOTHERMIA AND BRADYCARDIA**, both of which can lead to multi-organ failure and death if untreated promptly.\n\n7. **Urgent Medical Advice:**\n   - **THIS IS AN EMERGENCY. PLEASE CALL EMERGENCY SERVICES OR GO TO THE NEAREST HOSPITAL IMMEDIATELY. DO NOT WAIT TO SEEK HELP.**\n\n8. **BMI Calculation:**\n   \\[\n   \\text{BMI} = \\frac{\\text{Weight in kg}}{(\\text{Height in meters})^2} = \\frac{60.2}{(1.678)^2} \\approx 21.4 \\text{ kg/m}^2\n   \\]\n   - Your BMI is approximately **21.4**, which is within the normal range.\n\n9. **Note:**  \n   - This diagnosis is based solely on the data provided and is not 100% accurate. It is crucial to seek professional medical evaluation immediately for proper diagnosis and treatment.\n\n10. **Reminder:**  \n   - The school nurse is available to assist you further. If you are experiencing these symptoms or if they are observed in someone else, **please seek emergency medical attention immediately**.",
+        "refusal": null,
+        "annotations": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 323,
+    "completion_tokens": 735,
+    "total_tokens": 1058,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "audio_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "audio_tokens": 0,
+      "accepted_prediction_tokens": 0,
+      "rejected_prediction_tokens": 0
+    }
+  },
+  "service_tier": "default",
+  "system_fingerprint": "fp_f12167b370"
+}
+
+[2025-06-03 12:58:48] Decoded OpenAI response: {"id":"chatcmpl-BeJdnw1FFKWDHus5tGKUoABmBCkgZ","object":"chat.completion","created":1748948319,"model":"gpt-4.1-nano-2025-04-14","choices":[{"index":0,"message":{"role":"assistant","content":"Thank you for providing your vital signs. Based on the data, here is my analysis:\n\n1. **Vital Sign Assessment:**\n   - **Body Temperature: 29.71 \u00b0C** \u2014 IMPLAUDABLY LOW (Hypothermia)\n   - **ECG Rate: 95 BPM** \u2014 NORMAL\n   - **Pulse Rate: 8 BPM** \u2014 EXTREMELY LOW (Severe Bradycardia)\n   - **SpO2 Level: 95%** \u2014 NORMAL\n   - **Blood Pressure: 122\/89 mmHg** \u2014 ELEVATED (Prehypertension)\n   - **Height: 167.8 cm, Weight: 60.2 kg** \u2014 Used for BMI calculation\n\n2. **Potential Medical Conditions:**\n   - **SEVERE HYPOTHERMIA** (due to very low body temperature)\n   - **SEVERE BRADYCARDIA** (extremely slow pulse rate)\n   - Elevated blood pressure might be of concern but is less critical here.\n\n3. **Causes of Abnormal Readings:**\n   - The **low body temperature** suggests **hypothermia**, possibly caused by prolonged exposure to cold, certain medical conditions, or accidental hypothermia.\n   - The **extremely low pulse rate** indicates **bradycardia**, which can be caused by sinus node dysfunction, medication side effects, or underlying cardiac issues.\n   \n4. **Broad Medical Explanation:**\n   **THIS USER IS LIKELY EXPERIENCING SEVERE HYPOTHERMIA AND BRADYCARDIA, WHICH ARE LIFE-THREATENING CONDITIONS. HYPOTHERMIA CAN BE CAUSED BY EXPOSURE TO EXTREME COLD, AND BRADYCARDIA SIGNALS POTENTIALLY LIFE-THREATENING HEART SINUS NODE FAILURE OR OTHER CARDIAC ISSUES.** These conditions require IMMEDIATE medical attention.\n\n5. **Appropriate Medical Actions:**\n   - SEEK IMMEDIATE EMERGENCY CARE (call ambulance or go to the nearest ER).\n   - Keep the person warm with blankets and warm fluids if available.\n   - Do not attempt to rewarm too rapidly, as this can cause other issues.\n   - Do not give medications or food until evaluated by healthcare professionals.\n\n6. **Likely Disease or Issue:**\n   - The primary concern appears to be **SEVERE HYPOTHERMIA AND BRADYCARDIA**, both of which can lead to multi-organ failure and death if untreated promptly.\n\n7. **Urgent Medical Advice:**\n   - **THIS IS AN EMERGENCY. PLEASE CALL EMERGENCY SERVICES OR GO TO THE NEAREST HOSPITAL IMMEDIATELY. DO NOT WAIT TO SEEK HELP.**\n\n8. **BMI Calculation:**\n   \\[\n   \\text{BMI} = \\frac{\\text{Weight in kg}}{(\\text{Height in meters})^2} = \\frac{60.2}{(1.678)^2} \\approx 21.4 \\text{ kg\/m}^2\n   \\]\n   - Your BMI is approximately **21.4**, which is within the normal range.\n\n9. **Note:**  \n   - This diagnosis is based solely on the data provided and is not 100% accurate. It is crucial to seek professional medical evaluation immediately for proper diagnosis and treatment.\n\n10. **Reminder:**  \n   - The school nurse is available to assist you further. If you are experiencing these symptoms or if they are observed in someone else, **please seek emergency medical attention immediately**.","refusal":null,"annotations":[]},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":323,"completion_tokens":735,"total_tokens":1058,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}},"service_tier":"default","system_fingerprint":"fp_f12167b370"}
+[2025-06-03 12:58:48] Diagnosis result: Thank you for providing your vital signs. Based on the data, here is my analysis:
+
+1. **Vital Sign Assessment:**
+   - **Body Temperature: 29.71 °C** — IMPLAUDABLY LOW (Hypothermia)
+   - **ECG Rate: 95 BPM** — NORMAL
+   - **Pulse Rate: 8 BPM** — EXTREMELY LOW (Severe Bradycardia)
+   - **SpO2 Level: 95%** — NORMAL
+   - **Blood Pressure: 122/89 mmHg** — ELEVATED (Prehypertension)
+   - **Height: 167.8 cm, Weight: 60.2 kg** — Used for BMI calculation
+
+2. **Potential Medical Conditions:**
+   - **SEVERE HYPOTHERMIA** (due to very low body temperature)
+   - **SEVERE BRADYCARDIA** (extremely slow pulse rate)
+   - Elevated blood pressure might be of concern but is less critical here.
+
+3. **Causes of Abnormal Readings:**
+   - The **low body temperature** suggests **hypothermia**, possibly caused by prolonged exposure to cold, certain medical conditions, or accidental hypothermia.
+   - The **extremely low pulse rate** indicates **bradycardia**, which can be caused by sinus node dysfunction, medication side effects, or underlying cardiac issues.
+   
+4. **Broad Medical Explanation:**
+   **THIS USER IS LIKELY EXPERIENCING SEVERE HYPOTHERMIA AND BRADYCARDIA, WHICH ARE LIFE-THREATENING CONDITIONS. HYPOTHERMIA CAN BE CAUSED BY EXPOSURE TO EXTREME COLD, AND BRADYCARDIA SIGNALS POTENTIALLY LIFE-THREATENING HEART SINUS NODE FAILURE OR OTHER CARDIAC ISSUES.** These conditions require IMMEDIATE medical attention.
+
+5. **Appropriate Medical Actions:**
+   - SEEK IMMEDIATE EMERGENCY CARE (call ambulance or go to the nearest ER).
+   - Keep the person warm with blankets and warm fluids if available.
+   - Do not attempt to rewarm too rapidly, as this can cause other issues.
+   - Do not give medications or food until evaluated by healthcare professionals.
+
+6. **Likely Disease or Issue:**
+   - The primary concern appears to be **SEVERE HYPOTHERMIA AND BRADYCARDIA**, both of which can lead to multi-organ failure and death if untreated promptly.
+
+7. **Urgent Medical Advice:**
+   - **THIS IS AN EMERGENCY. PLEASE CALL EMERGENCY SERVICES OR GO TO THE NEAREST HOSPITAL IMMEDIATELY. DO NOT WAIT TO SEEK HELP.**
+
+8. **BMI Calculation:**
+   \[
+   \text{BMI} = \frac{\text{Weight in kg}}{(\text{Height in meters})^2} = \frac{60.2}{(1.678)^2} \approx 21.4 \text{ kg/m}^2
+   \]
+   - Your BMI is approximately **21.4**, which is within the normal range.
+
+9. **Note:**  
+   - This diagnosis is based solely on the data provided and is not 100% accurate. It is crucial to seek professional medical evaluation immediately for proper diagnosis and treatment.
+
+10. **Reminder:**  
+   - The school nurse is available to assist you further. If you are experiencing these symptoms or if they are observed in someone else, **please seek emergency medical attention immediately**.
+[2025-06-03 12:58:48] Connecting to database for storing results...
+[2025-06-03 12:58:53] Email sent to dendiass18@gmail.com
+[2025-06-03 12:58:53] Database disconnected after storing results.
+[2025-06-03 13:01:15] Connecting to database for user details...
+[2025-06-03 13:01:15] User fetch result: {"name":"JOHN PAUL LEGASPI","email":"dendiass18@gmail.com"}
+[2025-06-03 13:01:15] Fetched user: JOHN PAUL LEGASPI <dendiass18@gmail.com>
+[2025-06-03 13:01:15] Database disconnected after user fetch.
+[2025-06-03 13:01:15] POST request received. Generating AI diagnosis...
+[2025-06-03 13:01:15] Sending payload to OpenAI: {"model":"gpt-4.1-nano","messages":[{"role":"user","content":"You are a highly skilled virtual nurse with expertise in real-time patient diagnostics. \nYour goal is to analyze a user's vital signs, determine their health status, and provide recommendations.\n\n**User's Vital Signs:**\n- Body Temperature: 29.71 \u00b0C\n- ECG Rate: 95.00 BPM\n- Pulse Rate: 8 BPM\n- SpO2 Level: 95.00 %\n- Blood Pressure: 122\/89 (Elevated) mmHg\n- Height: 167.8 cm\n- Weight: 60.2 kg\n\n**Your Task as the AI Nurse:**\n1. Determine whether the vitals are **normal, borderline, or critical**.\n2. Identify potential medical conditions (e.g., fever, bradycardia, tachycardia, hypoxia, arrhythmia).\n3. Explain the **causes** behind abnormal readings.\n4. Possible sickeness based on user vitals sign result make this explain broadly. Also bold and capital this since this is very crusial.\n5. Suggest appropriate medical actions (e.g., drink fluids, rest, seek emergency care).\n6. Give a possible indication on what are their disease.\n7. If vitals indicate an emergency, give **urgent medical advice**.\n8. Calculate their BMI based on their weight and height.\n9. Always state that the diagnosis is based on the data provided and is not 100% accurate. Advise seeking medical attention if needed.\n10. Always remind the user that the school nurse is available to assist them."}]}
+[2025-06-03 13:01:24] OpenAI response: {
+  "id": "chatcmpl-BeJgJF3vhEmovAmAmLCIQqmkcO2hg",
+  "object": "chat.completion",
+  "created": 1748948475,
+  "model": "gpt-4.1-nano-2025-04-14",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Based on the vital signs you've provided, here's an analysis:\n\n1. **Vital Signs Evaluation:**\n   - **Body Temperature: 29.71°C**: Extremely low; **Critical Hypothermia**\n   - **ECG Rate: 95 BPM**: Normal adult heart rate (~60-100 bpm); **Normal**\n   - **Pulse Rate: 8 BPM**: Abnormally low; **BRADYCARDIA (Severe)**\n   - **SpO2 Level: 95%**: Slightly below optimal (~96-100%), but generally acceptable; **Borderline**\n   - **Blood Pressure: 122/89 mmHg**: Slightly elevated; **Borderline Hypertension**\n\n2. **Potential Medical Conditions:**\n   - **SEVERE HYPOTHERMIA** (from the body temperature)\n   - **BRADYCARDIA** (from the pulse rate)\n   - Minor concerns about **borderline hypertension** and **mild hypoxia** possibility\n\n3. **Causes of Abnormal Readings:**\n   - The **extremely low body temperature** suggests exposure to cold environments, metabolic issues, or severe systemic compromise.\n   - The **severely low pulse rate** could be due to cardiac conduction abnormalities, medication side effects, severe hypothermia, or other cardiac conditions.\n   - Slightly reduced SpO₂ might indicate early respiratory issues, or simply measurement variation.\n\n4. **BODY'S RESPONSE & BROAD CONDITIONS:**\n   - **SEVERE HYPOTHERMIA CAN LEAD TO LIFE-THREATENING COMPLICATIONS, INCLUDING CARDIAC ARRHYTHMIAS AND ORGAN FAILURE.**\n   - The low pulse rate combined with hypothermia suggests **CRITICAL CARDIAC IMPAIRMENT**.\n   - Elevated blood pressure could be a stress response or related to underlying hypertension.\n\n5. **Recommendations:**\n   - **IMMEDIATE MEDICAL ATTENTION IS REQUIRED.** Call emergency services or get to the nearest emergency department immediately.\n   - Keep the person **warm and dry**; initiate gentle rewarming if trained to do so.\n   - Do **NOT** try to rewarm aggressively or use hot baths — seek professional medical help urgently.\n   - Monitor breathing and pulse if possible, but **do not delay seeking emergency care**.\n\n6. **Possible Disease or Condition:**\n   - The presentation suggests **SEVERE HYPOTHERMIA**, which can be associated with **COOLING DUE TO EXTREME ENVIRONMENTAL EXPOSURE, IMMOBILITY, OR SEVERE ILLNESS**.\n\n7. **Urgent Medical Advice:**\n   - **THIS IS AN EMERGENCY. IMMEDIATELY CALL EMERGENCY SERVICES OR GO TO THE NEAREST ER.** Do not delay, as severe hypothermia can be fatal.\n\n8. **BMI Calculation:**\n   \\[\n   BMI = \\frac{\\text{Weight in kg}}{(\\text{Height in meters})^2} = \\frac{60.2}{(1.678)^2} \\approx \\frac{60.2}{2.813} \\approx 21.4 \\, \\text{kg/m}^2\n   \\]\n   - Your BMI is approximately **21.4 kg/m²**, which is within the normal weight range.\n\n9. **Disclaimer:**\n   - Please note that this assessment is based solely on the data provided and **IS NOT 100% definitive**. Seek immediate medical attention for proper diagnosis and treatment.\n\n10. **Reminder:**\n    - Your **SCHOOL NURSE IS AVAILABLE TO ASSIST YOU** and can provide further support or help coordinate emergency care if needed.\n\n**IMPORTANT:** If you or someone else shows signs of severe hypothermia (such as very low body temperature, unconsciousness, slow or irregular heartbeat), **call emergency services immediately**.",
+        "refusal": null,
+        "annotations": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 323,
+    "completion_tokens": 804,
+    "total_tokens": 1127,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "audio_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "audio_tokens": 0,
+      "accepted_prediction_tokens": 0,
+      "rejected_prediction_tokens": 0
+    }
+  },
+  "service_tier": "default",
+  "system_fingerprint": "fp_f12167b370"
+}
+
+[2025-06-03 13:01:24] Decoded OpenAI response: {"id":"chatcmpl-BeJgJF3vhEmovAmAmLCIQqmkcO2hg","object":"chat.completion","created":1748948475,"model":"gpt-4.1-nano-2025-04-14","choices":[{"index":0,"message":{"role":"assistant","content":"Based on the vital signs you've provided, here's an analysis:\n\n1. **Vital Signs Evaluation:**\n   - **Body Temperature: 29.71\u00b0C**: Extremely low; **Critical Hypothermia**\n   - **ECG Rate: 95 BPM**: Normal adult heart rate (~60-100 bpm); **Normal**\n   - **Pulse Rate: 8 BPM**: Abnormally low; **BRADYCARDIA (Severe)**\n   - **SpO2 Level: 95%**: Slightly below optimal (~96-100%), but generally acceptable; **Borderline**\n   - **Blood Pressure: 122\/89 mmHg**: Slightly elevated; **Borderline Hypertension**\n\n2. **Potential Medical Conditions:**\n   - **SEVERE HYPOTHERMIA** (from the body temperature)\n   - **BRADYCARDIA** (from the pulse rate)\n   - Minor concerns about **borderline hypertension** and **mild hypoxia** possibility\n\n3. **Causes of Abnormal Readings:**\n   - The **extremely low body temperature** suggests exposure to cold environments, metabolic issues, or severe systemic compromise.\n   - The **severely low pulse rate** could be due to cardiac conduction abnormalities, medication side effects, severe hypothermia, or other cardiac conditions.\n   - Slightly reduced SpO\u2082 might indicate early respiratory issues, or simply measurement variation.\n\n4. **BODY'S RESPONSE & BROAD CONDITIONS:**\n   - **SEVERE HYPOTHERMIA CAN LEAD TO LIFE-THREATENING COMPLICATIONS, INCLUDING CARDIAC ARRHYTHMIAS AND ORGAN FAILURE.**\n   - The low pulse rate combined with hypothermia suggests **CRITICAL CARDIAC IMPAIRMENT**.\n   - Elevated blood pressure could be a stress response or related to underlying hypertension.\n\n5. **Recommendations:**\n   - **IMMEDIATE MEDICAL ATTENTION IS REQUIRED.** Call emergency services or get to the nearest emergency department immediately.\n   - Keep the person **warm and dry**; initiate gentle rewarming if trained to do so.\n   - Do **NOT** try to rewarm aggressively or use hot baths \u2014 seek professional medical help urgently.\n   - Monitor breathing and pulse if possible, but **do not delay seeking emergency care**.\n\n6. **Possible Disease or Condition:**\n   - The presentation suggests **SEVERE HYPOTHERMIA**, which can be associated with **COOLING DUE TO EXTREME ENVIRONMENTAL EXPOSURE, IMMOBILITY, OR SEVERE ILLNESS**.\n\n7. **Urgent Medical Advice:**\n   - **THIS IS AN EMERGENCY. IMMEDIATELY CALL EMERGENCY SERVICES OR GO TO THE NEAREST ER.** Do not delay, as severe hypothermia can be fatal.\n\n8. **BMI Calculation:**\n   \\[\n   BMI = \\frac{\\text{Weight in kg}}{(\\text{Height in meters})^2} = \\frac{60.2}{(1.678)^2} \\approx \\frac{60.2}{2.813} \\approx 21.4 \\, \\text{kg\/m}^2\n   \\]\n   - Your BMI is approximately **21.4 kg\/m\u00b2**, which is within the normal weight range.\n\n9. **Disclaimer:**\n   - Please note that this assessment is based solely on the data provided and **IS NOT 100% definitive**. Seek immediate medical attention for proper diagnosis and treatment.\n\n10. **Reminder:**\n    - Your **SCHOOL NURSE IS AVAILABLE TO ASSIST YOU** and can provide further support or help coordinate emergency care if needed.\n\n**IMPORTANT:** If you or someone else shows signs of severe hypothermia (such as very low body temperature, unconsciousness, slow or irregular heartbeat), **call emergency services immediately**.","refusal":null,"annotations":[]},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":323,"completion_tokens":804,"total_tokens":1127,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}},"service_tier":"default","system_fingerprint":"fp_f12167b370"}
+[2025-06-03 13:01:24] Diagnosis result: Based on the vital signs you've provided, here's an analysis:
+
+1. **Vital Signs Evaluation:**
+   - **Body Temperature: 29.71°C**: Extremely low; **Critical Hypothermia**
+   - **ECG Rate: 95 BPM**: Normal adult heart rate (~60-100 bpm); **Normal**
+   - **Pulse Rate: 8 BPM**: Abnormally low; **BRADYCARDIA (Severe)**
+   - **SpO2 Level: 95%**: Slightly below optimal (~96-100%), but generally acceptable; **Borderline**
+   - **Blood Pressure: 122/89 mmHg**: Slightly elevated; **Borderline Hypertension**
+
+2. **Potential Medical Conditions:**
+   - **SEVERE HYPOTHERMIA** (from the body temperature)
+   - **BRADYCARDIA** (from the pulse rate)
+   - Minor concerns about **borderline hypertension** and **mild hypoxia** possibility
+
+3. **Causes of Abnormal Readings:**
+   - The **extremely low body temperature** suggests exposure to cold environments, metabolic issues, or severe systemic compromise.
+   - The **severely low pulse rate** could be due to cardiac conduction abnormalities, medication side effects, severe hypothermia, or other cardiac conditions.
+   - Slightly reduced SpO₂ might indicate early respiratory issues, or simply measurement variation.
+
+4. **BODY'S RESPONSE & BROAD CONDITIONS:**
+   - **SEVERE HYPOTHERMIA CAN LEAD TO LIFE-THREATENING COMPLICATIONS, INCLUDING CARDIAC ARRHYTHMIAS AND ORGAN FAILURE.**
+   - The low pulse rate combined with hypothermia suggests **CRITICAL CARDIAC IMPAIRMENT**.
+   - Elevated blood pressure could be a stress response or related to underlying hypertension.
+
+5. **Recommendations:**
+   - **IMMEDIATE MEDICAL ATTENTION IS REQUIRED.** Call emergency services or get to the nearest emergency department immediately.
+   - Keep the person **warm and dry**; initiate gentle rewarming if trained to do so.
+   - Do **NOT** try to rewarm aggressively or use hot baths — seek professional medical help urgently.
+   - Monitor breathing and pulse if possible, but **do not delay seeking emergency care**.
+
+6. **Possible Disease or Condition:**
+   - The presentation suggests **SEVERE HYPOTHERMIA**, which can be associated with **COOLING DUE TO EXTREME ENVIRONMENTAL EXPOSURE, IMMOBILITY, OR SEVERE ILLNESS**.
+
+7. **Urgent Medical Advice:**
+   - **THIS IS AN EMERGENCY. IMMEDIATELY CALL EMERGENCY SERVICES OR GO TO THE NEAREST ER.** Do not delay, as severe hypothermia can be fatal.
+
+8. **BMI Calculation:**
+   \[
+   BMI = \frac{\text{Weight in kg}}{(\text{Height in meters})^2} = \frac{60.2}{(1.678)^2} \approx \frac{60.2}{2.813} \approx 21.4 \, \text{kg/m}^2
+   \]
+   - Your BMI is approximately **21.4 kg/m²**, which is within the normal weight range.
+
+9. **Disclaimer:**
+   - Please note that this assessment is based solely on the data provided and **IS NOT 100% definitive**. Seek immediate medical attention for proper diagnosis and treatment.
+
+10. **Reminder:**
+    - Your **SCHOOL NURSE IS AVAILABLE TO ASSIST YOU** and can provide further support or help coordinate emergency care if needed.
+
+**IMPORTANT:** If you or someone else shows signs of severe hypothermia (such as very low body temperature, unconsciousness, slow or irregular heartbeat), **call emergency services immediately**.
+[2025-06-03 13:01:24] Connecting to database for storing results...
+[2025-06-03 13:01:28] Email sent to dendiass18@gmail.com
+[2025-06-03 13:01:28] Database disconnected after storing results.
+[2025-06-03 13:01:46] Connecting to database for user details...
+[2025-06-03 13:01:46] User fetch result: {"name":"EINSBERN SYSTEM","email":"einsbernsystem@gmail.com"}
+[2025-06-03 13:01:46] Fetched user: EINSBERN SYSTEM <einsbernsystem@gmail.com>
+[2025-06-03 13:01:46] Database disconnected after user fetch.
+[2025-06-03 13:01:47] Connecting to database for user details...
+[2025-06-03 13:01:47] User fetch result: {"name":"EINSBERN SYSTEM","email":"einsbernsystem@gmail.com"}
+[2025-06-03 13:01:47] Fetched user: EINSBERN SYSTEM <einsbernsystem@gmail.com>
+[2025-06-03 13:01:47] Database disconnected after user fetch.
+[2025-06-03 13:01:47] POST request received. Generating AI diagnosis...
+[2025-06-03 13:01:47] Sending payload to OpenAI: {"model":"gpt-4.1-nano","messages":[{"role":"user","content":"You are a highly skilled virtual nurse with expertise in real-time patient diagnostics. \nYour goal is to analyze a user's vital signs, determine their health status, and provide recommendations.\n\n**User's Vital Signs:**\n- Body Temperature: 29.83 \u00b0C\n- ECG Rate: 63.00 BPM\n- Pulse Rate: 72 BPM\n- SpO2 Level: 95.00 %\n- Blood Pressure: 122\/89 (Elevated) mmHg\n- Height: 10 cm\n- Weight: 10 kg\n\n**Your Task as the AI Nurse:**\n1. Determine whether the vitals are **normal, borderline, or critical**.\n2. Identify potential medical conditions (e.g., fever, bradycardia, tachycardia, hypoxia, arrhythmia).\n3. Explain the **causes** behind abnormal readings.\n4. Possible sickeness based on user vitals sign result make this explain broadly. Also bold and capital this since this is very crusial.\n5. Suggest appropriate medical actions (e.g., drink fluids, rest, seek emergency care).\n6. Give a possible indication on what are their disease.\n7. If vitals indicate an emergency, give **urgent medical advice**.\n8. Calculate their BMI based on their weight and height.\n9. Always state that the diagnosis is based on the data provided and is not 100% accurate. Advise seeking medical attention if needed.\n10. Always remind the user that the school nurse is available to assist them."}]}
+[2025-06-03 13:01:57] OpenAI response: {
+  "id": "chatcmpl-BeJgqS4cP03QLM48jeGspubVgURLO",
+  "object": "chat.completion",
+  "created": 1748948508,
+  "model": "gpt-4.1-nano-2025-04-14",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Based on the vital signs provided, here's a comprehensive analysis:\n\n1. **Assessment of Vital Signs:**\n   - **Body Temperature: 29.83 °C** — This is **critically low** (Hypothermia).\n   - **ECG Rate: 63 BPM** — Normal adult heart rate (bradycardia borderline but generally acceptable).\n   - **Pulse Rate: 72 BPM** — Normal.\n   - **SpO2 Level: 95%** — Slightly lower end of normal but generally acceptable.\n   - **Blood Pressure: 122/89 mmHg** — Slightly elevated, could be **prehypertensive**.\n   - **Height: 10 cm & Weight: 10 kg** — Implies data is about a child or infant; BMI calculation will clarify this.\n\n2. **Overall Vital Sign Status:**\n   - **Body temperature** is **CRITICAL**, indicating severe hypothermia.\n   - Other vitals are mostly within normal or borderline ranges.\n\n3. **Potential Medical Conditions:**\n   - **SEVERE HYPOTHERMIA** (due to body temperature).\n   - Slightly **elevated blood pressure** — possible **prehypertension**.\n   - Rest of the vitals are within acceptable limits.\n\n4. **Causes of Abnormal Readings:**\n   - **Severe hypothermia** (body temperature below 30°C) can result from prolonged exposure to cold environments.\n   - The low temperature can impair organ function, leading to confusion, weakness, or more severe symptoms.\n   \n5. **Possible Sickness and Conditions:**\n   - **SEVERE HYPOTHERMIA** — LIFE-THREATENING CONDITION requiring urgent attention.\n   - Potential **cold exposure injury** or other underlying issues affecting temperature regulation.\n\n6. **Medical Actions Recommended:**\n   - **IMMEDIATELY seek emergency medical care**—this is NOT a condition to treat at home.\n   - Keep the person warm with blankets; avoid rapid rewarming.\n   - Do not attempt to rewarm too quickly as it can cause other complications.\n   - Keep the person lying down and monitor breathing and consciousness.\n   - Ensure they are transported to an emergency facility promptly.\n\n7. **Possible Indications of Disease:**\n   - The primary indication is **SEVERE HYPOTHERMIA**, which can be associated with exposure, metabolic disturbances, or underlying health issues.\n\n8. **Emergency?**\n   - **YES. This is a medical EMERGENCY. Immediate urgent medical care is critical.**\n\n9. **BMI Calculation:**\n   - Height: 10 cm = 0.10 meters\n   - Weight: 10 kg\n   - BMI = weight / (height)^2 = 10 / (0.10)^2 = 10 / 0.01 = **100 kg/m²** — indicating extremely malnourished or data error (likely the height/weight are not realistic for an adult; this could be a child's data, but the very low body temperature takes priority).\n\n10. **Important Reminders:**\n    - The diagnosis provided is based on the data given and is not 100% conclusive.\n    - If you or the individual feel worse or experience symptoms like confusion, loss of consciousness, or difficulty breathing, **seek emergency care immediately**.\n    - The school nurse is available to assist you and guide the next steps.\n\n**In summary:**  \nYour vital signs reveal **SEVERE HYPOTHERMIA**, which is a **CRITICAL** condition requiring **IMMEDIATE EMERGENCY MEDICAL ATTENTION**. Do not delay—call emergency services or visit the nearest hospital. Keep the person warm and monitor their condition until professional help arrives.\n\n**Please seek urgent medical care now!**",
+        "refusal": null,
+        "annotations": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 319,
+    "completion_tokens": 782,
+    "total_tokens": 1101,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "audio_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "audio_tokens": 0,
+      "accepted_prediction_tokens": 0,
+      "rejected_prediction_tokens": 0
+    }
+  },
+  "service_tier": "default",
+  "system_fingerprint": "fp_38343a2f8f"
+}
+
+[2025-06-03 13:01:57] Decoded OpenAI response: {"id":"chatcmpl-BeJgqS4cP03QLM48jeGspubVgURLO","object":"chat.completion","created":1748948508,"model":"gpt-4.1-nano-2025-04-14","choices":[{"index":0,"message":{"role":"assistant","content":"Based on the vital signs provided, here's a comprehensive analysis:\n\n1. **Assessment of Vital Signs:**\n   - **Body Temperature: 29.83 \u00b0C** \u2014 This is **critically low** (Hypothermia).\n   - **ECG Rate: 63 BPM** \u2014 Normal adult heart rate (bradycardia borderline but generally acceptable).\n   - **Pulse Rate: 72 BPM** \u2014 Normal.\n   - **SpO2 Level: 95%** \u2014 Slightly lower end of normal but generally acceptable.\n   - **Blood Pressure: 122\/89 mmHg** \u2014 Slightly elevated, could be **prehypertensive**.\n   - **Height: 10 cm & Weight: 10 kg** \u2014 Implies data is about a child or infant; BMI calculation will clarify this.\n\n2. **Overall Vital Sign Status:**\n   - **Body temperature** is **CRITICAL**, indicating severe hypothermia.\n   - Other vitals are mostly within normal or borderline ranges.\n\n3. **Potential Medical Conditions:**\n   - **SEVERE HYPOTHERMIA** (due to body temperature).\n   - Slightly **elevated blood pressure** \u2014 possible **prehypertension**.\n   - Rest of the vitals are within acceptable limits.\n\n4. **Causes of Abnormal Readings:**\n   - **Severe hypothermia** (body temperature below 30\u00b0C) can result from prolonged exposure to cold environments.\n   - The low temperature can impair organ function, leading to confusion, weakness, or more severe symptoms.\n   \n5. **Possible Sickness and Conditions:**\n   - **SEVERE HYPOTHERMIA** \u2014 LIFE-THREATENING CONDITION requiring urgent attention.\n   - Potential **cold exposure injury** or other underlying issues affecting temperature regulation.\n\n6. **Medical Actions Recommended:**\n   - **IMMEDIATELY seek emergency medical care**\u2014this is NOT a condition to treat at home.\n   - Keep the person warm with blankets; avoid rapid rewarming.\n   - Do not attempt to rewarm too quickly as it can cause other complications.\n   - Keep the person lying down and monitor breathing and consciousness.\n   - Ensure they are transported to an emergency facility promptly.\n\n7. **Possible Indications of Disease:**\n   - The primary indication is **SEVERE HYPOTHERMIA**, which can be associated with exposure, metabolic disturbances, or underlying health issues.\n\n8. **Emergency?**\n   - **YES. This is a medical EMERGENCY. Immediate urgent medical care is critical.**\n\n9. **BMI Calculation:**\n   - Height: 10 cm = 0.10 meters\n   - Weight: 10 kg\n   - BMI = weight \/ (height)^2 = 10 \/ (0.10)^2 = 10 \/ 0.01 = **100 kg\/m\u00b2** \u2014 indicating extremely malnourished or data error (likely the height\/weight are not realistic for an adult; this could be a child's data, but the very low body temperature takes priority).\n\n10. **Important Reminders:**\n    - The diagnosis provided is based on the data given and is not 100% conclusive.\n    - If you or the individual feel worse or experience symptoms like confusion, loss of consciousness, or difficulty breathing, **seek emergency care immediately**.\n    - The school nurse is available to assist you and guide the next steps.\n\n**In summary:**  \nYour vital signs reveal **SEVERE HYPOTHERMIA**, which is a **CRITICAL** condition requiring **IMMEDIATE EMERGENCY MEDICAL ATTENTION**. Do not delay\u2014call emergency services or visit the nearest hospital. Keep the person warm and monitor their condition until professional help arrives.\n\n**Please seek urgent medical care now!**","refusal":null,"annotations":[]},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":319,"completion_tokens":782,"total_tokens":1101,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}},"service_tier":"default","system_fingerprint":"fp_38343a2f8f"}
+[2025-06-03 13:01:57] Diagnosis result: Based on the vital signs provided, here's a comprehensive analysis:
+
+1. **Assessment of Vital Signs:**
+   - **Body Temperature: 29.83 °C** — This is **critically low** (Hypothermia).
+   - **ECG Rate: 63 BPM** — Normal adult heart rate (bradycardia borderline but generally acceptable).
+   - **Pulse Rate: 72 BPM** — Normal.
+   - **SpO2 Level: 95%** — Slightly lower end of normal but generally acceptable.
+   - **Blood Pressure: 122/89 mmHg** — Slightly elevated, could be **prehypertensive**.
+   - **Height: 10 cm & Weight: 10 kg** — Implies data is about a child or infant; BMI calculation will clarify this.
+
+2. **Overall Vital Sign Status:**
+   - **Body temperature** is **CRITICAL**, indicating severe hypothermia.
+   - Other vitals are mostly within normal or borderline ranges.
+
+3. **Potential Medical Conditions:**
+   - **SEVERE HYPOTHERMIA** (due to body temperature).
+   - Slightly **elevated blood pressure** — possible **prehypertension**.
+   - Rest of the vitals are within acceptable limits.
+
+4. **Causes of Abnormal Readings:**
+   - **Severe hypothermia** (body temperature below 30°C) can result from prolonged exposure to cold environments.
+   - The low temperature can impair organ function, leading to confusion, weakness, or more severe symptoms.
+   
+5. **Possible Sickness and Conditions:**
+   - **SEVERE HYPOTHERMIA** — LIFE-THREATENING CONDITION requiring urgent attention.
+   - Potential **cold exposure injury** or other underlying issues affecting temperature regulation.
+
+6. **Medical Actions Recommended:**
+   - **IMMEDIATELY seek emergency medical care**—this is NOT a condition to treat at home.
+   - Keep the person warm with blankets; avoid rapid rewarming.
+   - Do not attempt to rewarm too quickly as it can cause other complications.
+   - Keep the person lying down and monitor breathing and consciousness.
+   - Ensure they are transported to an emergency facility promptly.
+
+7. **Possible Indications of Disease:**
+   - The primary indication is **SEVERE HYPOTHERMIA**, which can be associated with exposure, metabolic disturbances, or underlying health issues.
+
+8. **Emergency?**
+   - **YES. This is a medical EMERGENCY. Immediate urgent medical care is critical.**
+
+9. **BMI Calculation:**
+   - Height: 10 cm = 0.10 meters
+   - Weight: 10 kg
+   - BMI = weight / (height)^2 = 10 / (0.10)^2 = 10 / 0.01 = **100 kg/m²** — indicating extremely malnourished or data error (likely the height/weight are not realistic for an adult; this could be a child's data, but the very low body temperature takes priority).
+
+10. **Important Reminders:**
+    - The diagnosis provided is based on the data given and is not 100% conclusive.
+    - If you or the individual feel worse or experience symptoms like confusion, loss of consciousness, or difficulty breathing, **seek emergency care immediately**.
+    - The school nurse is available to assist you and guide the next steps.
+
+**In summary:**  
+Your vital signs reveal **SEVERE HYPOTHERMIA**, which is a **CRITICAL** condition requiring **IMMEDIATE EMERGENCY MEDICAL ATTENTION**. Do not delay—call emergency services or visit the nearest hospital. Keep the person warm and monitor their condition until professional help arrives.
+
+**Please seek urgent medical care now!**
+[2025-06-03 13:01:57] Connecting to database for storing results...
+[2025-06-03 13:02:01] Email sent to einsbernsystem@gmail.com
+[2025-06-03 13:02:01] Database disconnected after storing results.
+[2025-06-03 13:06:58] Connecting to database for user details...
+[2025-06-03 13:06:58] User fetch result: {"name":"EINSBERN SYSTEM","email":"einsbernsystem@gmail.com"}
+[2025-06-03 13:06:58] Fetched user: EINSBERN SYSTEM <einsbernsystem@gmail.com>
+[2025-06-03 13:06:58] Database disconnected after user fetch.
+[2025-06-03 13:07:00] Connecting to database for user details...
+[2025-06-03 13:07:00] User fetch result: {"name":"EINSBERN SYSTEM","email":"einsbernsystem@gmail.com"}
+[2025-06-03 13:07:00] Fetched user: EINSBERN SYSTEM <einsbernsystem@gmail.com>
+[2025-06-03 13:07:00] Database disconnected after user fetch.
+[2025-06-03 13:07:00] POST request received. Generating AI diagnosis...
+[2025-06-03 13:07:00] Sending payload to OpenAI: {"model":"gpt-4.1-nano","messages":[{"role":"user","content":"You are a highly skilled virtual nurse with expertise in real-time patient diagnostics. \nYour goal is to analyze a user's vital signs, determine their health status, and provide recommendations.\n\n**User's Vital Signs:**\n- Body Temperature: 29.75 \u00b0C\n- ECG Rate: 98.00 BPM\n- Pulse Rate: 58 BPM\n- SpO2 Level: 97.00 %\n- Blood Pressure: 122\/89 (Elevated) mmHg\n- Height: 10 cm\n- Weight: 10 kg\n\n**Your Task as the AI Nurse:**\n1. Determine whether the vitals are **normal, borderline, or critical**.\n2. Identify potential medical conditions (e.g., fever, bradycardia, tachycardia, hypoxia, arrhythmia).\n3. Explain the **causes** behind abnormal readings.\n4. Possible sickeness based on user vitals sign result make this explain broadly. Also bold and capital this since this is very crusial.\n5. Suggest appropriate medical actions (e.g., drink fluids, rest, seek emergency care).\n6. Give a possible indication on what are their disease.\n7. If vitals indicate an emergency, give **urgent medical advice**.\n8. Calculate their BMI based on their weight and height.\n9. Always state that the diagnosis is based on the data provided and is not 100% accurate. Advise seeking medical attention if needed.\n10. Always remind the user that the school nurse is available to assist them."}]}
+[2025-06-03 13:07:11] OpenAI response: {
+  "id": "chatcmpl-BeJltPVoeofvM1DpoQ45g6PRd871N",
+  "object": "chat.completion",
+  "created": 1748948821,
+  "model": "gpt-4.1-nano-2025-04-14",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Thank you for providing your vital signs. I will analyze them carefully and offer guidance based on the data.\n\n**Analysis of Your Vital Signs:**\n\n1. **Body Temperature: 29.75°C**  \n   - **Assessment:** CRITICALLY LOW (Hypothermia)  \n   - **Likely Cause:** Severe cold exposure, metabolic issues, or other underlying health problems.\n\n2. **ECG Rate: 98.00 BPM**  \n   - **Assessment:** NORMAL  \n   - **Possible Conditions:** Normal sinus rhythm.\n\n3. **Pulse Rate: 58 BPM**  \n   - **Assessment:** BORDERLINE BRADYCARDIA**  \n   - **Possible Causes:** Athletes or well-conditioned individuals, medication effects, or underlying heart rhythm issues.\n\n4. **SpO2 Level: 97%**  \n   - **Assessment:** NORMAL  \n   - **Implication:** Adequate oxygen saturation.\n\n5. **Blood Pressure: 122/89 mmHg**  \n   - **Assessment:** ELEVATED** (Stage 1 Hypertension)  \n   - **Possible Causes:** Stress, diet, genetics, or other health conditions.\n\n6. **Height and Weight:**  \n   - Height: 10 cm  \n   - Weight: 10 kg  \n   - **Note:** These measurements are not realistic for a typical human. Please verify your actual height and weight.\n\n---\n\n### Overall Evaluation:\n\n- **CRITICALLY LOW body temperature** indicates **SEVERE HYPOTHERMIA**, which is a medical emergency.\n- Slight bradycardia and elevated blood pressure do not override the critical hypothermia concern.\n\n---\n\n### **POTENTIAL MEDICAL CONDITIONS:**\n\n- **SEVERE HYPOTHERMIA (IMMENSELY CRITICAL)**\n- Possible **CARDIAC DYSREGULATION** due to hypothermia.\n- **Electrolyte imbalance** (common in hypothermia cases).\n- Underlying causes for hypothermia might include prolonged exposure to cold, metabolic issues, or environmental factors.\n\n---\n\n### **CAUSES BEHIND THE ABNORMAL READINGS:**\n\n- **Very low body temperature** is usually caused by exposure to cold environments beyond the body's ability to regulate temperature.\n- **Borderline bradycardia** can occur as the body responds to cold stress or as a side effect of medication or underlying health issues.\n- Elevated blood pressure may be a stress response or unrelated; however, it’s less concerning compared to hypothermia in this context.\n\n---\n\n### **RECOMMENDATIONS & MEDICAL ACTIONS:**\n\n- **This is an EMERGENCY.** You need **immediate medical attention**.\n- **Call emergency services or go to the nearest hospital immediately.**\n- While waiting for help:\n  - **Move to a warm, dry environment.**\n  - **Remove any wet clothing and insulate yourself with blankets or warm clothes.**\n  - **Avoid any movement that might worsen hypothermia.**\n- DO NOT attempt to rewarm yourself aggressively without medical supervision.\n\n---\n\n### **INDICATION OF POSSIBLE DISEASE:**\n\n- The critical low body temperature strongly indicates **SEVERE HYPOTHERMIA**, which can lead to organ failure, cardiac arrest, and death if not treated promptly.\n\n---\n\n### **BMI Calculation:**\n\n- **Given height:** 10 cm (0.1 meters)  \n- **Given weight:** 10 kg  \n- **BMI = weight (kg) / height² (m²) = 10 / (0.1)² = 10 / 0.01 = 1000 kg/m²**\n\n*Note: This BMI is not realistic and indicates a data entry or measurement error. Please provide accurate height and weight for proper BMI calculation.*\n\n---\n\n### **Important Reminder:**\n\nThis assessment is based solely on the data provided and is **NOT 100% accurate**. It is **crucial to seek immediate medical attention** from healthcare professionals.  \nYour school nurse is always available to assist you and can help facilitate medical care.\n\n**Please seek emergency services RIGHT NOW. Your health condition appears to be life-threatening.**",
+        "refusal": null,
+        "annotations": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 319,
+    "completion_tokens": 849,
+    "total_tokens": 1168,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "audio_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "audio_tokens": 0,
+      "accepted_prediction_tokens": 0,
+      "rejected_prediction_tokens": 0
+    }
+  },
+  "service_tier": "default",
+  "system_fingerprint": "fp_38343a2f8f"
+}
+
+[2025-06-03 13:07:11] Decoded OpenAI response: {"id":"chatcmpl-BeJltPVoeofvM1DpoQ45g6PRd871N","object":"chat.completion","created":1748948821,"model":"gpt-4.1-nano-2025-04-14","choices":[{"index":0,"message":{"role":"assistant","content":"Thank you for providing your vital signs. I will analyze them carefully and offer guidance based on the data.\n\n**Analysis of Your Vital Signs:**\n\n1. **Body Temperature: 29.75\u00b0C**  \n   - **Assessment:** CRITICALLY LOW (Hypothermia)  \n   - **Likely Cause:** Severe cold exposure, metabolic issues, or other underlying health problems.\n\n2. **ECG Rate: 98.00 BPM**  \n   - **Assessment:** NORMAL  \n   - **Possible Conditions:** Normal sinus rhythm.\n\n3. **Pulse Rate: 58 BPM**  \n   - **Assessment:** BORDERLINE BRADYCARDIA**  \n   - **Possible Causes:** Athletes or well-conditioned individuals, medication effects, or underlying heart rhythm issues.\n\n4. **SpO2 Level: 97%**  \n   - **Assessment:** NORMAL  \n   - **Implication:** Adequate oxygen saturation.\n\n5. **Blood Pressure: 122\/89 mmHg**  \n   - **Assessment:** ELEVATED** (Stage 1 Hypertension)  \n   - **Possible Causes:** Stress, diet, genetics, or other health conditions.\n\n6. **Height and Weight:**  \n   - Height: 10 cm  \n   - Weight: 10 kg  \n   - **Note:** These measurements are not realistic for a typical human. Please verify your actual height and weight.\n\n---\n\n### Overall Evaluation:\n\n- **CRITICALLY LOW body temperature** indicates **SEVERE HYPOTHERMIA**, which is a medical emergency.\n- Slight bradycardia and elevated blood pressure do not override the critical hypothermia concern.\n\n---\n\n### **POTENTIAL MEDICAL CONDITIONS:**\n\n- **SEVERE HYPOTHERMIA (IMMENSELY CRITICAL)**\n- Possible **CARDIAC DYSREGULATION** due to hypothermia.\n- **Electrolyte imbalance** (common in hypothermia cases).\n- Underlying causes for hypothermia might include prolonged exposure to cold, metabolic issues, or environmental factors.\n\n---\n\n### **CAUSES BEHIND THE ABNORMAL READINGS:**\n\n- **Very low body temperature** is usually caused by exposure to cold environments beyond the body's ability to regulate temperature.\n- **Borderline bradycardia** can occur as the body responds to cold stress or as a side effect of medication or underlying health issues.\n- Elevated blood pressure may be a stress response or unrelated; however, it\u2019s less concerning compared to hypothermia in this context.\n\n---\n\n### **RECOMMENDATIONS & MEDICAL ACTIONS:**\n\n- **This is an EMERGENCY.** You need **immediate medical attention**.\n- **Call emergency services or go to the nearest hospital immediately.**\n- While waiting for help:\n  - **Move to a warm, dry environment.**\n  - **Remove any wet clothing and insulate yourself with blankets or warm clothes.**\n  - **Avoid any movement that might worsen hypothermia.**\n- DO NOT attempt to rewarm yourself aggressively without medical supervision.\n\n---\n\n### **INDICATION OF POSSIBLE DISEASE:**\n\n- The critical low body temperature strongly indicates **SEVERE HYPOTHERMIA**, which can lead to organ failure, cardiac arrest, and death if not treated promptly.\n\n---\n\n### **BMI Calculation:**\n\n- **Given height:** 10 cm (0.1 meters)  \n- **Given weight:** 10 kg  \n- **BMI = weight (kg) \/ height\u00b2 (m\u00b2) = 10 \/ (0.1)\u00b2 = 10 \/ 0.01 = 1000 kg\/m\u00b2**\n\n*Note: This BMI is not realistic and indicates a data entry or measurement error. Please provide accurate height and weight for proper BMI calculation.*\n\n---\n\n### **Important Reminder:**\n\nThis assessment is based solely on the data provided and is **NOT 100% accurate**. It is **crucial to seek immediate medical attention** from healthcare professionals.  \nYour school nurse is always available to assist you and can help facilitate medical care.\n\n**Please seek emergency services RIGHT NOW. Your health condition appears to be life-threatening.**","refusal":null,"annotations":[]},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":319,"completion_tokens":849,"total_tokens":1168,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}},"service_tier":"default","system_fingerprint":"fp_38343a2f8f"}
+[2025-06-03 13:07:11] Diagnosis result: Thank you for providing your vital signs. I will analyze them carefully and offer guidance based on the data.
+
+**Analysis of Your Vital Signs:**
+
+1. **Body Temperature: 29.75°C**  
+   - **Assessment:** CRITICALLY LOW (Hypothermia)  
+   - **Likely Cause:** Severe cold exposure, metabolic issues, or other underlying health problems.
+
+2. **ECG Rate: 98.00 BPM**  
+   - **Assessment:** NORMAL  
+   - **Possible Conditions:** Normal sinus rhythm.
+
+3. **Pulse Rate: 58 BPM**  
+   - **Assessment:** BORDERLINE BRADYCARDIA**  
+   - **Possible Causes:** Athletes or well-conditioned individuals, medication effects, or underlying heart rhythm issues.
+
+4. **SpO2 Level: 97%**  
+   - **Assessment:** NORMAL  
+   - **Implication:** Adequate oxygen saturation.
+
+5. **Blood Pressure: 122/89 mmHg**  
+   - **Assessment:** ELEVATED** (Stage 1 Hypertension)  
+   - **Possible Causes:** Stress, diet, genetics, or other health conditions.
+
+6. **Height and Weight:**  
+   - Height: 10 cm  
+   - Weight: 10 kg  
+   - **Note:** These measurements are not realistic for a typical human. Please verify your actual height and weight.
+
+---
+
+### Overall Evaluation:
+
+- **CRITICALLY LOW body temperature** indicates **SEVERE HYPOTHERMIA**, which is a medical emergency.
+- Slight bradycardia and elevated blood pressure do not override the critical hypothermia concern.
+
+---
+
+### **POTENTIAL MEDICAL CONDITIONS:**
+
+- **SEVERE HYPOTHERMIA (IMMENSELY CRITICAL)**
+- Possible **CARDIAC DYSREGULATION** due to hypothermia.
+- **Electrolyte imbalance** (common in hypothermia cases).
+- Underlying causes for hypothermia might include prolonged exposure to cold, metabolic issues, or environmental factors.
+
+---
+
+### **CAUSES BEHIND THE ABNORMAL READINGS:**
+
+- **Very low body temperature** is usually caused by exposure to cold environments beyond the body's ability to regulate temperature.
+- **Borderline bradycardia** can occur as the body responds to cold stress or as a side effect of medication or underlying health issues.
+- Elevated blood pressure may be a stress response or unrelated; however, it’s less concerning compared to hypothermia in this context.
+
+---
+
+### **RECOMMENDATIONS & MEDICAL ACTIONS:**
+
+- **This is an EMERGENCY.** You need **immediate medical attention**.
+- **Call emergency services or go to the nearest hospital immediately.**
+- While waiting for help:
+  - **Move to a warm, dry environment.**
+  - **Remove any wet clothing and insulate yourself with blankets or warm clothes.**
+  - **Avoid any movement that might worsen hypothermia.**
+- DO NOT attempt to rewarm yourself aggressively without medical supervision.
+
+---
+
+### **INDICATION OF POSSIBLE DISEASE:**
+
+- The critical low body temperature strongly indicates **SEVERE HYPOTHERMIA**, which can lead to organ failure, cardiac arrest, and death if not treated promptly.
+
+---
+
+### **BMI Calculation:**
+
+- **Given height:** 10 cm (0.1 meters)  
+- **Given weight:** 10 kg  
+- **BMI = weight (kg) / height² (m²) = 10 / (0.1)² = 10 / 0.01 = 1000 kg/m²**
+
+*Note: This BMI is not realistic and indicates a data entry or measurement error. Please provide accurate height and weight for proper BMI calculation.*
+
+---
+
+### **Important Reminder:**
+
+This assessment is based solely on the data provided and is **NOT 100% accurate**. It is **crucial to seek immediate medical attention** from healthcare professionals.  
+Your school nurse is always available to assist you and can help facilitate medical care.
+
+**Please seek emergency services RIGHT NOW. Your health condition appears to be life-threatening.**
+[2025-06-03 13:07:11] Connecting to database for storing results...
+[2025-06-03 13:07:15] Email sent to einsbernsystem@gmail.com
+[2025-06-03 13:07:15] Database disconnected after storing results.

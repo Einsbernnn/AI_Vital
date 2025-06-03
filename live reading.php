@@ -567,17 +567,16 @@ $currentDate = date("F j, Y");
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
     // Utility: Build sensor summary string for consult
-    function buildSensorSummary() {
-        const temp = document.getElementById("temp").innerText.trim();
-        const ecg = document.getElementById("ecg").innerText.trim();
-        const pulse = document.getElementById("pulse_rate").innerText.trim();
-        const spo2 = document.getElementById("spo2").innerText.trim();
-        const bp = document.getElementById("bp").innerText.trim();
-        return `Temp\n${temp}\nECG\n${ecg}\nPulse\n${pulse}\nSpO₂\n${spo2}\nBP\n${bp}`;
+    function buildSensorSummary(values) {
+        // Accepts an object with keys: temp, ecg, pulse, spo2, bp
+        return `Temp\n${values.temp}\nECG\n${values.ecg}\nPulse\n${values.pulse}\nSpO₂\n${values.spo2}\nBP\n${values.bp}`;
     }
 
+    // Store frozen sensor values for diagnosis/consult
+    let frozenSensorValues = null;
+
     // Reusable diagnosis modal logic
-    function showDiagnosisModal(validMap, onSuccess) {
+    function showDiagnosisModal(validMap, onSuccess, sensorValues) {
         const modal = document.getElementById("diagnosisModal");
         modal.style.display = "flex";
         const sensors = ["temp","ecg","pulse","spo2","bp"];
@@ -595,13 +594,8 @@ $currentDate = date("F j, Y");
             spo2: "indicator-spo2-icon",
             bp: "indicator-bp-icon"
         };
-        const values = {
-            temp: document.getElementById("temp").innerText,
-            ecg: document.getElementById("ecg").innerText,
-            pulse: document.getElementById("pulse_rate").innerText,
-            spo2: document.getElementById("spo2").innerText,
-            bp: document.getElementById("bp").innerText
-        };
+        // Use the provided sensorValues (frozen at modal open)
+        const values = sensorValues;
         let anyInvalid = false;
         let invalidSensors = [];
         sensors.forEach(s => {
@@ -619,8 +613,8 @@ $currentDate = date("F j, Y");
         const keys = ["temp","ecg","pulse","spo2","bp"];
         function step() {
             if (idx < keys.length) {
-                const key = keys[idx];
                 setTimeout(() => {
+                    const key = keys[idx];
                     document.getElementById(`indicator-${key}-status`).innerHTML = validMap[key] ? "✔️" : "❌";
                     const valueEl = document.getElementById(`indicator-${key}-value`);
                     valueEl.textContent = values[key] || "";
@@ -646,42 +640,14 @@ $currentDate = date("F j, Y");
                     document.getElementById("diagnosisProgressText").textContent = "Diagnosis ready! Please review and continue.";
                     document.getElementById("diagnosisProgressBar").style.width = "100%";
                     var waitMsg = document.querySelector('#diagnosisModal span[style*="color:#888"]');
-                    if (waitMsg) waitMsg.style.display = "none";
-                    // Play notification sound
-                    try {
-                        let audio = document.getElementById('diagnosisReadyAudio');
-                        if (!audio) {
-                            audio = document.createElement('audio');
-                            audio.id = 'diagnosisReadyAudio';
-                            audio.src = 'https://cdn.pixabay.com/audio/2022/07/26/audio_124bfa4c82.mp3';
-                            audio.preload = 'auto';
-                            document.body.appendChild(audio);
-                        }
-                        audio.currentTime = 0;
-                        audio.play();
-                    } catch (e) {}
-                    if (window.navigator && window.navigator.vibrate) {
-                        window.navigator.vibrate([100, 30, 100]);
-                    }
-                    setTimeout(() => {
-                        if (!anyInvalid) {
-                            document.getElementById("diagnosisProceedContainer").style.display = "flex";
-                            document.getElementById("diagnosisProceedBtn").onclick = function() {
-                                modal.style.display = "none";
-                                if (typeof onSuccess === "function") onSuccess();
-                            };
-                        } else {
-                            modal.style.display = "none";
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Missing/Invalid Readings',
-                                text: "The following readings are missing or invalid: " + invalidSensors.join(", ") + ". Please check all sensors and try again.",
-                                confirmButtonText: 'Okay',
-                                confirmButtonColor: '#ef4444'
-                            });
-                        }
-                    }, 6000);
-                }, 500);
+                    if (waitMsg) waitMsg.textContent = anyInvalid ? "Some readings are invalid." : "All readings are valid.";
+                    // Show proceed button
+                    document.getElementById("diagnosisProceedContainer").style.display = "flex";
+                    document.getElementById("diagnosisProceedBtn").onclick = function() {
+                        modal.style.display = "none";
+                        if (typeof onSuccess === 'function') onSuccess();
+                    };
+                }, 600);
             }
         }
         step();
@@ -712,6 +678,14 @@ $currentDate = date("F j, Y");
             return;
         }
         event.preventDefault();
+        // Freeze sensor values at modal open
+        frozenSensorValues = {
+            temp: temp,
+            ecg: ecg,
+            pulse: pulseRate,
+            spo2: spo2,
+            bp: bp
+        };
         var validMap = {
             temp: !!(temp && !/^0(\.00)? ?°C$/.test(temp) && !/^N\/A ?°C$/.test(temp)),
             ecg: !!(ecg && !/^0(\.00)?$/.test(ecg) && !/^N\/A$/.test(ecg)),
@@ -720,8 +694,14 @@ $currentDate = date("F j, Y");
             bp: !!(bp && !/^N\/A ?mmHg$/.test(bp) && !/^0(\/0)?( mmHg)?$/.test(bp))
         };
         showDiagnosisModal(validMap, function() {
+            // Set hidden form fields using frozen values
+            document.getElementById("emailBodyTemp").value = frozenSensorValues.temp.replace(" °C", "").replace("N/A", "0.00");
+            document.getElementById("emailEcg").value = frozenSensorValues.ecg.replace("N/A", "0.00");
+            document.getElementById("emailPulseRate").value = frozenSensorValues.pulse.replace(" BPM", "").replace("N/A", "0");
+            document.getElementById("emailSpo2").value = frozenSensorValues.spo2.replace(" %", "").replace("N/A", "0.00");
+            document.getElementById("emailBp").value = frozenSensorValues.bp.replace("N/A", "0/0");
             document.getElementById("sendToMailForm").submit();
-        });
+        }, frozenSensorValues);
     });
 
     // Consult button (redirect to consult.php with sensor summary)
@@ -747,6 +727,14 @@ $currentDate = date("F j, Y");
             return;
         }
         event.preventDefault();
+        // Freeze sensor values at modal open
+        frozenSensorValues = {
+            temp: temp,
+            ecg: ecg,
+            pulse: pulseRate,
+            spo2: spo2,
+            bp: bp
+        };
         var validMap = {
             temp: !!(temp && !/^0(\.00)? ?°C$/.test(temp) && !/^N\/A ?°C$/.test(temp)),
             ecg: !!(ecg && !/^0(\.00)?$/.test(ecg) && !/^N\/A$/.test(ecg)),
@@ -755,10 +743,10 @@ $currentDate = date("F j, Y");
             bp: !!(bp && !/^N\/A ?mmHg$/.test(bp) && !/^0(\/0)?( mmHg)?$/.test(bp))
         };
         showDiagnosisModal(validMap, function() {
-            // Always build the summary from the latest DOM values after modal validation
-            const summary = encodeURIComponent(buildSensorSummary());
+            // Always build the summary from the frozen values after modal validation
+            const summary = encodeURIComponent(buildSensorSummary(frozenSensorValues));
             window.location.href = "consult.php?sensor_summary=" + summary;
-        });
+        }, frozenSensorValues);
     });
 
     // Close button logic
@@ -1021,6 +1009,14 @@ $currentDate = date("F j, Y");
                             return;
                         }
                         event.preventDefault();
+                        // Freeze sensor values at modal open
+                        frozenSensorValues = {
+                            temp: temp,
+                            ecg: ecg,
+                            pulse: pulseRate,
+                            spo2: spo2,
+                            bp: bp
+                        };
                         var validMap = {
                             temp: !!(temp && !/^0(\.00)? ?°C$/.test(temp) && !/^N\/A ?°C$/.test(temp)),
                             ecg: !!(ecg && !/^0(\.00)?$/.test(ecg) && !/^N\/A$/.test(ecg)),
@@ -1029,8 +1025,14 @@ $currentDate = date("F j, Y");
                             bp: !!(bp && !/^N\/A ?mmHg$/.test(bp) && !/^0(\/0)?( mmHg)?$/.test(bp))
                         };
                         showDiagnosisModal(validMap, function() {
+                            // Set hidden form fields using frozen values
+                            document.getElementById("emailBodyTemp").value = frozenSensorValues.temp.replace(" °C", "").replace("N/A", "0.00");
+                            document.getElementById("emailEcg").value = frozenSensorValues.ecg.replace("N/A", "0.00");
+                            document.getElementById("emailPulseRate").value = frozenSensorValues.pulse.replace(" BPM", "").replace("N/A", "0");
+                            document.getElementById("emailSpo2").value = frozenSensorValues.spo2.replace(" %", "").replace("N/A", "0.00");
+                            document.getElementById("emailBp").value = frozenSensorValues.bp.replace("N/A", "0/0");
                             document.getElementById("sendToMailForm").submit();
-                        });
+                        }, frozenSensorValues);
                     });
 
                     // Consult button (redirect to consult.php with sensor summary)
@@ -1056,6 +1058,14 @@ $currentDate = date("F j, Y");
                             return;
                         }
                         event.preventDefault();
+                        // Freeze sensor values at modal open
+                        frozenSensorValues = {
+                            temp: temp,
+                            ecg: ecg,
+                            pulse: pulseRate,
+                            spo2: spo2,
+                            bp: bp
+                        };
                         var validMap = {
                             temp: !!(temp && !/^0(\.00)? ?°C$/.test(temp) && !/^N\/A ?°C$/.test(temp)),
                             ecg: !!(ecg && !/^0(\.00)?$/.test(ecg) && !/^N\/A$/.test(ecg)),
@@ -1064,10 +1074,10 @@ $currentDate = date("F j, Y");
                             bp: !!(bp && !/^N\/A ?mmHg$/.test(bp) && !/^0(\/0)?( mmHg)?$/.test(bp))
                         };
                         showDiagnosisModal(validMap, function() {
-                            // Always build the summary from the latest DOM values after modal validation
-                            const summary = encodeURIComponent(buildSensorSummary());
+                            // Always build the summary from the frozen values after modal validation
+                            const summary = encodeURIComponent(buildSensorSummary(frozenSensorValues));
                             window.location.href = "consult.php?sensor_summary=" + summary;
-                        });
+                        }, frozenSensorValues);
                     });
 
                     // Close button logic
