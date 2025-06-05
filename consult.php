@@ -2219,7 +2219,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                 sensorValues.spo2_level = parseFloat(value.replace('%', '').trim()) || 0;
                                 break;
                             case 'BP':
-                                sensorValues.blood_pressure = value.replace('mmHg', '').trim();
+                                const bp_clean = trim(str_replace(['mmHg', ' '], '', value));
+                                const bp_parts = explode('/', $bp_clean);
+                                if (count($bp_parts) === 2 && is_numeric($bp_parts[0]) && is_numeric($bp_parts[1])) {
+                                    sensorValues.blood_pressure = value.replace('mmHg', '').trim();
+                                } else {
+                                    // If BP is not in the expected format (e.g., "error"), treat as abnormal (low)
+                                    sensorValues.blood_pressure = '0/0';
+                                }
                                 break;
                         }
                     }
