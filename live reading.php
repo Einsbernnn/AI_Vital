@@ -655,6 +655,23 @@ $currentDate = date("F j, Y");
 
     // Diagnosis button (AI Diagnosis)
     document.getElementById("diagnosisButton").addEventListener("click", function (event) {
+        const bpValue = document.getElementById('bp').innerText.trim();
+        
+        if (bpValue === 'N/A mmHg' || this.disabled) {
+            event.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Blood Pressure Required',
+                text: 'Please enter your blood pressure readings before proceeding with the diagnosis.',
+                confirmButtonText: 'Okay',
+                confirmButtonColor: '#3085d6',
+                timer: 3500,
+                timerProgressBar: true
+            });
+            return;
+        }
+        
+        // Rest of the existing diagnosis button code...
         const uid = document.getElementById("uid").innerText.trim();
         const temp = document.getElementById("temp").innerText.trim();
         const ecg = document.getElementById("ecg").innerText.trim();
@@ -706,6 +723,23 @@ $currentDate = date("F j, Y");
 
     // Consult button (redirect to consult.php with sensor summary)
     document.getElementById("consultButton").addEventListener("click", function (event) {
+        const bpValue = document.getElementById('bp').innerText.trim();
+        
+        if (bpValue === 'N/A mmHg' || this.disabled) {
+            event.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Blood Pressure Required',
+                text: 'Please enter your blood pressure readings before proceeding with the consultation.',
+                confirmButtonText: 'Okay',
+                confirmButtonColor: '#3085d6',
+                timer: 3500,
+                timerProgressBar: true
+            });
+            return;
+        }
+        
+        // Rest of the existing consult button code...
         const uid = document.getElementById("uid").innerText.trim();
         const temp = document.getElementById("temp").innerText.trim();
         const ecg = document.getElementById("ecg").innerText.trim();
@@ -753,6 +787,133 @@ $currentDate = date("F j, Y");
     document.getElementById("diagnosisModalClose").onclick = function() {
         document.getElementById("diagnosisModal").style.display = "none";
     };
+
+    // Add this function to check BP value and update button states
+    function updateButtonStates() {
+        const bpValue = document.getElementById('bp').innerText.trim();
+        const diagnosisButton = document.getElementById('diagnosisButton');
+        const consultButton = document.getElementById('consultButton');
+        
+        if (bpValue === 'N/A mmHg') {
+            diagnosisButton.disabled = true;
+            consultButton.disabled = true;
+            diagnosisButton.classList.add('opacity-50', 'cursor-not-allowed');
+            consultButton.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            diagnosisButton.disabled = false;
+            consultButton.disabled = false;
+            diagnosisButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            consultButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
+    // Function to show BP required alert
+    function showBPRequiredAlert() {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Blood Pressure Required',
+            text: 'Please enter your blood pressure readings before proceeding.',
+            confirmButtonText: 'Okay',
+            confirmButtonColor: '#3085d6',
+            timer: 3500,
+            timerProgressBar: true
+        });
+    }
+
+    // Add click event listeners to both buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        const diagnosisButton = document.getElementById('diagnosisButton');
+        const consultButton = document.getElementById('consultButton');
+
+        diagnosisButton.addEventListener('click', function(event) {
+            const bpValue = document.getElementById('bp').innerText.trim();
+            if (bpValue === 'N/A mmHg') {
+                event.preventDefault();
+                showBPRequiredAlert();
+                return;
+            }
+            // Rest of the existing diagnosis button code...
+        });
+
+        consultButton.addEventListener('click', function(event) {
+            const bpValue = document.getElementById('bp').innerText.trim();
+            if (bpValue === 'N/A mmHg') {
+                event.preventDefault();
+                showBPRequiredAlert();
+                return;
+            }
+            // Rest of the existing consult button code...
+        });
+
+        // Initial button state update
+        updateButtonStates();
+    });
+
+    // Modify the validateBP function to call updateButtonStates
+    function validateBP() {
+        const systolic = document.getElementById('systolic').value;
+        const diastolic = document.getElementById('diastolic').value;
+        const bpDisplay = document.getElementById('bp');
+        const bpCategory = document.getElementById('bpCategory');
+        
+        // Validate ranges
+        if (systolic < 60 || systolic > 250) {
+            document.getElementById('systolic').value = '';
+            return;
+        }
+        if (diastolic < 30 || diastolic > 150) {
+            document.getElementById('diastolic').value = '';
+            return;
+        }
+        
+        // Validate that systolic is greater than diastolic
+        if (parseInt(systolic) <= parseInt(diastolic)) {
+            document.getElementById('diastolic').value = '';
+            return;
+        }
+        
+        // Update display if both values are valid
+        if (systolic && diastolic) {
+            bpDisplay.innerText = `${systolic}/${diastolic} mmHg`;
+            // Update hidden form field
+            document.getElementById("emailBp").value = `${systolic}/${diastolic}`;
+            
+            // Determine BP category
+            let category = '';
+            let categoryColor = '';
+            
+            if (systolic >= 181 || diastolic >= 121) {
+                category = 'Hypertensive Crisis';
+                categoryColor = '#DC2626'; // Red
+            } else if (systolic >= 140 || diastolic >= 90) {
+                category = 'Hypertension Stage 2';
+                categoryColor = '#EF4444'; // Light red
+            } else if (systolic >= 130 || diastolic >= 80) {
+                category = 'Hypertension Stage 1';
+                categoryColor = '#F59E0B'; // Orange
+            } else if (systolic >= 120) {
+                category = 'Elevated';
+                categoryColor = '#F59E0B'; // Orange
+            } else if (systolic >= 90 && diastolic >= 60) {
+                category = 'Normal';
+                categoryColor = '#10B981'; // Green
+            } else {
+                category = 'Hypotension (Low)';
+                categoryColor = '#3B82F6'; // Blue
+            }
+            
+            // Update category display
+            bpCategory.textContent = category;
+            bpCategory.style.color = categoryColor;
+        } else {
+            bpDisplay.innerText = "N/A mmHg";
+            document.getElementById("emailBp").value = "N/A";
+            bpCategory.textContent = '';
+        }
+        
+        // Update button states after BP validation
+        updateButtonStates();
+    }
     </script>
 </head>
 <body class="bg-gradient-to-r from-green-200 to-green-400 min-h-screen flex flex-col">
@@ -870,9 +1031,22 @@ $currentDate = date("F j, Y");
                             </span>
                         </p>
                         <div id="bpInfo" class="sensor-tooltip" style="display:none;position:absolute;z-index:999;background:#fff;border:1px solid #d1fae5;padding:10px 14px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);font-size:0.98rem;max-width:220px;">
-                            Normal: 90/60 mmHg – 120/80 mmHg<br>Ideal blood pressure is around 120/80 mmHg. High or low readings can be a sign of cardiovascular issues.
+                            <strong>Blood Pressure Categories:</strong><br>
+                            <span style="color: #3B82F6;">Hypotension (Low):</span> SYS: 60-89, DIA: 30-59<br>
+                            <span style="color: #10B981;">Normal:</span> SYS: 90-119, DIA: 60-79<br>
+                            <span style="color: #F59E0B;">Elevated:</span> SYS: 120-129, DIA: 30-79<br>
+                            <span style="color: #F59E0B;">Stage 1:</span> SYS: 130-139, DIA: 80-89<br>
+                            <span style="color: #EF4444;">Stage 2:</span> SYS: 140-180, DIA: 90-120<br>
+                            <span style="color: #DC2626;">Crisis:</span> SYS: 181-250, DIA: 121-150
+                        </div>
+                        <div class="flex items-center justify-center gap-2 mt-2">
+                            <input type="number" id="systolic" class="w-20 px-2 py-1 border border-gray-300 rounded text-center" placeholder="SYS" min="60" max="250" onchange="validateBP()">
+                            <span class="text-xl font-bold">/</span>
+                            <input type="number" id="diastolic" class="w-20 px-2 py-1 border border-gray-300 rounded text-center" placeholder="DIA" min="30" max="150" onchange="validateBP()">
+                            <span class="text-lg font-semibold">mmHg</span>
                         </div>
                         <p class="value" id="bp">N/A mmHg</p>
+                        <p id="bpCategory" class="text-center mt-2 font-semibold"></p>
                     </div>
                 </div>
                 <div class="mt-4 flex justify-center space-x-4">
@@ -889,9 +1063,9 @@ $currentDate = date("F j, Y");
                         <input type="hidden" name="pulse_rate" id="emailPulseRate">
                         <input type="hidden" name="spo2" id="emailSpo2">
                         <input type="hidden" name="blood_pressure" id="emailBp">
-                        <button type="submit" id="diagnosisButton" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Get AI Diagnosis</button>
+                        <button type="submit" id="diagnosisButton" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Quick Diagnosis</button>
                     </form>
-                    <button id="consultButton" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Consult</button>
+                    <button id="consultButton" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Get a Consult</button>
                 </div>
                 <!-- Diagnosis Loading Modal Overlay -->
                 <style>
@@ -986,6 +1160,23 @@ $currentDate = date("F j, Y");
                 </div>
                 <script>
                     document.getElementById("diagnosisButton").addEventListener("click", function (event) {
+                        const bpValue = document.getElementById('bp').innerText.trim();
+                        
+                        if (bpValue === 'N/A mmHg' || this.disabled) {
+                            event.preventDefault();
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Blood Pressure Required',
+                                text: 'Please enter your blood pressure readings before proceeding with the diagnosis.',
+                                confirmButtonText: 'Okay',
+                                confirmButtonColor: '#3085d6',
+                                timer: 3500,
+                                timerProgressBar: true
+                            });
+                            return;
+                        }
+                        
+                        // Rest of the existing diagnosis button code...
                         const uid = document.getElementById("uid").innerText.trim();
                         const temp = document.getElementById("temp").innerText.trim();
                         const ecg = document.getElementById("ecg").innerText.trim();
@@ -1037,6 +1228,23 @@ $currentDate = date("F j, Y");
 
                     // Consult button (redirect to consult.php with sensor summary)
                     document.getElementById("consultButton").addEventListener("click", function (event) {
+                        const bpValue = document.getElementById('bp').innerText.trim();
+                        
+                        if (bpValue === 'N/A mmHg' || this.disabled) {
+                            event.preventDefault();
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Blood Pressure Required',
+                                text: 'Please enter your blood pressure readings before proceeding with the consultation.',
+                                confirmButtonText: 'Okay',
+                                confirmButtonColor: '#3085d6',
+                                timer: 3500,
+                                timerProgressBar: true
+                            });
+                            return;
+                        }
+                        
+                        // Rest of the existing consult button code...
                         const uid = document.getElementById("uid").innerText.trim();
                         const temp = document.getElementById("temp").innerText.trim();
                         const ecg = document.getElementById("ecg").innerText.trim();
@@ -1340,47 +1548,34 @@ $currentDate = date("F j, Y");
             }
         });
 
-        // Original fetchSensorData function with ECG value tracking added
+        // Modify the fetchSensorData function to not update BP
         async function fetchSensorData() {
             try {
-                const response = await fetch("fetch_data.php"); // Keep original fetch_random.php
+                const response = await fetch("fetch_data.php");
                 const data = await response.json();
 
-                // Debugging: Log the fetched data
                 console.log("Fetched Sensor Data:", data);
 
-                // Update the UI with fetched sensor data
                 document.getElementById("temp").innerText = data.body_temp !== null ? parseFloat(data.body_temp).toFixed(2) + " °C" : "0.00 °C";
                 
-                // Update ECG value and store it for the graph
                 const ecgValue = data.ecg !== null ? parseFloat(data.ecg) : 0;
                 document.getElementById("ecg").innerText = ecgValue.toFixed(2);
-                lastECGValue = ecgValue; // Store the ECG value for the graph
+                lastECGValue = ecgValue;
                 
                 document.getElementById("pulse_rate").innerText = data.pulse_rate !== null ? parseInt(data.pulse_rate, 10) + " BPM" : "0 BPM";
                 document.getElementById("spo2").innerText = data.spo2 !== null ? parseFloat(data.spo2).toFixed(2) + " %" : "0.00 %";
-                document.getElementById("bp").innerText = data.bp || "N/A mmHg";
+                // BP is now handled by manual input, so we don't update it here
 
-                // Populate hidden email form fields
+                // Update hidden form fields
                 document.getElementById("emailBodyTemp").value = data.body_temp || "0.00";
                 document.getElementById("emailEcg").value = data.ecg || "0.00";
                 document.getElementById("emailPulseRate").value = data.pulse_rate || "0";
                 document.getElementById("emailSpo2").value = data.spo2 || "0.00";
-                document.getElementById("emailBp").value = data.bp || "N/A";
+                // BP is handled by validateBP function
             } catch (error) {
                 console.error("Error fetching sensor data:", error);
             }
         }
-
-        // Make sure the canvas is properly initialized
-        document.addEventListener('DOMContentLoaded', () => {
-            const canvas = document.getElementById('ecgCanvas');
-            if (!canvas) {
-                console.error('ECG canvas not found in DOM');
-            } else {
-                console.log('ECG canvas found and initialized');
-            }
-        });
 
         async function fetchUID() {
             try {
@@ -1492,6 +1687,11 @@ $currentDate = date("F j, Y");
                 tooltip.style.display = 'none';
             }
         }
+
+        // Call updateButtonStates when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            updateButtonStates();
+        });
     </script>
 </body>
 </html>

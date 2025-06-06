@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 
-$esp32IP = "http://192.168.101.20"; // ESP32 IP Address
+$esp32IP = "http://192.168.101.20"; // change to your ESP32 IP addres
 $data = null; // Default to null to detect if no data is received
 
 // Fetch data from ESP32 using cURL

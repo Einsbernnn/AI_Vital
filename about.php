@@ -350,7 +350,7 @@ include 'header.php'; // Include your navigation/header file
                 <div class="animated-bg"></div>
                 <h1 class="text-4xl font-bold text-green-700 mb-4 text-center" data-aos="fade-down" data-aos-delay="100">About AI-Vital</h1>
                 <p class="text-lg text-gray-700 leading-relaxed text-center mb-6" data-aos="fade-up" data-aos-delay="200">
-                    AI-Vital is an innovative health monitoring and diagnostic platform that leverages the power of artificial intelligence, IoT sensors, and web technology to provide real-time, accessible, and secure healthcare solutions for schools, clinics, and communities. Designed to seamlessly integrate with existing health infrastructure, AI-Vital continuously monitors vital signs such as heart rate, body temperature, and ECG, providing instant insights into the user’s health status. The platform’s intelligent algorithms can detect early signs of medical issues, alerting users or healthcare providers in real-time, ensuring timely intervention. With cloud-based data storage, AI-Vital ensures that health records are securely stored and easily accessible for authorized personnel, maintaining privacy while improving the quality of care. Whether in a school setting, a local clinic, or within a community, AI-Vital is committed to making healthcare more proactive, efficient, and affordable for everyone.
+                    AI-Vital is an innovative health monitoring and diagnostic platform that leverages the power of artificial intelligence, IoT sensors, and web technology to provide real-time, accessible, and secure healthcare solutions for schools, clinics, and communities. Designed to seamlessly integrate with existing health infrastructure, AI-Vital continuously monitors vital signs such as heart rate, body temperature, and ECG, providing instant insights into the user's health status. The platform's intelligent algorithms can detect early signs of medical issues, alerting users or healthcare providers in real-time, ensuring timely intervention. With cloud-based data storage, AI-Vital ensures that health records are securely stored and easily accessible for authorized personnel, maintaining privacy while improving the quality of care. Whether in a school setting, a local clinic, or within a community, AI-Vital is committed to making healthcare more proactive, efficient, and affordable for everyone.
                 </p>
                 <div class="icon-row" data-aos="zoom-in" data-aos-delay="300">
                     <div class="icon-box">
@@ -384,25 +384,33 @@ include 'header.php'; // Include your navigation/header file
                 </ul>
                 <div class="timeline" data-aos="fade-left" data-aos-delay="700">
                     <div class="timeline-event">
-                        <h4>2022: Project Inception</h4>
-                        <p>AI-Vital was conceptualized as a capstone project to address the need for smarter, accessible health monitoring in schools.</p>
+                        <h4>JAN 25-31 2025: Title Finalization & Research</h4>
+                        <p>Finalize the final title and define the project's scope. Research vital signs, AI use in healthcare, and how consultation systems work.</p>
                     </div>
                     <div class="timeline-event">
-                        <h4>2023: Development & Prototyping</h4>
-                        <p>Hardware integration, AI model training, and web platform development. Multiple iterations and user testing in real-world settings.</p>
+                        <h4>FEB 1-19 2025: Component Selection & System Design</h4>
+                        <p>Choose the needed sensors (SpO₂, temp, HR, BP) and microcontroller. Plan the full system setup for both hardware and software.</p>
                     </div>
                     <div class="timeline-event">
-                        <h4>2024: Launch & Community Impact</h4>
-                        <p>AI-Vital is deployed in partner schools and clinics, empowering users and healthcare professionals with real-time, AI-driven insights.</p>
+                        <h4>FEB 21-28 2025: Prototype Development</h4>
+                        <p>Assemble prototype with sensors. Create a basic interface to show the collected vitals.</p>
                     </div>
                     <div class="timeline-event">
-                        <h4>2025: Expansion & Innovation</h4>
-                        <p>AI-Vital expands its reach to more communities and institutions, introduces new AI features, and enhances integration with modern health technologies for even greater impact.</p>
+                        <h4>MARCH 3-22 2025: Add ECG & Consultation Features</h4>
+                        <p>Attach and configure the ECG module. Design a simple chat or report-based consultation tool. Link the vitals data to the consultation system.</p>
+                    </div>
+                    <div class="timeline-event">
+                        <h4>MARCH 24-30 2025: Sensor Testing & Casing</h4>
+                        <p>Test sensor accuracy. Build and fit the casing.</p>
+                    </div>
+                    <div class="timeline-event">
+                        <h4>APRIL 2025: AI Diagnosis Integration & Finalization</h4>
+                        <p>Add AI for health suggestions. Train AI model (rule-based or ML). Final test, polish system, complete docs, and prep for defense.</p>
                     </div>
                 </div>
                 <h2 class="text-2xl font-semibold text-gray-800 mt-8 mb-4 text-center border-b-2 border-green-700 inline-block" data-aos="fade-up" data-aos-delay="800">Our Mission</h2>
                 <p class="text-lg text-gray-700 leading-relaxed text-center mb-6" data-aos="fade-up" data-aos-delay="900">
-                    To make advanced health monitoring and AI-driven diagnostics accessible to everyone, ensuring early detection, prevention, and better health outcomes for all, AI-Vital bridges the gap between technology and healthcare. By democratizing access to state-of-the-art health tools, it empowers individuals and communities to take proactive steps towards managing their health. The platform’s user-friendly interface allows anyone, regardless of technical expertise, to easily monitor their health metrics and receive actionable insights. AI-Vital’s focus on early detection ensures that potential health issues are identified before they become critical, leading to more effective preventive care. This approach not only enhances individual health but also contributes to reducing healthcare costs, improving quality of life, and fostering healthier communities across the globe.
+                    To make advanced health monitoring and AI-driven diagnostics accessible to everyone, ensuring early detection, prevention, and better health outcomes for all, AI-Vital bridges the gap between technology and healthcare. By democratizing access to state-of-the-art health tools, it empowers individuals and communities to take proactive steps towards managing their health. The platform's user-friendly interface allows anyone, regardless of technical expertise, to easily monitor their health metrics and receive actionable insights. AI-Vital's focus on early detection ensures that potential health issues are identified before they become critical, leading to more effective preventive care. This approach not only enhances individual health but also contributes to reducing healthcare costs, improving quality of life, and fostering healthier communities across the globe.
                 </p>
                 <h2 class="text-2xl font-semibold text-gray-800 mt-8 mb-4 text-center border-b-2 border-green-700 inline-block" data-aos="fade-up" data-aos-delay="1000">Meet the Developers</h2>
                 <ul class="dev-list text-center mb-6" data-aos="zoom-in" data-aos-delay="1100">
@@ -425,10 +433,6 @@ include 'header.php'; // Include your navigation/header file
                         <span class="text-xs font-semibold text-gray-700">Bootstrap</span>
                     </div>
                     <div class="flex flex-col items-center">
-                        <img src="img/css3-logo.svg" alt="CSS3" class="w-12 h-12 mb-1" title="CSS3">
-                        <span class="text-xs font-semibold text-gray-700">CSS3</span>
-                    </div>
-                    <div class="flex flex-col items-center">
                         <img src="img/espressif-logo.svg" alt="ESPRESSIF SYSTEM" class="w-12 h-12 mb-1" title="ESPRESSIF SYSTEM">
                         <span class="text-xs font-semibold text-gray-700">ESPRESSIF</span>
                     </div>
@@ -439,10 +443,6 @@ include 'header.php'; // Include your navigation/header file
                     <div class="flex flex-col items-center">
                         <img src="img/github-logo.svg" alt="GitHub" class="w-12 h-12 mb-1" title="GitHub">
                         <span class="text-xs font-semibold text-gray-700">GitHub</span>
-                    </div>
-                    <div class="flex flex-col items-center">
-                        <img src="img/html5-logo.svg" alt="HTML5" class="w-12 h-12 mb-1" title="HTML5">
-                        <span class="text-xs font-semibold text-gray-700">HTML5</span>
                     </div>
                     <div class="flex flex-col items-center">
                         <img src="img/javascript-logo.svg" alt="JavaScript" class="w-12 h-12 mb-1" title="JavaScript">
@@ -485,7 +485,7 @@ include 'header.php'; // Include your navigation/header file
                     <li>Continuous updates and improvements from a passionate team</li>
                 </ul>
                 <div class="about-quote text-center" data-aos="fade-left" data-aos-delay="1600">
-                    "AI-Vital is more than a project — it’s our vision of a smarter, safer, and more connected future for healthcare."
+                    "AI-Vital is more than a project — it's our vision of a smarter, safer, and more connected future for healthcare."
                 </div>
                 <div class="text-center mt-8" data-aos="zoom-in" data-aos-delay="1700">
                     <a href="registration2.php" class="bg-green-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition shadow-lg animate-bounce">Get Started</a>
