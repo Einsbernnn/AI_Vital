@@ -485,8 +485,7 @@ include 'header.php'; // Include your navigation/header file
                     <li>Continuous updates and improvements from a passionate team</li>
                 </ul>
                 <div class="about-quote text-center" data-aos="fade-left" data-aos-delay="1600">
-                    "AI-Vital is more than a project — it's our vision of a smarter, safer, and more connected future for healthcare."
-                </div>
+                    "AI-Vital is more than a project — it's our vision of a smarter, safer, and more connected future for healthcare."                </div>
                 <div class="text-center mt-8" data-aos="zoom-in" data-aos-delay="1700">
                     <a href="registration2.php" class="bg-green-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition shadow-lg animate-bounce">Get Started</a>
                 </div>
