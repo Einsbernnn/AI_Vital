@@ -1551,7 +1551,7 @@ $currentDate = date("F j, Y");
         // Modify the fetchSensorData function to not update BP
         async function fetchSensorData() {
             try {
-                const response = await fetch("fetch_random.php");
+                const response = await fetch("fetch_data.php");
                 const data = await response.json();
 
                 console.log("Fetched Sensor Data:", data);

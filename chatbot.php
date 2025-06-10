@@ -47,7 +47,7 @@ EOT;
 // Prepare Ollama API call
 $ollamaUrl = 'http://localhost:11434/api/generate';
 $payload = [
-    'model' => 'llama3', //replace with your mistral
+    'model' => 'mistral:instruct', //replace with your mistral
     'prompt' => $siteInfo . "\n\nUser: " . $userMessage . "\nAI:",
     'stream' => false
 ];

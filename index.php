@@ -187,7 +187,7 @@
         <div class="carousel-item active">
           <img src="img/hero_1.jpg" alt="">
           <div class="carousel-container">
-            <h2>AI-Vital an AI in Healthcare</h2>
+            <h2>Smart System for Vital Signs Monitoring & Interpretation</h2>
             <p>A Smart System for Vital Signs Monitoring and Diagnosis.</p>
           </div>
         </div><!-- End Carousel Item -->
