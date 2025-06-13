@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 
-$esp32IP = "http://192.168.101.20"; // change to your ESP32 IP addres
+$esp32IP = "http://192.168.101.16"; // change to your ESP32 IP addres
 $data = null; // Default to null to detect if no data is received
 
 // Fetch data from ESP32 using cURL
@@ -24,19 +24,20 @@ if ($data) {
     // Split the response into individual sensor values
     $values = explode(",", $data);
 
-    if (count($values) >= 5) {
-        list($body_temp, $ecg, $pulse_rate, $spo2, $blood_pressure) = $values;
+    if (count($values) === 4) {  // Changed to expect exactly 4 values
+        list($body_temp, $ecg, $pulse_rate, $spo2) = $values;
+        
+        // Debugging: Log the parsed values
+        error_log("Parsed Values - Body Temp: $body_temp, ECG: $ecg, Pulse Rate: $pulse_rate, SpO2: $spo2");
+
+        // Ensure numeric values where needed
+        $body_temp = is_numeric($body_temp) ? floatval($body_temp) : 0.00;
+        $ecg = is_numeric($ecg) ? floatval($ecg) : 0.00;
+        $pulse_rate = is_numeric($pulse_rate) ? floatval($pulse_rate) : 0.00;
+        $spo2 = is_numeric($spo2) ? floatval($spo2) : 0.00;
+    } else {
+        error_log("Invalid number of values received: " . count($values));
     }
-
-    // Debugging: Log the parsed values
-    error_log("Parsed Values - Body Temp: $body_temp, ECG: $ecg, Pulse Rate: $pulse_rate, SpO2: $spo2, BP: $blood_pressure");
-
-    // Ensure numeric values where needed
-    $body_temp = is_numeric($body_temp) ? floatval($body_temp) : 0.00;
-    $ecg = is_numeric($ecg) ? floatval($ecg) : 0.00;
-    $pulse_rate = is_numeric($pulse_rate) ? floatval($pulse_rate) : 0.00;
-    $spo2 = is_numeric($spo2) ? floatval($spo2) : 0.00;
-    $blood_pressure = $blood_pressure ?: "N/A"; // If not available
 }
 
 // Format the current timestamp
@@ -48,7 +49,6 @@ echo json_encode([
     "ecg" => $ecg,
     "pulse_rate" => $pulse_rate,
     "spo2" => $spo2,
-    "bp" => $blood_pressure, // Use "bp" key for frontend compatibility
     "currentTime" => $currentTime
 ]);
 ?>
