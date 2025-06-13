@@ -754,6 +754,7 @@ $currentDate = date("F j, Y");
         document.getElementById("diagnosisModal").style.display = "none";
     };
     </script>
+    <script src="bp_handler.js"></script>
 </head>
 <body class="bg-gradient-to-r from-green-200 to-green-400 min-h-screen flex flex-col">
     <div class="bg-overlay min-h-screen">

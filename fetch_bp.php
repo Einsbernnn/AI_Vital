@@ -1,55 +1,23 @@
 <?php
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
 
-$esp32IP = "http://192.168.101.16"; // ESP32 IP Address
-$data = null; // Default to null to detect if no data is received
-
-// Fetch data from ESP32 using cURL
-$ch = curl_init("$esp32IP/data");
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$response = curl_exec($ch);
-curl_close($ch);
-
-// Debugging: Log the raw response from ESP32
-error_log("Raw ESP32 Response: " . $response);
-
-if ($response) {
-    $data = $response;
-}
-
-// Initialize default values
-$body_temp = $ecg = $pulse_rate = $spo2 = $blood_pressure = null;
-
-if ($data) {
-    // Split the response into individual sensor values
-    $values = explode(",", $data);
-
-    if (count($values) >= 5) {
-        list($body_temp, $ecg, $pulse_rate, $spo2, $blood_pressure) = $values;
+// Function to get the latest BP values
+function getLatestBP() {
+    if (file_exists('bp_values.json')) {
+        $bp_data = json_decode(file_get_contents('bp_values.json'), true);
+        error_log("BP Data from file: " . print_r($bp_data, true)); // Debug log
+        if ($bp_data && isset($bp_data['bp'])) {
+            return $bp_data['bp'];
+        }
     }
-
-    // Debugging: Log the parsed values
-    error_log("Parsed Values - Body Temp: $body_temp, ECG: $ecg, Pulse Rate: $pulse_rate, SpO2: $spo2, BP: $blood_pressure");
-
-    // Ensure numeric values where needed
-    $body_temp = is_numeric($body_temp) ? floatval($body_temp) : 0.00;
-    $ecg = is_numeric($ecg) ? floatval($ecg) : 0.00;
-    $pulse_rate = is_numeric($pulse_rate) ? floatval($pulse_rate) : 0.00;
-    $spo2 = is_numeric($spo2) ? floatval($spo2) : 0.00;
-    // Set blood pressure to fixed value
-    $blood_pressure = "124/84";
+    return null;
 }
 
-// Format the current timestamp
-$currentTime = date("Y-m-d H:i:s");
+// Get BP value
+$bp_value = getLatestBP();
+error_log("BP Value being sent: " . $bp_value); // Debug log
 
-// Return the sensor data as JSON
-echo json_encode([
-    "body_temp" => $body_temp,
-    "ecg" => $ecg,
-    "pulse_rate" => $pulse_rate,
-    "spo2" => $spo2,
-    "bp" => $blood_pressure, // Use "bp" key for frontend compatibility
-    "currentTime" => $currentTime
-]);
+// Send the response
+echo json_encode(['bp' => $bp_value]);
 ?>
