@@ -2,3 +2,4 @@ UIDContainer.php
 .DS_Store
 cohere_debug.log
 mail_debug.log
+bp_values.json
