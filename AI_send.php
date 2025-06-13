@@ -191,54 +191,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         ]);
 
         $message = "The diagnostic result has been sent to \"$email\" successfully.";
-
-        // Add success notifications
-        echo "<script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // Email success notification
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Email Sent Successfully',
-                    text: 'Your diagnostic results have been sent to your email address.',
-                    confirmButtonText: 'Okay',
-                    confirmButtonColor: '#28a745',
-                    timer: 3000,
-                    timerProgressBar: true,
-                    showConfirmButton: true
-                }).then(() => {
-                    // Database success notification
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Data Stored Successfully',
-                        text: 'Your diagnostic results have been saved to the database.',
-                        confirmButtonText: 'Okay',
-                        confirmButtonColor: '#28a745',
-                        timer: 3000,
-                        timerProgressBar: true,
-                        showConfirmButton: true
-                    });
-                });
-            });
-        </script>";
+        $success = true;
 
     } catch (Exception $e) {
         $message = "Failed to send the email. " . htmlspecialchars($e->getMessage());
-
-        // Add error notifications
-        echo "<script>
-            document.addEventListener('DOMContentLoaded', function() {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Operation Failed',
-                    text: 'Failed to send email and store data. Please try again later.',
-                    confirmButtonText: 'Okay',
-                    confirmButtonColor: '#d33',
-                    timer: 3000,
-                    timerProgressBar: true,
-                    showConfirmButton: true
-                });
-            });
-        </script>";
+        $success = false;
     } finally {
         Database::disconnect();
     }
@@ -522,8 +479,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
 
         <!-- Diagnosis Button -->
-        <form action="" method="post">
-            <button type="submit" class="diagnosis-button">Get AI Diagnosis</button>
+        <form action="" method="post" id="diagnosisForm">
+            <button type="submit" class="diagnosis-button" id="submitButton">Get AI Diagnosis</button>
         </form>
 
         <!-- Diagnosis Result -->
@@ -627,13 +584,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <!-- Add JavaScript for loading animation and result display -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const form = document.querySelector('form');
+            const form = document.getElementById('diagnosisForm');
             const loadingContainer = document.getElementById('loadingContainer');
             const diagnosisResult = document.getElementById('diagnosisResult');
+            const submitButton = document.getElementById('submitButton');
 
             if (form) {
-                form.addEventListener('submit', function() {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
                     loadingContainer.style.display = 'flex';
+                    submitButton.disabled = true;
+                    
+                    // Submit the form after a short delay
+                    setTimeout(() => {
+                        form.submit();
+                    }, 100);
                 });
             }
 
@@ -643,6 +608,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     diagnosisResult.classList.add('show');
                 }, 100);
             }
+
+            <?php if ($_SERVER["REQUEST_METHOD"] == "POST"): ?>
+            // Show notifications after form submission
+            <?php if (isset($success) && $success): ?>
+                setTimeout(() => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Email Sent Successfully',
+                        text: 'Your diagnostic results have been sent to your email address.',
+                        confirmButtonText: 'Okay',
+                        confirmButtonColor: '#28a745',
+                        timer: 3000,
+                        timerProgressBar: true,
+                        showConfirmButton: true
+                    }).then(() => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Data Stored Successfully',
+                            text: 'Your diagnostic results have been saved to the database.',
+                            confirmButtonText: 'Okay',
+                            confirmButtonColor: '#28a745',
+                            timer: 3000,
+                            timerProgressBar: true,
+                            showConfirmButton: true
+                        });
+                    });
+                }, 500);
+            <?php else: ?>
+                setTimeout(() => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Operation Failed',
+                        text: '<?php echo addslashes($message); ?>',
+                        confirmButtonText: 'Okay',
+                        confirmButtonColor: '#d33',
+                        timer: 3000,
+                        timerProgressBar: true,
+                        showConfirmButton: true
+                    });
+                }, 500);
+            <?php endif; ?>
+            <?php endif; ?>
         });
     </script>
 </body>

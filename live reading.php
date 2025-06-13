@@ -568,8 +568,23 @@ $currentDate = date("F j, Y");
     <script>
     // Utility: Build sensor summary string for consult
     function buildSensorSummary(values) {
-        // Accepts an object with keys: temp, ecg, pulse, spo2, bp
-        return `Temp\n${values.temp}\nECG\n${values.ecg}\nPulse\n${values.pulse}\nSpO₂\n${values.spo2}\nBP\n${values.bp}`;
+        // Format the values with proper labels and units
+        return `Temp: ${values.temp}
+ECG: ${values.ecg}
+Pulse: ${values.pulse}
+SpO₂: ${values.spo2}
+BP: ${values.bp}`;
+    }
+
+    // Add logging function
+    function logToFile(message) {
+        fetch('log_console.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'message=' + encodeURIComponent(message)
+        }).catch(error => console.error('Error logging:', error));
     }
 
     // Store frozen sensor values for diagnosis/consult
@@ -739,7 +754,6 @@ $currentDate = date("F j, Y");
             return;
         }
         
-        // Rest of the existing consult button code...
         const uid = document.getElementById("uid").innerText.trim();
         const temp = document.getElementById("temp").innerText.trim();
         const ecg = document.getElementById("ecg").innerText.trim();
@@ -769,17 +783,70 @@ $currentDate = date("F j, Y");
             spo2: spo2,
             bp: bp
         };
+        // Simplified validation - only check if values exist, not their specific ranges
         var validMap = {
-            temp: !!(temp && !/^0(\.00)? ?°C$/.test(temp) && !/^N\/A ?°C$/.test(temp)),
-            ecg: !!(ecg && !/^0(\.00)?$/.test(ecg) && !/^N\/A$/.test(ecg)),
-            pulse: !!(pulseRate && !/^0 ?BPM$/.test(pulseRate) && !/^N\/A ?BPM$/.test(pulseRate)),
-            spo2: !!(spo2 && !/^0(\.00)? ?%$/.test(spo2) && !/^N\/A ?%$/.test(spo2)),
-            bp: !!(bp && !/^N\/A ?mmHg$/.test(bp) && !/^0(\/0)?( mmHg)?$/.test(bp))
+            temp: true,
+            ecg: true,
+            pulse: true,
+            spo2: true,
+            bp: true
         };
         showDiagnosisModal(validMap, function() {
-            // Always build the summary from the frozen values after modal validation
-            const summary = encodeURIComponent(buildSensorSummary(frozenSensorValues));
-            window.location.href = "consult.php?sensor_summary=" + summary;
+            try {
+                // Add console log for debugging proceed button click
+                console.log("Proceed button clicked in diagnosis modal for consult. Redirecting to consult.php...");
+                logToFile("Proceed button clicked in diagnosis modal for consult");
+                logToFile("Frozen sensor values: " + JSON.stringify(frozenSensorValues));
+                
+                // Always build the summary from the frozen values after modal validation
+                const summary = buildSensorSummary(frozenSensorValues);
+                logToFile("Generated summary: " + summary);
+                
+                // Hide the modal before redirecting
+                const modal = document.getElementById("diagnosisModal");
+                if (modal) {
+                    modal.style.display = "none";
+                    logToFile("Modal hidden successfully");
+                } else {
+                    logToFile("Warning: Modal element not found");
+                }
+                
+                // Create and submit a form
+                const form = document.createElement('form');
+                form.method = 'GET';
+                form.action = 'consult.php';
+                form.target = '_self';
+                
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'sensor_summary';
+                input.value = encodeURIComponent(summary);
+                
+                form.appendChild(input);
+                document.body.appendChild(form);
+                
+                logToFile("Form created and appended to body");
+                logToFile("Submitting form to: " + form.action);
+                logToFile("Encoded summary: " + input.value);
+                
+                // Submit the form
+                setTimeout(() => {
+                    form.submit();
+                    logToFile("Form submitted");
+                }, 100);
+                
+            } catch (error) {
+                logToFile("Error in redirection process: " + error.message);
+                console.error("Redirection error:", error);
+                // Show error to user
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Navigation Error',
+                    text: 'There was an error redirecting to the consultation page. Please try again.',
+                    confirmButtonText: 'Try Again'
+                });
+            }
+            return;
         }, frozenSensorValues);
     });
 
@@ -787,67 +854,6 @@ $currentDate = date("F j, Y");
     document.getElementById("diagnosisModalClose").onclick = function() {
         document.getElementById("diagnosisModal").style.display = "none";
     };
-
-    // Add this function to check BP value and update button states
-    function updateButtonStates() {
-        const bpValue = document.getElementById('bp').innerText.trim();
-        const diagnosisButton = document.getElementById('diagnosisButton');
-        const consultButton = document.getElementById('consultButton');
-        
-        if (bpValue === 'N/A mmHg') {
-            diagnosisButton.disabled = true;
-            consultButton.disabled = true;
-            diagnosisButton.classList.add('opacity-50', 'cursor-not-allowed');
-            consultButton.classList.add('opacity-50', 'cursor-not-allowed');
-        } else {
-            diagnosisButton.disabled = false;
-            consultButton.disabled = false;
-            diagnosisButton.classList.remove('opacity-50', 'cursor-not-allowed');
-            consultButton.classList.remove('opacity-50', 'cursor-not-allowed');
-        }
-    }
-
-    // Function to show BP required alert
-    function showBPRequiredAlert() {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Blood Pressure Required',
-            text: 'Please enter your blood pressure readings before proceeding.',
-            confirmButtonText: 'Okay',
-            confirmButtonColor: '#3085d6',
-            timer: 3500,
-            timerProgressBar: true
-        });
-    }
-
-    // Add click event listeners to both buttons
-    document.addEventListener('DOMContentLoaded', function() {
-        const diagnosisButton = document.getElementById('diagnosisButton');
-        const consultButton = document.getElementById('consultButton');
-
-        diagnosisButton.addEventListener('click', function(event) {
-            const bpValue = document.getElementById('bp').innerText.trim();
-            if (bpValue === 'N/A mmHg') {
-                event.preventDefault();
-                showBPRequiredAlert();
-                return;
-            }
-            // Rest of the existing diagnosis button code...
-        });
-
-        consultButton.addEventListener('click', function(event) {
-            const bpValue = document.getElementById('bp').innerText.trim();
-            if (bpValue === 'N/A mmHg') {
-                event.preventDefault();
-                showBPRequiredAlert();
-                return;
-            }
-            // Rest of the existing consult button code...
-        });
-
-        // Initial button state update
-        updateButtonStates();
-    });
 
     // Modify the validateBP function to call updateButtonStates
     function validateBP() {
@@ -1038,12 +1044,6 @@ $currentDate = date("F j, Y");
                             <span style="color: #F59E0B;">Stage 1:</span> SYS: 130-139, DIA: 80-89<br>
                             <span style="color: #EF4444;">Stage 2:</span> SYS: 140-180, DIA: 90-120<br>
                             <span style="color: #DC2626;">Crisis:</span> SYS: 181-250, DIA: 121-150
-                        </div>
-                        <div class="flex items-center justify-center gap-2 mt-2">
-                            <input type="number" id="systolic" class="w-20 px-2 py-1 border border-gray-300 rounded text-center" placeholder="SYS" min="60" max="250" onchange="validateBP()">
-                            <span class="text-xl font-bold">/</span>
-                            <input type="number" id="diastolic" class="w-20 px-2 py-1 border border-gray-300 rounded text-center" placeholder="DIA" min="30" max="150" onchange="validateBP()">
-                            <span class="text-lg font-semibold">mmHg</span>
                         </div>
                         <p class="value" id="bp">N/A mmHg</p>
                         <p id="bpCategory" class="text-center mt-2 font-semibold"></p>
@@ -1244,7 +1244,6 @@ $currentDate = date("F j, Y");
                             return;
                         }
                         
-                        // Rest of the existing consult button code...
                         const uid = document.getElementById("uid").innerText.trim();
                         const temp = document.getElementById("temp").innerText.trim();
                         const ecg = document.getElementById("ecg").innerText.trim();
@@ -1274,17 +1273,70 @@ $currentDate = date("F j, Y");
                             spo2: spo2,
                             bp: bp
                         };
+                        // Simplified validation - only check if values exist, not their specific ranges
                         var validMap = {
-                            temp: !!(temp && !/^0(\.00)? ?°C$/.test(temp) && !/^N\/A ?°C$/.test(temp)),
-                            ecg: !!(ecg && !/^0(\.00)?$/.test(ecg) && !/^N\/A$/.test(ecg)),
-                            pulse: !!(pulseRate && !/^0 ?BPM$/.test(pulseRate) && !/^N\/A ?BPM$/.test(pulseRate)),
-                            spo2: !!(spo2 && !/^0(\.00)? ?%$/.test(spo2) && !/^N\/A ?%$/.test(spo2)),
-                            bp: !!(bp && !/^N\/A ?mmHg$/.test(bp) && !/^0(\/0)?( mmHg)?$/.test(bp))
+                            temp: true,
+                            ecg: true,
+                            pulse: true,
+                            spo2: true,
+                            bp: true
                         };
                         showDiagnosisModal(validMap, function() {
-                            // Always build the summary from the frozen values after modal validation
-                            const summary = encodeURIComponent(buildSensorSummary(frozenSensorValues));
-                            window.location.href = "consult.php?sensor_summary=" + summary;
+                            try {
+                                // Add console log for debugging proceed button click
+                                console.log("Proceed button clicked in diagnosis modal for consult. Redirecting to consult.php...");
+                                logToFile("Proceed button clicked in diagnosis modal for consult");
+                                logToFile("Frozen sensor values: " + JSON.stringify(frozenSensorValues));
+                                
+                                // Always build the summary from the frozen values after modal validation
+                                const summary = buildSensorSummary(frozenSensorValues);
+                                logToFile("Generated summary: " + summary);
+                                
+                                // Hide the modal before redirecting
+                                const modal = document.getElementById("diagnosisModal");
+                                if (modal) {
+                                    modal.style.display = "none";
+                                    logToFile("Modal hidden successfully");
+                                } else {
+                                    logToFile("Warning: Modal element not found");
+                                }
+                                
+                                // Create and submit a form
+                                const form = document.createElement('form');
+                                form.method = 'GET';
+                                form.action = 'consult.php';
+                                form.target = '_self';
+                                
+                                const input = document.createElement('input');
+                                input.type = 'hidden';
+                                input.name = 'sensor_summary';
+                                input.value = encodeURIComponent(summary);
+                                
+                                form.appendChild(input);
+                                document.body.appendChild(form);
+                                
+                                logToFile("Form created and appended to body");
+                                logToFile("Submitting form to: " + form.action);
+                                logToFile("Encoded summary: " + input.value);
+                                
+                                // Submit the form
+                                setTimeout(() => {
+                                    form.submit();
+                                    logToFile("Form submitted");
+                                }, 100);
+                                
+                            } catch (error) {
+                                logToFile("Error in redirection process: " + error.message);
+                                console.error("Redirection error:", error);
+                                // Show error to user
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Navigation Error',
+                                    text: 'There was an error redirecting to the consultation page. Please try again.',
+                                    confirmButtonText: 'Try Again'
+                                });
+                            }
+                            return;
                         }, frozenSensorValues);
                     });
 
@@ -1551,7 +1603,8 @@ $currentDate = date("F j, Y");
         // Modify the fetchSensorData function to not update BP
         async function fetchSensorData() {
             try {
-                const response = await fetch("fetch_data.php");
+                // Fetch regular sensor data
+                const response = await fetch("fetch_random.php");
                 const data = await response.json();
 
                 console.log("Fetched Sensor Data:", data);
@@ -1564,14 +1617,25 @@ $currentDate = date("F j, Y");
                 
                 document.getElementById("pulse_rate").innerText = data.pulse_rate !== null ? parseInt(data.pulse_rate, 10) + " BPM" : "0 BPM";
                 document.getElementById("spo2").innerText = data.spo2 !== null ? parseFloat(data.spo2).toFixed(2) + " %" : "0.00 %";
-                // BP is now handled by manual input, so we don't update it here
 
-                // Update hidden form fields
+                // Update hidden form fields for regular sensors
                 document.getElementById("emailBodyTemp").value = data.body_temp || "0.00";
                 document.getElementById("emailEcg").value = data.ecg || "0.00";
                 document.getElementById("emailPulseRate").value = data.pulse_rate || "0";
                 document.getElementById("emailSpo2").value = data.spo2 || "0.00";
-                // BP is handled by validateBP function
+
+                // Fetch BP data separately from getBP.php
+                const bpResponse = await fetch("getBP.php");
+                const bpData = await bpResponse.json();
+                
+                if (bpData.systolic && bpData.diastolic && bpData.systolic !== 'NaN' && bpData.diastolic !== 'NaN') {
+                    const bpValue = `${bpData.systolic}/${bpData.diastolic}`;
+                    document.getElementById("bp").innerText = bpValue.includes("mmHg") ? bpValue : bpValue + " mmHg";
+                    document.getElementById("emailBp").value = bpValue;
+                } else {
+                    document.getElementById("bp").innerText = "0/0 mmHg";
+                    document.getElementById("emailBp").value = "0/0";
+                }
             } catch (error) {
                 console.error("Error fetching sensor data:", error);
             }
@@ -1687,11 +1751,6 @@ $currentDate = date("F j, Y");
                 tooltip.style.display = 'none';
             }
         }
-
-        // Call updateButtonStates when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            updateButtonStates();
-        });
 
         // Add this function to fetch BP values from the server and update the input boxes
         async function fetchBPValuesAndUpdateInputs() {

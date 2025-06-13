@@ -5,6 +5,9 @@ ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/php_errors.log');
 
+// Add a verification message
+file_put_contents(__DIR__ . '/consult_access.log', date('Y-m-d H:i:s') . " - File accessed\n", FILE_APPEND);
+
 // Include required files
 require_once __DIR__ . '/database.php';
 require 'PHPMailer/src/Exception.php';
@@ -20,36 +23,108 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Initialize logging
-$logFile = __DIR__ . '/mail_debug.log';
-$timestamp = date('Y-m-d H:i:s');
+$logFile = __DIR__ . '/consult_debug.log';
+file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Script started\n", FILE_APPEND);
+file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Request Method: " . $_SERVER['REQUEST_METHOD'] . "\n", FILE_APPEND);
+file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Request URI: " . $_SERVER['REQUEST_URI'] . "\n", FILE_APPEND);
+file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Query String: " . $_SERVER['QUERY_STRING'] . "\n", FILE_APPEND);
 
-// Check if log file is writable
-if (!is_writable($logFile) && !is_writable(dirname($logFile))) {
-    error_log("Mail debug log file is not writable: $logFile");
+// Log raw input
+$rawInput = file_get_contents('php://input');
+file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Raw Input: " . $rawInput . "\n", FILE_APPEND);
+
+// Log GET and POST data
+file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] GET Data: " . print_r($_GET, true) . "\n", FILE_APPEND);
+file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] POST Data: " . print_r($_POST, true) . "\n", FILE_APPEND);
+
+// Handle GET request for sensor_summary
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['sensor_summary'])) {
+    file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Received GET request with sensor_summary\n", FILE_APPEND);
+    
+    try {
+        // Decode the URL-encoded summary
+        $decoded_summary = urldecode($_GET['sensor_summary']);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Decoded summary: " . $decoded_summary . "\n", FILE_APPEND);
+        
+        // Set the decoded summary in POST array for processing
+        $_POST['sensor_summary'] = $decoded_summary;
+        $consultInput = "Please analyze these vital signs:\n" . $decoded_summary;
+        
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Successfully processed GET request\n", FILE_APPEND);
+    } catch (Exception $e) {
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Error processing GET request: " . $e->getMessage() . "\n", FILE_APPEND);
+        error_log("Error processing GET request: " . $e->getMessage());
+        header("Location: live reading.php?error=processing_error");
+        exit();
+    }
 }
 
-// Clear the log file at the start of each request
-file_put_contents($logFile, "[$timestamp] ===== Script Started =====\n");
-file_put_contents($logFile, "[$timestamp] PHP Version: " . PHP_VERSION . "\n", FILE_APPEND);
-file_put_contents($logFile, "[$timestamp] Server Software: " . $_SERVER['SERVER_SOFTWARE'] . "\n", FILE_APPEND);
-file_put_contents($logFile, "[$timestamp] Request Method: " . $_SERVER['REQUEST_METHOD'] . "\n", FILE_APPEND);
+// Check for required sensor_summary data
+if (!isset($_POST['sensor_summary'])) {
+    file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Error: No sensor_summary data found\n", FILE_APPEND);
+    header("Location: live reading.php?error=no_data");
+    exit();
+}
 
-// Log POST data if present
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    file_put_contents($logFile, "[$timestamp] POST data received: " . json_encode($_POST) . "\n", FILE_APPEND);
+// Process the sensor summary
+$sensor_summary = $_POST['sensor_summary'];
+file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Processing sensor summary:\n" . $sensor_summary . "\n", FILE_APPEND);
+
+// Extract vital signs
+$temperature = null;
+$ecg_rate = null;
+$pulse_rate = null;
+$spo2_level = null;
+$blood_pressure = null;
+
+// Extract temperature
+if (preg_match('/Temp\s*:\s*([\d.]+)\s*°C/i', $sensor_summary, $matches)) {
+    $temperature = floatval($matches[1]);
+    file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Extracted temperature: $temperature\n", FILE_APPEND);
+}
+
+// Extract ECG rate
+if (preg_match('/ECG\s*:\s*([\d.]+)/i', $sensor_summary, $matches)) {
+    $ecg_rate = floatval($matches[1]);
+    file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Extracted ECG rate: $ecg_rate\n", FILE_APPEND);
+}
+
+// Extract pulse rate
+if (preg_match('/Pulse\s*:\s*([\d.]+)\s*BPM/i', $sensor_summary, $matches)) {
+    $pulse_rate = floatval($matches[1]);
+    file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Extracted pulse rate: $pulse_rate\n", FILE_APPEND);
+}
+
+// Extract SpO2 level
+if (preg_match('/SpO2\s*:\s*([\d.]+)\s*%/i', $sensor_summary, $matches)) {
+    $spo2_level = floatval($matches[1]);
+    file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Extracted SpO2 level: $spo2_level\n", FILE_APPEND);
+}
+
+// Extract blood pressure
+if (preg_match('/BP\s*:\s*([\d\/]+)/i', $sensor_summary, $matches)) {
+    $blood_pressure = trim($matches[1]);
+    file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Extracted blood pressure: $blood_pressure\n", FILE_APPEND);
+}
+
+// Validate extracted values
+if ($temperature === null || $ecg_rate === null || $pulse_rate === null || $spo2_level === null || $blood_pressure === null) {
+    file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Error: Failed to extract all vital signs\n", FILE_APPEND);
+    header("Location: live reading.php?error=invalid_data");
+    exit();
 }
 
 // Log any PHP errors
-set_error_handler(function($errno, $errstr, $errfile, $errline) use ($logFile, $timestamp) {
-    $error_message = "[$timestamp] PHP Error [$errno]: $errstr in $errfile on line $errline\n";
+set_error_handler(function($errno, $errstr, $errfile, $errline) use ($logFile) {
+    $error_message = "[" . date('Y-m-d H:i:s') . "] PHP Error [$errno]: $errstr in $errfile on line $errline\n";
     file_put_contents($logFile, $error_message, FILE_APPEND);
     error_log($error_message);
     return false;
 });
 
 // Log any uncaught exceptions
-set_exception_handler(function($exception) use ($logFile, $timestamp) {
-    $error_message = "[$timestamp] Uncaught Exception: " . $exception->getMessage() . "\n";
+set_exception_handler(function($exception) use ($logFile) {
+    $error_message = "[" . date('Y-m-d H:i:s') . "] Uncaught Exception: " . $exception->getMessage() . "\n";
     $error_message .= "Stack trace: " . $exception->getTraceAsString() . "\n";
     file_put_contents($logFile, $error_message, FILE_APPEND);
     error_log($error_message);
@@ -62,9 +137,9 @@ $currentDate = date("F j, Y");
 $ai_responses = [];
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
-    file_put_contents($logFile, "[$timestamp] POST request received with consultInput\n", FILE_APPEND);
-    $userInput = trim($_POST['consultInput']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['sensor_summary'])) {
+    file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Processing request with sensor data\n", FILE_APPEND);
+    $userInput = isset($_POST['consultInput']) ? trim($_POST['consultInput']) : "Please analyze these vital signs:\n" . urldecode($_GET['sensor_summary']);
 
     // Get user details
     $uid = isset($_POST['uid']) ? trim($_POST['uid']) : '';
@@ -80,54 +155,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
     $spo2_level = 0.00;
     $blood_pressure = '';
 
-    if (isset($_POST['sensor_summary'])) {
-        $sensor_summary = $_POST['sensor_summary'];
-        
-        // Log the raw sensor summary for debugging
-        file_put_contents($logFile, "[$timestamp] Raw sensor summary:\n" . $sensor_summary . "\n", FILE_APPEND);
-        
-        // Extract temperature
-        if (preg_match('/Temp:\s*([\d.]+)\s*°C/i', $sensor_summary, $matches)) {
-            $temperature = floatval($matches[1]);
-            file_put_contents($logFile, "[$timestamp] Extracted temperature: $temperature\n", FILE_APPEND);
-        }
-        
-        // Extract ECG rate
-        if (preg_match('/ECG:\s*([\d.]+)/i', $sensor_summary, $matches)) {
-            $ecg_rate = floatval($matches[1]);
-            file_put_contents($logFile, "[$timestamp] Extracted ECG rate: $ecg_rate\n", FILE_APPEND);
-        }
-        
-        // Extract pulse rate
-        if (preg_match('/Pulse:\s*([\d.]+)\s*BPM/i', $sensor_summary, $matches)) {
-            $pulse_rate = floatval($matches[1]);
-            file_put_contents($logFile, "[$timestamp] Extracted pulse rate: $pulse_rate\n", FILE_APPEND);
-        }
-        
-        // Extract SpO2 level - try multiple patterns to handle different formats
-        if (preg_match('/SpO2:\s*([\d.]+)\s*%/i', $sensor_summary, $matches) || 
-            preg_match('/SpO₂:\s*([\d.]+)\s*%/i', $sensor_summary, $matches) ||
-            preg_match('/SpO2\s*:\s*([\d.]+)/i', $sensor_summary, $matches)) {
-            $spo2_level = floatval($matches[1]);
-            file_put_contents($logFile, "[$timestamp] Extracted SpO2 level: $spo2_level\n", FILE_APPEND);
-        } else {
-            file_put_contents($logFile, "[$timestamp] Failed to extract SpO2 level. Raw summary: $sensor_summary\n", FILE_APPEND);
-        }
-        
-        // Extract blood pressure
-        if (preg_match('/BP:\s*([\d\/]+)/i', $sensor_summary, $matches)) {
-            $blood_pressure = trim($matches[1]);
-            file_put_contents($logFile, "[$timestamp] Extracted blood pressure: $blood_pressure\n", FILE_APPEND);
-        }
-
-        // Log all extracted values
-        file_put_contents($logFile, "[$timestamp] All extracted values:\n", FILE_APPEND);
-        file_put_contents($logFile, "Temperature: $temperature\n", FILE_APPEND);
-        file_put_contents($logFile, "ECG Rate: $ecg_rate\n", FILE_APPEND);
-        file_put_contents($logFile, "Pulse Rate: $pulse_rate\n", FILE_APPEND);
-        file_put_contents($logFile, "SpO2 Level: $spo2_level\n", FILE_APPEND);
-        file_put_contents($logFile, "Blood Pressure: $blood_pressure\n", FILE_APPEND);
+    $sensor_summary = isset($_POST['sensor_summary']) ? $_POST['sensor_summary'] : $_GET['sensor_summary'];
+    
+    // Log the raw sensor summary for debugging
+    file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Raw sensor summary:\n" . $sensor_summary . "\n", FILE_APPEND);
+    
+    // Extract temperature
+    if (preg_match('/Temp:\s*([\d.]+)\s*°C/i', $sensor_summary, $matches)) {
+        $temperature = floatval($matches[1]);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Extracted temperature: $temperature\n", FILE_APPEND);
     }
+    
+    // Extract ECG rate
+    if (preg_match('/ECG:\s*([\d.]+)/i', $sensor_summary, $matches)) {
+        $ecg_rate = floatval($matches[1]);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Extracted ECG rate: $ecg_rate\n", FILE_APPEND);
+    }
+    
+    // Extract pulse rate
+    if (preg_match('/Pulse:\s*([\d.]+)\s*BPM/i', $sensor_summary, $matches)) {
+        $pulse_rate = floatval($matches[1]);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Extracted pulse rate: $pulse_rate\n", FILE_APPEND);
+    }
+    
+    // Extract SpO2 level - try multiple patterns to handle different formats
+    if (preg_match('/SpO2:\s*([\d.]+)\s*%/i', $sensor_summary, $matches) || 
+        preg_match('/SpO₂:\s*([\d.]+)\s*%/i', $sensor_summary, $matches) ||
+        preg_match('/SpO2\s*:\s*([\d.]+)/i', $sensor_summary, $matches)) {
+        $spo2_level = floatval($matches[1]);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Extracted SpO2 level: $spo2_level\n", FILE_APPEND);
+    } else {
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Failed to extract SpO2 level. Raw summary: $sensor_summary\n", FILE_APPEND);
+    }
+    
+    // Extract blood pressure
+    if (preg_match('/BP:\s*([\d\/]+)/i', $sensor_summary, $matches)) {
+        $blood_pressure = trim($matches[1]);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Extracted blood pressure: $blood_pressure\n", FILE_APPEND);
+    }
+
+    // Log all extracted values
+    file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] All extracted values:\n", FILE_APPEND);
+    file_put_contents($logFile, "Temperature: $temperature\n", FILE_APPEND);
+    file_put_contents($logFile, "ECG Rate: $ecg_rate\n", FILE_APPEND);
+    file_put_contents($logFile, "Pulse Rate: $pulse_rate\n", FILE_APPEND);
+    file_put_contents($logFile, "SpO2 Level: $spo2_level\n", FILE_APPEND);
+    file_put_contents($logFile, "Blood Pressure: $blood_pressure\n", FILE_APPEND);
 
     // Validate numeric values
     $temperature = is_numeric($temperature) ? floatval($temperature) : 0.00;
@@ -136,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
     $spo2_level = is_numeric($spo2_level) ? floatval($spo2_level) : 0.00;
 
     // Log the validated values
-    file_put_contents($logFile, "[$timestamp] Validated values:\n", FILE_APPEND);
+    file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Validated values:\n", FILE_APPEND);
     file_put_contents($logFile, "Temperature: $temperature\n", FILE_APPEND);
     file_put_contents($logFile, "ECG Rate: $ecg_rate\n", FILE_APPEND);
     file_put_contents($logFile, "Pulse Rate: $pulse_rate\n", FILE_APPEND);
@@ -145,7 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
 
     // If sensor_summary is present in POST, append it to $userInput if not already present
     if (isset($_POST['sensor_summary']) && $_POST['sensor_summary']) {
-        file_put_contents($logFile, "[$timestamp] Sensor summary found in POST\n", FILE_APPEND);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Sensor summary found in POST\n", FILE_APPEND);
         $sensor_summary = trim($_POST['sensor_summary']);
         if (strpos($userInput, $sensor_summary) === false) {
             $userInput = trim($userInput . "\n\n" . $sensor_summary);
@@ -156,7 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
         "Patient vital signs received:\n\n$userInput\n\nPlease analyze the values and provide a medically accurate interpretation. Identify any abnormalities (e.g., hypothermia, tachycardia, low SpO₂), explain the clinical implications, and recommend appropriate actions. Consider standard reference ranges for adults. Maintain a professional and empathetic tone. Conclude with guidance on whether to seek immediate medical attention or continue monitoring."
     ];
 
-    file_put_contents($logFile, "[$timestamp] Sending request to Cohere API\n", FILE_APPEND);
+    file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Sending request to Cohere API\n", FILE_APPEND);
     $cohere_url = 'https://api.cohere.com/v2/chat';
     $api_key = 'F3LM9ycUnenzInMB2m94RWdRwHuQLnTH7cT2f5qB';
     $model = 'command-a-03-2025';
@@ -221,7 +294,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
         $stmt = $pdo->prepare("INSERT INTO health_readings (id, patient_name, temperature, ecg_rate, pulse_rate, spo2_level, blood_pressure, diagnosis, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
         
         // Log the SQL parameters for debugging
-        file_put_contents($logFile, "[$timestamp] SQL Parameters:\n", FILE_APPEND);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] SQL Parameters:\n", FILE_APPEND);
         file_put_contents($logFile, "UID: $uid\n", FILE_APPEND);
         file_put_contents($logFile, "Name: $name\n", FILE_APPEND);
         file_put_contents($logFile, "Temperature: $temperature\n", FILE_APPEND);
@@ -242,18 +315,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['consultInput'])) {
             $ai_result
         ]);
         Database::disconnect();
-        file_put_contents($logFile, "[$timestamp] Successfully stored AI result and sensor values to health_readings table for UID: $uid\n", FILE_APPEND);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Successfully stored AI result and sensor values to health_readings table for UID: $uid\n", FILE_APPEND);
     } catch (Exception $e) {
-        file_put_contents($logFile, "[$timestamp] Error storing to health_readings: " . $e->getMessage() . "\n", FILE_APPEND);
-        file_put_contents($logFile, "[$timestamp] Error trace: " . $e->getTraceAsString() . "\n", FILE_APPEND);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Error storing to health_readings: " . $e->getMessage() . "\n", FILE_APPEND);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Error trace: " . $e->getTraceAsString() . "\n", FILE_APPEND);
     }
 }
 
-file_put_contents($logFile, "[$timestamp] ===== Script Ended =====\n", FILE_APPEND);
+file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] ===== Script Ended =====\n", FILE_APPEND);
 
 // After AI response is received, send email using PHPMailer
 if (!empty($ai_responses)) {
-    file_put_contents($logFile, "[$timestamp] AI responses received, preparing to send email\n", FILE_APPEND);
+    file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] AI responses received, preparing to send email\n", FILE_APPEND);
     
     try {
         // Create a new PHPMailer instance
@@ -297,7 +370,7 @@ if (!empty($ai_responses)) {
 
         // Send email
         $mail->send();
-        file_put_contents($logFile, "[$timestamp] Email sent successfully to $email\n", FILE_APPEND);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Email sent successfully to $email\n", FILE_APPEND);
         
         // Store email status in session
         $_SESSION['email_sent'] = true;
@@ -320,7 +393,7 @@ if (!empty($ai_responses)) {
         </script>";
 
     } catch (Exception $e) {
-        file_put_contents($logFile, "[$timestamp] Email sending failed: " . $mail->ErrorInfo . "\n", FILE_APPEND);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Email sending failed: " . $mail->ErrorInfo . "\n", FILE_APPEND);
         $_SESSION['email_sent'] = false;
         $_SESSION['email_message'] = "Failed to send email. Please try again later.";
 
@@ -357,7 +430,7 @@ if (!empty($ai_responses)) {
             $ai_result
         ]);
         Database::disconnect();
-        file_put_contents($logFile, "[$timestamp] Successfully stored AI result and sensor values to health_readings table for UID: $uid\n", FILE_APPEND);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Successfully stored AI result and sensor values to health_readings table for UID: $uid\n", FILE_APPEND);
 
         // Add success notification for database storage
         echo "<script>
@@ -376,8 +449,8 @@ if (!empty($ai_responses)) {
         </script>";
 
     } catch (Exception $e) {
-        file_put_contents($logFile, "[$timestamp] Error storing to health_readings: " . $e->getMessage() . "\n", FILE_APPEND);
-        file_put_contents($logFile, "[$timestamp] Error trace: " . $e->getTraceAsString() . "\n", FILE_APPEND);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Error storing to health_readings: " . $e->getMessage() . "\n", FILE_APPEND);
+        file_put_contents($logFile, "[" . date('Y-m-d H:i:s') . "] Error trace: " . $e->getTraceAsString() . "\n", FILE_APPEND);
 
         // Add error notification for database storage
         echo "<script>

@@ -1,0 +1,45 @@
+[2025-06-13 08:28:43] Proceed button clicked in diagnosis modal for consult
+[2025-06-13 08:28:43] Modal hidden successfully
+[2025-06-13 08:28:43] Submitting form to: http://localhost/StazSys/consult.php
+[2025-06-13 08:28:43] Frozen sensor values: {"temp":"31.00 °C","ecg":"79.00","pulse":"64 BPM","spo2":"89.00 %","bp":"124/83 mmHg"}
+[2025-06-13 08:28:43] Generated summary: Temp
+31.00 °C
+ECG
+79.00
+Pulse
+64 BPM
+SpO₂
+89.00 %
+BP
+124/83 mmHg
+[2025-06-13 08:28:43] Form created and appended to body
+[2025-06-13 08:28:43] Form submitted
+[2025-06-13 08:30:53] Frozen sensor values: {"temp":"31.80 °C","ecg":"105.00","pulse":"62 BPM","spo2":"96.00 %","bp":"124/83 mmHg"}
+[2025-06-13 08:30:53] Proceed button clicked in diagnosis modal for consult
+[2025-06-13 08:30:53] Generated summary: Temp
+31.80 °C
+ECG
+105.00
+Pulse
+62 BPM
+SpO₂
+96.00 %
+BP
+124/83 mmHg
+[2025-06-13 08:30:53] Modal hidden successfully
+[2025-06-13 08:30:53] Encoded summary: Temp%0A31.80%20%C2%B0C%0AECG%0A105.00%0APulse%0A62%20BPM%0ASpO%E2%82%82%0A96.00%20%25%0ABP%0A124%2F83%20mmHg
+[2025-06-13 08:30:53] Submitting form to: http://localhost/StazSys/consult.php
+[2025-06-13 08:30:53] Form created and appended to body
+[2025-06-13 08:30:53] Form submitted
+[2025-06-13 08:34:57] Generated summary: Temp: 35.40 °C
+ECG: 73.00
+Pulse: 86 BPM
+SpO₂: 95.00 %
+BP: 124/83 mmHg
+[2025-06-13 08:34:57] Frozen sensor values: {"temp":"35.40 °C","ecg":"73.00","pulse":"86 BPM","spo2":"95.00 %","bp":"124/83 mmHg"}
+[2025-06-13 08:34:57] Submitting form to: http://localhost/StazSys/consult.php
+[2025-06-13 08:34:57] Modal hidden successfully
+[2025-06-13 08:34:57] Form created and appended to body
+[2025-06-13 08:34:57] Proceed button clicked in diagnosis modal for consult
+[2025-06-13 08:34:57] Encoded summary: Temp%3A%2035.40%20%C2%B0C%0AECG%3A%2073.00%0APulse%3A%2086%20BPM%0ASpO%E2%82%82%3A%2095.00%20%25%0ABP%3A%20124%2F83%20mmHg
+[2025-06-13 08:34:57] Form submitted

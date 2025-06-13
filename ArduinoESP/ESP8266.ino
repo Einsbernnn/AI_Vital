@@ -93,7 +93,7 @@ void handleRFID() {
 
   // Send UID to server using HTTP POST request
   if (WiFi.status() == WL_CONNECTED) {
-    http.begin(client, "http://192.168.101.12/StazSys/getUID.php");
+    http.begin(client, "http://192.168.100.126/StazSys/getUID.php");
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");
     
     String postData = "UIDresult=" + uid;
@@ -131,24 +131,35 @@ void handleBPData() {
       return;
     }
     
-    // Handle BP data as before
+    // Handle BP data like other sensors
     if (data.startsWith("BP:") && (millis() - lastSendTime >= sendCooldown)) {
-      String bpValue = data.substring(3);
+      String bpValue = data.substring(3); // Remove "BP:"
       
       if (bpValue != lastBPValue) {
         lastBPValue = bpValue;
         lastSendTime = millis();
         
-        // Check if it's an error message
-        if (bpValue.startsWith("ERROR_STATE:")) {
-          Serial.println("Detected error message: " + bpValue);
+        // Parse systolic and diastolic values
+        int separatorIndex = bpValue.indexOf('/');
+        if (separatorIndex != -1) {
+          String systolic = bpValue.substring(0, separatorIndex);
+          String diastolic = bpValue.substring(separatorIndex + 1);
+          
+          // Remove any status text from diastolic (e.g., " (High)")
+          int statusIndex = diastolic.indexOf(' ');
+          if (statusIndex != -1) {
+            diastolic = diastolic.substring(0, statusIndex);
+          }
+          
           if (WiFi.status() == WL_CONNECTED) {
-            http.begin(client, "http://192.168.101.12/StazSys/updateBP.php");
+            Serial.println("WiFi Status: Connected");
+            Serial.println("Local IP: " + WiFi.localIP().toString());
+            
+            http.begin(client, "http://192.168.100.126/StazSys/updateBP.php");
             http.addHeader("Content-Type", "application/x-www-form-urlencoded");
             
-            // Send NaN for both values during error
-            String postData = "systolic=NaN&diastolic=NaN&error_message=" + bpValue.substring(12);
-            Serial.println("Sending error to server: " + postData);
+            String postData = "systolic=" + systolic + "&diastolic=" + diastolic + "&error_message=";
+            Serial.println("POST Data: " + postData);
             
             int httpCode = http.POST(postData);
             String payload = http.getString();
@@ -156,37 +167,14 @@ void handleBPData() {
             Serial.println("HTTP Code: " + String(httpCode));
             Serial.println("Server Response: " + payload);
             
+            if (httpCode == -1) {
+              Serial.println("Connection failed. WiFi Status: " + String(WiFi.status()));
+              Serial.println("RSSI: " + String(WiFi.RSSI()));
+            }
+            
             http.end();
-          }
-        } else {
-          int separatorIndex = bpValue.indexOf('/');
-          if (separatorIndex != -1) {
-            String systolic = bpValue.substring(0, separatorIndex);
-            String diastolic = bpValue.substring(separatorIndex + 1);
-            
-            // Remove any status text from diastolic
-            int statusIndex = diastolic.indexOf(' ');
-            if (statusIndex != -1) {
-              diastolic = diastolic.substring(0, statusIndex);
-            }
-            
-            if (WiFi.status() == WL_CONNECTED) {
-              Serial.println("Sending to server - Systolic: " + systolic + ", Diastolic: " + diastolic);
-              
-              http.begin(client, "http://192.168.101.12/StazSys/updateBP.php");
-              http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-              
-              String postData = "systolic=" + systolic + "&diastolic=" + diastolic + "&error_message=";
-              Serial.println("POST Data: " + postData);
-              
-              int httpCode = http.POST(postData);
-              String payload = http.getString();
-              
-              Serial.println("HTTP Code: " + String(httpCode));
-              Serial.println("Server Response: " + payload);
-              
-              http.end();
-            }
+          } else {
+            Serial.println("WiFi not connected. Status: " + String(WiFi.status()));
           }
         }
       }
