@@ -11,7 +11,7 @@ SoftwareSerial espSerial(ESP_RX, ESP_TX); // SoftwareSerial for ESP8266 communic
 
 // Timing Constants
 #define START_DELAY 3000      // 3s pre-measurement delay
-#define MOTOR_RUN_TIME 8000   // 8s measurement time
+#define MOTOR_RUN_TIME 20000   // 8s measurement time
 #define COOLDOWN_TIME 5000    // 5s cooldown
 
 // State Tracking
@@ -51,7 +51,7 @@ void setup() {
   digitalWrite(IN2, LOW);
   digitalWrite(EEP, HIGH); // Enable motor driver
   
-  Serial.println("BP Monitor Ready. Press button to start.");
+  Serial.println("BP Monitor Reading. Press button to use.");
 }
 
 void loop() {
@@ -95,7 +95,7 @@ void loop() {
 void startProcess(unsigned long currentTime) {
   processStarted = true;
   processStartTime = currentTime;
-  Serial.println("✅ Starting BP measurement...");
+  Serial.println("Starting BP listening...");
 }
 
 void startMotor(unsigned long currentTime) {
@@ -104,7 +104,7 @@ void startMotor(unsigned long currentTime) {
   digitalWrite(IN1, LOW);
   digitalWrite(IN2, HIGH); // Activate pump
   sendBuzzerCommand(1, 100);  // Short beep when motor starts
-  Serial.println("⚙️ Motor running...");
+  Serial.println(" BP listening started...");
 }
 
 void interruptProcess(unsigned long currentTime) {
@@ -114,7 +114,7 @@ void interruptProcess(unsigned long currentTime) {
   digitalWrite(IN2, LOW);
   bpValue = "N/A";
   sendBPData();
-  Serial.println("❌ Measurement interrupted!");
+  Serial.println("❌ Reading interrupted!");
   inCooldown = true;
   cooldownStartTime = currentTime;
 }
@@ -128,7 +128,7 @@ void completeMeasurement(unsigned long currentTime) {
   sendBPData();
   sendBuzzerCommand(1, 500);  // Long beep for successful measurement
   
-  Serial.print("🩺 BP Result: ");
+  Serial.print("🩺 BP listen value was : ");
   Serial.println(bpValue);
   
   processStarted = false;
@@ -169,5 +169,5 @@ void sendBPData() {
 void resetSystem() {
   inCooldown = false;
   bpValue = "N/A";
-  Serial.println("System ready for next reading.");
+  Serial.println("System ready for next listening.");
 }

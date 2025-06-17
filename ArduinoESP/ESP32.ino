@@ -27,7 +27,7 @@ const unsigned long timeoutDuration = 8000;
 
 unsigned long lastPoxUpdateTime = 0;
 
-// ---------- Web Page ----------
+
 void handleRoot() {
   String html = "<html><head><meta http-equiv='refresh' content='2'/></head><body>";
   html += "<h1>Live Health Monitoring</h1>";
@@ -69,7 +69,6 @@ void handleRoot() {
   server.send(200, "text/html", html);
 }
 
-// ---------- Data Endpoint ----------
 void handleData() {
   String temp = isnan(bodyTemp) ? "0.00" : String(bodyTemp, 2);
   String ecgVal = isnan(ecg) ? "0.0" : String(ecg, 1);
@@ -80,7 +79,6 @@ void handleData() {
   server.send(200, "text/plain", data);
 }
 
-// ---------- Wi-Fi Connect ----------
 void connectWiFi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
@@ -114,6 +112,9 @@ void loop() {
   // ----- Serial1 ECG + Temp -----
   if (mySerial.available()) {
     String data = mySerial.readStringUntil('\n');
+    Serial.print("Received from Arduino: ");
+    Serial.println(data);
+    
     int comma1 = data.indexOf(',');
 
     if (comma1 != -1) {
@@ -123,12 +124,16 @@ void loop() {
       if (newEcg != 0.0) {
         ecg = newEcg;
         lastValidEcgTime = millis();
+        Serial.print("Updated ECG: "); Serial.println(ecg);
       }
 
       if (newBodyTemp != 0.0) {
         bodyTemp = newBodyTemp;
         lastValidBodyTempTime = millis();
+        Serial.print("Updated Body Temp: "); Serial.println(bodyTemp);
       }
+    } else {
+      Serial.println("Invalid data format received");
     }
   }
 

@@ -25,11 +25,11 @@ void setup() {
     pinMode(LO_MINUS, INPUT);
 
     if (!mlx.begin()) {
-        Serial.println("ERROR: MLX90614 not detected!");
+        Serial.println("ERROR: Body Temperature Sensor Not Working!");
         while (1);
     }
 
-    Serial.println("System Ready. Monitoring ECG & Temperature...");
+    Serial.println("System Ready. for Getting ECG & Temperature...");
 }
 
 void loop() {
@@ -61,6 +61,12 @@ void loop() {
     Serial.print("ECG: "); Serial.print(ecgHeartRate);
     Serial.print(" BPM, Temp: "); Serial.print(bodyTemp);
     Serial.println(" °C");
+
+    // Print data being sent to ESP32
+    Serial.print("Sending to ESP32: ");
+    Serial.print(ecgHeartRate);
+    Serial.print(",");
+    Serial.println(bodyTemp);
 
     mySerial.print(ecgHeartRate);
     mySerial.print(",");

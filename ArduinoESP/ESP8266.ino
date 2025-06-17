@@ -93,7 +93,7 @@ void handleRFID() {
 
   // Send UID to server using HTTP POST request
   if (WiFi.status() == WL_CONNECTED) {
-    http.begin(client, "http://192.168.100.126/StazSys/getUID.php");
+    http.begin(client, "http://192.168.100.126/StazSys/getUID.php"); //Change to PC IP
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");
     
     String postData = "UIDresult=" + uid;
@@ -155,7 +155,7 @@ void handleBPData() {
             Serial.println("WiFi Status: Connected");
             Serial.println("Local IP: " + WiFi.localIP().toString());
             
-            http.begin(client, "http://192.168.100.126/StazSys/updateBP.php");
+            http.begin(client, "http://192.168.100.126/StazSys/updateBP.php"); //Change to PC's IP
             http.addHeader("Content-Type", "application/x-www-form-urlencoded");
             
             String postData = "systolic=" + systolic + "&diastolic=" + diastolic + "&error_message=";
