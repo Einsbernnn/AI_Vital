@@ -1,12 +1,15 @@
 💡 AI-Vital
+---
 
 AI-Vital is an intelligent health monitoring system that leverages OpenAI’s API to provide real-time AI-assisted diagnoses based on biometric sensor data. It integrates sensors for ECG, blood pressure, body temperature, pulse rate, and SpO₂, and is powered by ESP32, ESP8266, and Arduino Uno communicating via UART. The system also features RFID-based user identification and a MySQL database to store diagnostic results. A web dashboard allows for centralized access, while automated email delivery ensures users receive their health insights instantly.
 
 ⸻
 
 ✨ Features
+---
 
 🤖 AI-Powered Diagnosis
+---
 
 Utilizes OpenAI’s API to analyze health metrics and deliver intelligent, real-time medical insights.
 
@@ -15,6 +18,7 @@ Utilizes OpenAI’s API to analyze health metrics and deliver intelligent, real-
 Incorporates a digital sphygmomanometer to record both systolic and diastolic blood pressure.
 
 💓 ECG Monitoring
+---
 
 Captures real-time ECG signals to detect irregular heart activity and abnormalities.
 
@@ -23,25 +27,29 @@ Captures real-time ECG signals to detect irregular heart activity and abnormalit
 Securely stores all sensor readings in a web-connected MySQL database.
 
 🆔 RFID-Based Identification
+---
 
 Links health data to individual users via RFID, enabling personalized tracking and record management.
 
 🫁 SpO₂ & Pulse Monitoring
+---
 
 Measures oxygen saturation and pulse rate using an integrated pulse oximeter.
 
 🌡️ Temperature Sensing
+---
 
 Monitors body temperature using infrared sensors for fast, contactless detection.
 
 📧 Email Notifications
+---
 
 Automatically sends users a summary of their diagnosis and vital signs through email
 ## 📄 License
-
+---
 MIT License
 
-Copyright (c) 2025 John Paul Legaspi (Einsbernnn)
+Copyright (c) 2025  (Einsbernnn)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -56,6 +64,7 @@ copies or substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND...
 
 ## ⚙️ Website Installation (PHP + MySQL)
+
 
 This guide covers the installation of the **web-based interface** of AI-Vital, including the PHP backend, MySQL database, and dashboard interface.
 
@@ -114,7 +123,8 @@ You should now see the AI-Vital homepage or dashboard.
 
 ---
 
-📌 **Please refer to the image below** for the full wiring diagram of sensors, UART communication between ESP boards and Arduino Uno, and power supply distribution. And upload the code for each microcontroller inside the MCU folder of the project foder.## 🔌 API Reference (Free Usage Guide)
+📌 **Please refer to the image below** for the full wiring diagram of sensors, UART communication between ESP boards and Arduino Uno, and power supply distribution. And upload the code for each microcontroller inside the MCU folder of the project foder.
+## 🔌 API Reference (Free Usage Guide)
 
 AI-Vital integrates with **OpenAI** and **Cohere** APIs to generate AI-powered medical insights and classifications. This guide shows how to use both APIs **within their free-tier limits**.
 
@@ -122,7 +132,9 @@ AI-Vital integrates with **OpenAI** and **Cohere** APIs to generate AI-powered m
 
 ### 🧠 OpenAI API (Free Plan)
 
+
 OpenAI offers limited free usage under their free-tier account, ideal for basic testing and development.
+
 
 **How to Get Started:**
 
@@ -217,9 +229,15 @@ This project was made possible with the help of the following platforms, librari
 
 ### 👨‍💻 Built By
 
-**John Paul Legaspi**  
+**Engr. John Paul Legaspi**  
 GitHub: [@Einsbernnn](https://github.com/Einsbernnn)  
-📧 Email: johnpaullgsp@gmail.com — *Open for collaboration or work opportunities*
+---
+**Engr. Danilo Y. Nuñez II**
+GitHub: [@Lev-ux](https://github.com/Lev-ux)  
+--- 
+
+📧 Email: einsbernsystem@gmail.com — *Open for collaboration or work opportunities*
+---
 ## 📎 Appendix
 
 ### 🔧 Project Structure
@@ -341,39 +359,39 @@ If you have any questions or suggestions, feel free to [open an issue](https://g
 Below are sample screenshots of the AI-Vital system, showing various components of the interface and data output:
 
 <!-- Rendered in reverse order: AI33.png to AI1.png -->
-![AI33](screenshots/AI33.png)
-![AI32](screenshots/AI32.png)
-![AI31](screenshots/AI31.png)
-![AI30](screenshots/AI30.png)
-![AI29](screenshots/AI29.png)
-![AI28](screenshots/AI28.png)
-![AI27](screenshots/AI27.png)
-![AI26](screenshots/AI26.png)
-![AI25](screenshots/AI25.png)
-![AI24](screenshots/AI24.png)
-![AI23](screenshots/AI23.png)
-![AI22](screenshots/AI22.png)
-![AI21](screenshots/AI21.png)
-![AI20](screenshots/AI20.png)
-![AI19](screenshots/AI19.png)
-![AI18](screenshots/AI18.png)
-![AI17](screenshots/AI17.png)
-![AI16](screenshots/AI16.png)
-![AI15](screenshots/AI15.png)
-![AI14](screenshots/AI14.png)
-![AI13](screenshots/AI13.png)
-![AI12](screenshots/AI12.png)
-![AI11](screenshots/AI11.png)
-![AI10](screenshots/AI10.png)
-![AI9](screenshots/AI9.png)
-![AI8](screenshots/AI8.png)
-![AI7](screenshots/AI7.png)
-![AI6](screenshots/AI6.png)
-![AI5](screenshots/AI5.png)
-![AI4](screenshots/AI4.png)
-![AI3](screenshots/AI3.png)
-![AI2](screenshots/AI2.png)
-![AI1](screenshots/AI1.png)
+![AI33](WebsitePreview/AI33.png)
+![AI32](WebsitePreview/AI32.png)
+![AI31](WebsitePreview/AI31.png)
+![AI30](WebsitePreview/AI30.png)
+![AI29](WebsitePreview/AI29.png)
+![AI28](WebsitePreview/AI28.png)
+![AI27](WebsitePreview/AI27.png)
+![AI26](WebsitePreview/AI26.png)
+![AI25](WebsitePreview/AI25.png)
+![AI24](WebsitePreview/AI24.png)
+![AI23](WebsitePreview/AI23.png)
+![AI22](WebsitePreview/AI22.png)
+![AI21](WebsitePreview/AI21.png)
+![AI20](WebsitePreview/AI20.png)
+![AI19](WebsitePreview/AI19.png)
+![AI18](WebsitePreview/AI18.png)
+![AI17](WebsitePreview/AI17.png)
+![AI16](WebsitePreview/AI16.png)
+![AI15](WebsitePreview/AI15.png)
+![AI14](WebsitePreview/AI14.png)
+![AI13](WebsitePreview/AI13.png)
+![AI12](WebsitePreview/AI12.png)
+![AI11](WebsitePreview/AI11.png)
+![AI10](WebsitePreview/AI10.png)
+![AI9](WebsitePreview/AI9.png)
+![AI8](WebsitePreview/AI8.png)
+![AI7](WebsitePreview/AI7.png)
+![AI6](WebsitePreview/AI6.png)
+![AI5](WebsitePreview/AI5.png)
+![AI4](WebsitePreview/AI4.png)
+![AI3](WebsitePreview/AI3.png)
+![AI2](WebsitePreview/AI2.png)
+![AI1](WebsitePreview/AI1.png)
 ## 🧰 Tech Stack
 
 
