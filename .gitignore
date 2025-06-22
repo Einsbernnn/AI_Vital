@@ -1,3 +1,17 @@
+# Ignore environment variable files containing sensitive data
+.env
+.env.*
+# Ignore database dumps
+*.sql
+DATABASE/
+# Ignore vendor dependencies (if using Composer)
+vendor/
+# Ignore PHPMailer config if any
+PHPMailer/*.json
+PHPMailer/*.php
+# Ignore IDE/editor config
+.vscode/
+.idea/
 UIDContainer.php
 .DS_Store
 cohere_debug.log
