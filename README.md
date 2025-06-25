@@ -231,12 +231,9 @@ This project was made possible with the help of the following platforms, librari
 
 **Engr. John Paul Legaspi**  
 GitHub: [@Einsbernnn](https://github.com/Einsbernnn)  
----
-**Engr. Danilo Y. Nuñez II**
-GitHub: [@Lev-ux](https://github.com/Lev-ux)  
 --- 
 
-📧 Email: einsbernsystem@gmail.com — *Open for collaboration or work opportunities*
+📧 Email: johnpaullgsp@gmail.com — *Open for collaboration or work opportunities*
 ---
 ## 📎 Appendix
 
@@ -277,9 +274,9 @@ AI_Vital/
 
 ### 🌐 Recommended Tools
 
-- [Postman](https://www.postman.com/) – For testing API calls locally
-- [Arduino IDE](https://www.arduino.cc/en/software) – For uploading firmware to ESP/Uno
-- [VS Code](https://code.visualstudio.com/) – For editing PHP/C++ with useful extensions
+- [Postman](https://www.postman.com/) – For testing API calls locally.
+- [Arduino IDE](https://www.arduino.cc/en/software) – For uploading firmware to ESP and Arduino Uno.
+- [VS Code](https://code.visualstudio.com/) – For writting codes.
 
 ---
 
