@@ -1,6 +1,5 @@
 # Ignore environment variable files containing sensitive data
 .env
-.env.*
 # Ignore database dumps
 *.sql
 DATABASE/
